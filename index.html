@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой Тамагочи</title>
+    <title>карманная камичка</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="pet-widget" id="petWidget">
-        <!-- Слой для отображения картинок -->
+    <div class="theme-switcher">
+        <button class="theme-btn" data-theme="dark"   style="background:#2a2a2a" title="Тёмная"></button>
+        <button class="theme-btn" data-theme="gray"   style="background:#4a4a4a" title="Серая"></button>
+        <button class="theme-btn" data-theme="night"  style="background:#1a1a2e" title="Ночь"></button>
+        <button class="theme-btn" data-theme="rose"   style="background:#3d2222" title="Роза"></button>
+        <button class="theme-btn" data-theme="forest" style="background:#1e2f1e" title="Лес"></button>
+        <button class="theme-btn" data-theme="ocean"  style="background:#1a2a3a" title="Океан"></button>
+        <button class="theme-btn" data-theme="light"  style="background:#e8e8e8" title="Светлая"></button>
+    </div>
+
+    <div class="pet-widget sleeping" id="petWidget">
         <div class="pet-layer" id="petLayer"></div>
-        
-        <!-- Иконка вопроса -->
         <div class="pet-icon pet-question" id="petQuestion">?</div>
-        
-        <!-- Значок злости -->
         <div class="pet-icon pet-angry-mark" id="petAngryMark">💢</div>
-        
-        <!-- Облачко с репликами -->
         <div class="pet-speech" id="petSpeech"></div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
