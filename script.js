@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    /* Реакции на смену темы (один раз за цикл сна) */
+    /* Реакции на смену темы */
     const THEME_REACTIONS = [
         { text: "что-то изменилось вокруг...",      mood: "neutral" },
         { text: "да, этот цвет лучше прошлого",      mood: "happy"   },
@@ -58,12 +58,79 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     let themeChanges = 0;
 
-    /* Фразы, когда пользователь долго ничего не делает */
-    const IDLE_PHRASES = [
+    /* Idle-фразы: первый рандом (без "пора"), второй — всегда фиксированный */
+    const IDLE_PHRASES_FIRST = [
         { text: "ээ... ты там?",                       mood: "neutral" },
-        { text: "так и будем смотреть друг на друга?",  mood: "neutral" },
-        { text: "ты уснул? значит, мне тоже пора...",   mood: "neutral" }
+        { text: "так и будем смотреть друг на друга?",  mood: "neutral" }
     ];
+    const IDLE_PHRASE_SECOND = { text: "ты уснул? значит, мне тоже пора...", mood: "neutral" };
+
+    /* Достижения за накопленные обнимашки */
+    const ACHIEVEMENTS = [
+        { score: 10,  text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral" },
+        { score: 25,  text: "ладно, ты мне нравишься",                   mood: "happy"   },
+        { score: 50,  text: "я тебя запомнила, знай!",                   mood: "happy"   },
+        { score: 100, text: "ты стала моим лучшим другом~",              mood: "laughing" }
+    ];
+    const shownAchievements = new Set();
+
+    /* ===== СЧЁТЧИК ДРУЖБЫ ===== */
+    let friendship = parseInt(localStorage.getItem('petFriendship') || '0', 10);
+    if (isNaN(friendship)) friendship = 0;
+
+    const friendEl = document.createElement('div');
+    friendEl.className = 'friendship-counter';
+    document.body.appendChild(friendEl);
+
+    function renderFriendship(bump) {
+        let icon = '❤';
+        friendEl.className = 'friendship-counter';
+        if (friendship >= 100)      friendEl.classList.add('lvl-4');
+        else if (friendship >= 50)  friendEl.classList.add('lvl-3');
+        else if (friendship >= 25)  friendEl.classList.add('lvl-2');
+        else if (friendship >= 10)  friendEl.classList.add('lvl-1');
+        friendEl.textContent = `${icon} ${friendship}`;
+        if (bump) {
+            friendEl.classList.add('bump');
+            setTimeout(() => friendEl.classList.remove('bump'), 180);
+        }
+    }
+
+    function changeFriendship(delta, x, y) {
+        const old = friendship;
+        friendship = Math.max(0, Math.min(9999, friendship + delta));
+        if (friendship === old) return;
+
+        localStorage.setItem('petFriendship', friendship);
+        renderFriendship(true);
+        spawnHeart(x, y, delta < 0);
+
+        if (delta > 0) checkAchievements(old, friendship);
+    }
+
+    function checkAchievements(oldScore, newScore) {
+        ACHIEVEMENTS.forEach(a => {
+            if (shownAchievements.has(a.score)) return;
+            if (oldScore < a.score && newScore >= a.score) {
+                shownAchievements.add(a.score);
+                setTimeout(() => {
+                    if (state === 'talking' || state === 'waking') return;
+                    forcePlayPhrase({ text: a.text, mood: a.mood }, finishDialog);
+                }, 400);
+            }
+        });
+    }
+
+    /* Частица-сердечко в точке клика */
+    function spawnHeart(x, y, negative) {
+        const h = document.createElement('div');
+        h.className = 'heart-particle' + (negative ? ' negative' : '');
+        h.textContent = negative ? '✖' : '♥';
+        h.style.left = x + 'px';
+        h.style.top = y + 'px';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 1300);
+    }
 
     /* ===== СОСТОЯНИЕ ===== */
     let state           = 'sleeping';
@@ -123,9 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
     }
 
-    /* Дыхание во сне.
-       ВАЖНО: теперь стартуем с "sleep2" (вдох), потом переключаем на "sleep1" (выдох).
-       Так визуальный порядок совпадает с анимацией scale: сначала вдох → потом выдох. */
     function startBreathing() {
         stopBreathing();
         breathFrame = 0;
@@ -140,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
     }
 
-    /* Отмена idle-фразы (если игрок кликнул или меняет тему) */
     function cancelIdlePhrase() {
         if (!idlePhraseActive) return;
         idlePhraseActive = false;
@@ -151,12 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state === 'idle') showLayer('idle');
     }
 
-    /* Показ фразы от бездействия */
-    function playIdlePhrase() {
+    function playIdlePhrase(phrase) {
         if (state !== 'idle' || idlePhraseActive) return;
         idlePhraseActive = true;
 
-        const phrase = IDLE_PHRASES[Math.floor(Math.random() * IDLE_PHRASES.length)];
         petSpeech.textContent = phrase.text;
         showSpeech(true);
         setMood(phrase.mood);
@@ -231,19 +292,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 160);
         }, 4000);
 
-        /* Фразы от бездействия — на 10-й и 20-й секунде */
+        /* Первая idle-фраза — рандом из двух без "пора" */
         clearTimeout(idlePhrase1);
         clearTimeout(idlePhrase2);
         idlePhrase1 = setTimeout(() => {
             if (state !== 'idle') return;
-            playIdlePhrase();
+            const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
+            playIdlePhrase(p);
         }, 10000);
+
+        /* Вторая idle-фраза — всегда фиксированная */
         idlePhrase2 = setTimeout(() => {
             if (state !== 'idle') return;
-            playIdlePhrase();
+            playIdlePhrase(IDLE_PHRASE_SECOND);
         }, 20000);
 
-        /* Сон через 30 секунд */
         clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
             if (state !== 'idle') return;
@@ -284,13 +347,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const rect = petWidget.getBoundingClientRect();
         const y = (e.clientY - rect.top) / rect.height;
+        const x = e.clientX;
+        const cy = e.clientY;
 
-        if (state === 'sleeping') { wakeUp(); return; }
+        if (state === 'sleeping') {
+            changeFriendship(1, x, cy);
+            wakeUp();
+            return;
+        }
         if (state === 'talking' || state === 'waking') return;
 
         let zone = 'body';
         if (y < 0.35)       zone = 'hair';
         else if (y > 0.7)   zone = 'skirt';
+
+        /* Очки дружбы */
+        let delta = 1;
+        if (zone === 'hair')  delta = 3;
+        if (zone === 'skirt') delta = -2;
+        changeFriendship(delta, x, cy);
 
         playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
     });
@@ -319,6 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
 
     /* ===== СТАРТ ===== */
+    renderFriendship(false);
     setState('sleeping');
     startBreathing();
 });
