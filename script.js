@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* Если phrase.text — функция, вызываем её, чтобы получить актуальный текст */
     function getPhraseText(phrase) {
         return typeof phrase.text === 'function' ? phrase.text() : phrase.text;
     }
@@ -141,6 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShown') || '[]'));
 
+    /* ===== НЕПРОЧИТАННЫЕ АЧИВКИ ===== */
+    let unreadAchievements = 0;
+
     /* ===== СЧЁТЧИК ДРУЖБЫ ===== */
     let friendship = parseInt(localStorage.getItem('petFriendship') || '0', 10);
     if (isNaN(friendship)) friendship = 0;
@@ -176,18 +178,171 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkAchievements(oldScore, newScore) {
+        let unlockedAny = false;
         ACHIEVEMENTS.forEach(a => {
             if (shownAchievements.has(a.score)) return;
             if (oldScore < a.score && newScore >= a.score) {
                 shownAchievements.add(a.score);
-                localStorage.setItem('petAchShown', JSON.stringify([...shownAchievements]));
-                renderAchPanel();
-                setTimeout(() => {
-                    if (state === 'talking' || state === 'waking') return;
-                    forcePlayPhrase({ text: a.text, mood: a.mood }, finishDialog);
-                }, 400);
+                unlockedAny = true;
             }
         });
+
+        if (unlockedAny) {
+            localStorage.setItem('petAchShown', JSON.stringify([...shownAchievements]));
+            renderAchPanel();
+            onAchievementUnlocked();
+        }
+    }
+
+    /* ===== УВЕДОМЛЕНИЕ ОБ АЧИВКЕ ===== */
+    let achToastEl = null;
+    let achToastHideTimer = null;
+    let achPhraseTimer = null;
+
+    function ensureAchToast() {
+        if (achToastEl && document.body.contains(achToastEl)) return achToastEl;
+        achToastEl = document.createElement('div');
+        achToastEl.className = 'ach-toast';
+        achToastEl.innerHTML = `
+            <div class="ach-toast-icon">🏆</div>
+            <div class="ach-toast-text">
+                <div class="ach-toast-title">получена ачивка!</div>
+                <div class="ach-toast-sub">открой список, чтобы узнать какая</div>
+            </div>
+        `;
+        document.body.appendChild(achToastEl);
+        return achToastEl;
+    }
+
+    function showAchToast() {
+        const toast = ensureAchToast();
+        /* Force reflow, чтобы анимация запускалась каждый раз */
+        void toast.offsetWidth;
+        toast.classList.add('show');
+        clearTimeout(achToastHideTimer);
+        achToastHideTimer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 4500);
+    }
+
+    /* Звук ачивки (Steam-style восходящий чимс) */
+    function playAchievementSound() {
+        try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            const ctx = new Ctx();
+            const now = ctx.currentTime;
+            /* E6 → A6 → C#7 — восходящий мажорный чимс */
+            const notes = [
+                { freq: 1318.51, time: 0.00, dur: 0.40, vol: 0.10 },
+                { freq: 1760.00, time: 0.13, dur: 0.45, vol: 0.13 },
+                { freq: 2217.46, time: 0.27, dur: 0.60, vol: 0.11 }
+            ];
+            notes.forEach(n => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = n.freq;
+                const t = now + n.time;
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(n.vol, t + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + n.dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(t);
+                osc.stop(t + n.dur + 0.1);
+            });
+        } catch (e) { /* звук опционален */ }
+    }
+
+    /* Мини-фейерверки вокруг персонажа */
+    function spawnFireworks() {
+        const rect = petWidget.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        const colors = ['#ff5a8a', '#ff9a5a', '#ffd54a', '#8a7fd4', '#5eb3e4', '#8bc34a', '#ff7aaa'];
+        const burstCount = 4;
+
+        for (let b = 0; b < burstCount; b++) {
+            setTimeout(() => {
+                const bx = cx + (Math.random() - 0.5) * 220;
+                const by = cy + (Math.random() - 0.5) * 160;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const count = 14;
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'firework-particle' + (i % 3 === 0 ? ' large' : '');
+                    p.style.left = bx + 'px';
+                    p.style.top = by + 'px';
+                    p.style.color = color;
+                    p.style.background = color;
+                    const angle = (Math.PI * 2 / count) * i + Math.random() * 0.4;
+                    const dist = 55 + Math.random() * 70;
+                    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+                    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 1600);
+                }
+            }, b * 180);
+        }
+    }
+
+    /* Бейдж непрочитанных */
+    function updateAchBadge() {
+        let badge = achBtn.querySelector('.ach-badge');
+        if (unreadAchievements > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'ach-badge';
+                achBtn.appendChild(badge);
+            }
+            badge.textContent = unreadAchievements;
+            /* Мини-анимация при каждом обновлении */
+            badge.style.animation = 'none';
+            void badge.offsetWidth;
+            badge.style.animation = '';
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    /* ===== СОБЫТИЕ: АЧИВКА ПОЛУЧЕНА ===== */
+    function onAchievementUnlocked() {
+        unreadAchievements++;
+        updateAchBadge();
+        showAchToast();
+        playAchievementSound();
+        spawnFireworks();
+
+        /* Фраза-поздравление, перебивающая любой диалог.
+           Небольшая задержка, чтобы тост и звук успели сработать. */
+        clearTimeout(achPhraseTimer);
+        achPhraseTimer = setTimeout(() => {
+            showAchievementPhrase();
+        }, 900);
+    }
+
+    function showAchievementPhrase() {
+        /* Жёстко прерываем всё текущее */
+        cancelIdlePhrase();
+        clearTimeout(wakeTimer);
+        clearTimeout(idleTimer);
+        clearTimeout(sleepTimer);
+        clearInterval(blinkTimer);
+        stopBreathing();
+        stopTalkAnim();
+
+        setState('talking');
+        petSpeech.textContent = "поздравляю с ачивкой!";
+        showSpeech(true);
+        setMood('happy');
+        startTalkAnim('happy');
+
+        clearTimeout(talkTimer);
+        talkTimer = setTimeout(() => {
+            finishDialog();
+        }, 3500);
     }
 
     /* ===== ВИЗУАЛЬНЫЕ ЭФФЕКТЫ КЛИКА ===== */
@@ -243,6 +398,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     achBtn.addEventListener('click', () => {
         achPanel.classList.toggle('open');
+        if (achPanel.classList.contains('open')) {
+            unreadAchievements = 0;
+            updateAchBadge();
+        }
     });
 
     /* ===== СОСТОЯНИЕ ===== */
@@ -254,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let breathTimer     = null;
     let breathFrame     = 0;
     let talkAnim        = null;
+    let wakeTimer       = null;
 
     let idlePhrase1     = null;
     let idlePhrase2     = null;
@@ -464,7 +624,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setState('waking');
         showLayer('wake');
 
-        setTimeout(() => {
+        clearTimeout(wakeTimer);
+        wakeTimer = setTimeout(() => {
+            if (state !== 'waking') return;
             const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
             forcePlayPhrase(phrase, finishDialog);
         }, 900);
