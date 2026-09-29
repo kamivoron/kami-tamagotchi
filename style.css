@@ -53,6 +53,8 @@ body {
     transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
     font-family: inherit;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
 }
 .ach-btn:hover {
     transform: translateY(-2px);
@@ -179,6 +181,93 @@ body {
 .ach-item.unlocked .ach-progress {
     background: rgba(255,90,138,0.25);
     color: #fff;
+}
+
+/* ============ БЕЙДЖ НЕПРОЧИТАННЫХ НА КНОПКЕ ============ */
+.ach-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 8px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ff3b6b, #ff7a3b);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 0 12px rgba(255,59,107,0.7), 0 0 3px rgba(255,255,255,0.4);
+    animation: ach-badge-pop 0.4s cubic-bezier(.2,1.5,.5,1);
+}
+@keyframes ach-badge-pop {
+    0%   { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+/* ============ УВЕДОМЛЕНИЕ ОБ АЧИВКЕ (Steam-стиль) ============ */
+.ach-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 22px 14px 16px;
+    background: linear-gradient(135deg, rgba(30, 18, 28, 0.97), rgba(55, 25, 45, 0.97));
+    border: 1px solid rgba(255, 90, 138, 0.55);
+    border-radius: 14px;
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.55),
+        0 0 30px rgba(255,90,138,0.35),
+        inset 0 0 20px rgba(255,90,138,0.08);
+    transform: translateX(calc(100% + 60px));
+    transition: transform 0.55s cubic-bezier(.2,.9,.3,1), opacity 0.4s ease;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    max-width: 340px;
+}
+.ach-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.ach-toast-icon {
+    font-size: 32px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255,90,138,0.35), rgba(255,154,90,0.2));
+    border: 1px solid rgba(255,90,138,0.5);
+    border-radius: 12px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 10px rgba(255,90,138,0.7));
+    animation: ach-toast-icon-pulse 1.5s ease-in-out infinite;
+}
+@keyframes ach-toast-icon-pulse {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50%      { transform: scale(1.08) rotate(-3deg); }
+}
+.ach-toast-text { min-width: 0; }
+.ach-toast-title {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    color: #ff7aaa;
+    margin-bottom: 4px;
+    text-shadow: 0 0 10px rgba(255,90,138,0.6);
+}
+.ach-toast-sub {
+    font-size: 12px;
+    opacity: 0.8;
+    color: #fff;
+    line-height: 1.3;
 }
 
 /* ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ============ */
@@ -394,4 +483,37 @@ body.theme-light .pet-speech { color: #222; }
 @keyframes dot-burst {
     0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); }
+}
+
+/* ==========================================================
+   МИНИ-ФЕЙЕРВЕРКИ ПРИ ПОЛУЧЕНИИ АЧИВКИ
+   ========================================================== */
+.firework-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 997;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: firework-burst 1.5s cubic-bezier(.2,.9,.3,1) forwards;
+    box-shadow: 0 0 10px currentColor, 0 0 4px currentColor;
+}
+.firework-particle.large {
+    width: 8px;
+    height: 8px;
+}
+@keyframes firework-burst {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    60% {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--dx) * 0.85), calc(-50% + var(--dy) * 0.85)) scale(1.15);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2);
+    }
 }
