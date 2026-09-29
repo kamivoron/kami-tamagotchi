@@ -1,0 +1,106 @@
+/* Основной контейнер виджета */
+.pet-widget {
+    position: fixed; /* Фиксируем на экране */
+    bottom: 20px;
+    left: 20px;
+    width: 200px;  /* Ширина = ширина твоих картинок */
+    height: 200px; /* Высота = высота твоих картинок */
+    cursor: pointer;
+    user-select: none; /* Запрещаем выделение текста */
+    z-index: 1000; /* Чтобы был поверх всего */
+}
+
+/* Слой, на котором меняются картинки */
+.pet-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: contain; /* Картинка вписывается в размеры */
+    pointer-events: none; /* Клики проходят сквозь этот слой */
+}
+
+/* Стили для иконок "?" и "💢" */
+.pet-icon {
+    position: absolute;
+    pointer-events: none; /* Клики по ним не обрабатываются */
+    font-weight: 900;
+    line-height: 1;
+    z-index: 5; /* Поверх картинки */
+    opacity: 0; /* Изначально скрыты */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Иконка "?" */
+.pet-question {
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.6); /* Немного уменьшена */
+    font-size: 32px;
+    color: #ffd54a; /* Жёлтый */
+    text-shadow: 0 0 4px #000, 0 0 8px #000; /* Обводка для читаемости */
+    font-family: "Trebuchet MS", sans-serif;
+}
+
+/* Показываем "?" при наведении на виджет */
+.pet-widget:hover .pet-question {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+/* Иконка "💢" */
+.pet-angry-mark {
+    top: 40px;   /* Позиция по вертикали */
+    left: 78%;   /* Позиция по горизонтали */
+    font-size: 26px;
+    color: #ff3b3b; /* Красный */
+    transform: scale(0.4) rotate(-15deg); /* Уменьшена и повёрнута */
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.8)); /* Тень */
+}
+
+/* Показываем "💢" при наведении на виджет */
+.pet-widget:hover .pet-angry-mark {
+    opacity: 1;
+    transform: scale(1) rotate(-15deg);
+}
+
+/* Облачко с репликами */
+.pet-speech {
+    position: absolute;
+    bottom: 100%; /* Над персонажем */
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    width: 200px;
+    padding: 8px 12px;
+    background: rgba(20, 15, 15, 0.92); /* Тёмный полупрозрачный фон */
+    color: #fff;
+    border: 1px solid #e26a6a; /* Красноватая рамка */
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: center;
+    opacity: 0; /* Изначально скрыто */
+    pointer-events: none; /* Клики проходят сквозь */
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    z-index: 4;
+}
+
+/* Хвостик у облачка */
+.pet-speech::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(20, 15, 15, 0.92);
+}
+
+/* Показываем облачко, когда персонаж "говорит" */
+.pet-widget.awake .pet-speech {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
