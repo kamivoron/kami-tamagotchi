@@ -1,106 +1,171 @@
-/* Основной контейнер виджета */
-.pet-widget {
-    position: fixed; /* Фиксируем на экране */
-    bottom: 20px;
-    left: 20px;
-    width: 200px;  /* Ширина = ширина твоих картинок */
-    height: 200px; /* Высота = высота твоих картинок */
-    cursor: pointer;
-    user-select: none; /* Запрещаем выделение текста */
-    z-index: 1000; /* Чтобы был поверх всего */
+/* ============ ТЕМЫ ============ */
+:root {
+    --bg: #2a2a2a;
+    --text: #e8e8e8;
+    --accent: #e26a6a;
+    --speech-bg: rgba(20, 15, 15, 0.92);
+    --speech-border: #e26a6a;
+}
+body.theme-gray   { --bg: #4a4a4a; }
+body.theme-night  { --bg: #1a1a2e; --accent: #8a7fd4; --speech-border: #8a7fd4; }
+body.theme-rose   { --bg: #3d2222; --accent: #ff9a9a; --speech-border: #ff9a9a; }
+body.theme-forest { --bg: #1e2f1e; --accent: #8bc34a; --speech-border: #8bc34a; }
+body.theme-ocean  { --bg: #1a2a3a; --accent: #5eb3e4; --speech-border: #5eb3e4; }
+body.theme-light  { --bg: #e8e8e8; --text: #222; --speech-bg: rgba(255,255,255,0.95); --speech-border: #b55; }
+
+/* ============ БАЗА ============ */
+* { box-sizing: border-box; }
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", "Trebuchet MS", sans-serif;
+    transition: background 0.4s ease, color 0.4s ease;
+    overflow: hidden;
 }
 
-/* Слой, на котором меняются картинки */
+/* ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ============ */
+.theme-switcher {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+}
+.theme-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.25);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s, border-color 0.15s;
+}
+.theme-btn:hover {
+    transform: scale(1.15);
+    border-color: var(--accent);
+}
+
+/* ============ ВИДЖЕТ ============ */
+.pet-widget {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
 .pet-layer {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-repeat: no-repeat;
     background-position: center bottom;
-    background-size: contain; /* Картинка вписывается в размеры */
-    pointer-events: none; /* Клики проходят сквозь этот слой */
+    background-size: contain;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
-/* Стили для иконок "?" и "💢" */
+/* ============ ИКОНКИ ============ */
 .pet-icon {
     position: absolute;
-    pointer-events: none; /* Клики по ним не обрабатываются */
+    pointer-events: none;
     font-weight: 900;
     line-height: 1;
-    z-index: 5; /* Поверх картинки */
-    opacity: 0; /* Изначально скрыты */
+    z-index: 5;
+    opacity: 0;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Иконка "?" */
+/* «?» — над головой */
 .pet-question {
     top: -10px;
     left: 50%;
-    transform: translateX(-50%) scale(0.6); /* Немного уменьшена */
-    font-size: 32px;
-    color: #ffd54a; /* Жёлтый */
-    text-shadow: 0 0 4px #000, 0 0 8px #000; /* Обводка для читаемости */
+    transform: translateX(-50%) scale(0.6);
+    font-size: 42px;
+    color: #ffd54a;
+    text-shadow: 0 0 5px #000, 0 0 10px #000;
     font-family: "Trebuchet MS", sans-serif;
 }
 
-/* Показываем "?" при наведении на виджет */
-.pet-widget:hover .pet-question {
+/* «?» — только когда спит и наведена мышь */
+.pet-widget.sleeping:hover .pet-question {
     opacity: 1;
     transform: translateX(-50%) scale(1);
+    animation: pet-bounce 0.6s infinite alternate;
+}
+@keyframes pet-bounce {
+    from { transform: translateX(-50%) scale(1) translateY(0); }
+    to   { transform: translateX(-50%) scale(1.15) translateY(-6px); }
 }
 
-/* Иконка "💢" */
+/* «💢» — на волосах */
 .pet-angry-mark {
-    top: 40px;   /* Позиция по вертикали */
-    left: 78%;   /* Позиция по горизонтали */
-    font-size: 26px;
-    color: #ff3b3b; /* Красный */
-    transform: scale(0.4) rotate(-15deg); /* Уменьшена и повёрнута */
-    filter: drop-shadow(0 0 3px rgba(0,0,0,0.8)); /* Тень */
+    top: 60px;
+    left: 78%;
+    font-size: 36px;
+    color: #ff3b3b;
+    transform: scale(0.4) rotate(-15deg);
+    filter: drop-shadow(0 0 4px rgba(0,0,0,0.8));
 }
 
-/* Показываем "💢" при наведении на виджет */
-.pet-widget:hover .pet-angry-mark {
+/* «💢» — только когда персонаж злится / просыпается */
+.pet-widget.waking .pet-angry-mark,
+.pet-widget.mood-angry .pet-angry-mark {
     opacity: 1;
     transform: scale(1) rotate(-15deg);
+    animation: pet-shake 0.3s infinite;
+}
+@keyframes pet-shake {
+    0%, 100% { transform: scale(1) rotate(-22deg); }
+    50%      { transform: scale(1.1) rotate(-8deg); }
 }
 
-/* Облачко с репликами */
+/* ============ ОБЛАЧКО ============ */
 .pet-speech {
     position: absolute;
-    bottom: 100%; /* Над персонажем */
+    bottom: 100%;
     left: 50%;
-    transform: translateX(-50%) translateY(8px);
-    width: 200px;
-    padding: 8px 12px;
-    background: rgba(20, 15, 15, 0.92); /* Тёмный полупрозрачный фон */
+    transform: translateX(-50%) translateY(10px);
+    width: 260px;
+    min-height: 60px;
+    padding: 10px 14px;
+    background: var(--speech-bg);
     color: #fff;
-    border: 1px solid #e26a6a; /* Красноватая рамка */
-    border-radius: 10px;
-    font-size: 13px;
-    line-height: 1.35;
+    border: 1px solid var(--speech-border);
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.4;
     text-align: center;
-    opacity: 0; /* Изначально скрыто */
-    pointer-events: none; /* Клики проходят сквозь */
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease, background 0.4s, border-color 0.4s;
     z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
-/* Хвостик у облачка */
 .pet-speech::after {
     content: "";
     position: absolute;
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border: 8px solid transparent;
-    border-top-color: rgba(20, 15, 15, 0.92);
+    border: 10px solid transparent;
+    border-top-color: var(--speech-bg);
+    transition: border-top-color 0.4s;
 }
-
-/* Показываем облачко, когда персонаж "говорит" */
 .pet-widget.awake .pet-speech {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* Облачко в светлой теме — тёмный текст */
+body.theme-light .pet-speech { color: #222; }
