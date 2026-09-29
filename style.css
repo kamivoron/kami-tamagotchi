@@ -71,6 +71,16 @@ body {
     background-size: contain;
     pointer-events: none;
     transition: opacity 0.15s ease;
+    transform-origin: center bottom;
+}
+
+/* ============ ДЫХАНИЕ ВО СНЕ ============ */
+.pet-widget.sleeping .pet-layer {
+    animation: breathe-scale 3.6s ease-in-out infinite;
+}
+@keyframes breathe-scale {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(1.02); }
 }
 
 /* ============ ИКОНКИ ============ */
@@ -106,7 +116,7 @@ body {
     to   { transform: translateX(-50%) scale(1.15) translateY(-6px); }
 }
 
-/* «💢» — на волосах */
+/* «💢» — БАЗОВАЯ (лежачая) позиция: сон + пробуждение */
 .pet-angry-mark {
     top: 60px;
     left: 78%;
@@ -116,7 +126,13 @@ body {
     filter: drop-shadow(0 0 4px rgba(0,0,0,0.8));
 }
 
-/* «💢» — только когда персонаж злится / просыпается */
+/* «💢» — СИДЯЧАЯ позиция: только когда персонаж говорит (сидит) */
+.pet-widget.talking .pet-angry-mark {
+    top: 30px;
+    left: 56%;
+}
+
+/* Появление «💢» в злых сценах */
 .pet-widget.waking .pet-angry-mark,
 .pet-widget.mood-angry .pet-angry-mark {
     opacity: 1;
@@ -167,5 +183,4 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* Облачко в светлой теме — тёмный текст */
 body.theme-light .pet-speech { color: #222; }
