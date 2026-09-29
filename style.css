@@ -75,12 +75,13 @@ body {
 }
 
 /* ============ ДЫХАНИЕ ВО СНЕ ============ */
+/* Начинаем с кадра "вдох" (большой), в середине цикла уходим в "выдох" (маленький) */
 .pet-widget.sleeping .pet-layer {
     animation: breathe-scale 3.6s ease-in-out infinite;
 }
 @keyframes breathe-scale {
-    0%, 100% { transform: scaleY(1); }
-    50%      { transform: scaleY(1.02); }
+    0%, 100% { transform: scaleY(1.02); }   /* вдох — чуть растянут */
+    50%      { transform: scaleY(1); }       /* выдох — обычный */
 }
 
 /* ============ ИКОНКИ ============ */
@@ -90,8 +91,6 @@ body {
     font-weight: 900;
     line-height: 1;
     z-index: 5;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 /* «?» — над головой */
@@ -103,9 +102,9 @@ body {
     color: #ffd54a;
     text-shadow: 0 0 5px #000, 0 0 10px #000;
     font-family: "Trebuchet MS", sans-serif;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
-
-/* «?» — только когда спит и наведена мышь */
 .pet-widget.sleeping:hover .pet-question {
     opacity: 1;
     transform: translateX(-50%) scale(1);
@@ -116,7 +115,8 @@ body {
     to   { transform: translateX(-50%) scale(1.15) translateY(-6px); }
 }
 
-/* «💢» — БАЗОВАЯ (лежачая) позиция: сон + пробуждение */
+/* ============ ЗНАЧОК «💢» ============ */
+/* Базовая (ЛЕЖАЧАЯ) позиция — она же позиция при пробуждении */
 .pet-angry-mark {
     top: 60px;
     left: 78%;
@@ -124,20 +124,23 @@ body {
     color: #ff3b3b;
     transform: scale(0.4) rotate(-15deg);
     filter: drop-shadow(0 0 4px rgba(0,0,0,0.8));
+    opacity: 0;
+    transition: none;   /* ← при исчезновении меняется мгновенно, без "прыжка" */
 }
 
-/* «💢» — СИДЯЧАЯ позиция: только когда персонаж говорит (сидит) */
-.pet-widget.talking .pet-angry-mark {
-    top: 30px;
-    left: 56%;
+/* СИДЯЧАЯ позиция — сдвинуто левее и выше, чтобы попасть на волосы */
+.pet-widget.mood-angry .pet-angry-mark {
+    top: 20px;      /* ⚙️ подправьте под себя */
+    left: 48%;      /* ⚙️ подправьте под себя */
 }
 
-/* Появление «💢» в злых сценах */
+/* Появление значка — только при пробуждении и в злых диалогах */
 .pet-widget.waking .pet-angry-mark,
 .pet-widget.mood-angry .pet-angry-mark {
     opacity: 1;
     transform: scale(1) rotate(-15deg);
     animation: pet-shake 0.3s infinite;
+    transition: opacity 0.25s ease;   /* ← при появлении — мягко */
 }
 @keyframes pet-shake {
     0%, 100% { transform: scale(1) rotate(-22deg); }
