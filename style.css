@@ -30,6 +30,158 @@ body {
     overflow: hidden;
 }
 
+/* ============ ВЕРХНИЙ ЛЕВЫЙ БЛОК ============ */
+.top-left-bar {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 101;
+}
+
+.ach-btn {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--speech-border);
+    background: var(--speech-bg);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.ach-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+.ach-btn:active {
+    transform: translateY(0);
+}
+
+/* ============ СЧЁТЧИК ДРУЖБЫ ============ */
+.friendship-counter {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    user-select: none;
+    transition: color 0.4s, text-shadow 0.3s ease;
+    text-shadow: 0 0 8px rgba(0,0,0,0.35);
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.15);
+    letter-spacing: -0.5px;
+}
+.friendship-counter.lvl-1 { color: #ff9a9a; }
+.friendship-counter.lvl-2 { color: #ff5a8a; }
+.friendship-counter.lvl-3 { color: #ff2a6a; }
+.friendship-counter.lvl-4 { color: #ffd54a; }
+
+/* Мягкое свечение вместо прыжка */
+.friendship-counter.pulse {
+    text-shadow: 0 0 18px var(--accent), 0 0 6px var(--accent);
+}
+
+/* ============ ПАНЕЛЬ ДОСТИЖЕНИЙ ============ */
+.ach-panel {
+    position: fixed;
+    top: 70px;
+    left: 20px;
+    width: 340px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 16px;
+    padding: 16px;
+    z-index: 102;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+.ach-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.ach-panel::-webkit-scrollbar { width: 6px; }
+.ach-panel::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+.ach-header {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.ach-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+}
+.ach-item.locked {
+    opacity: 0.4;
+    filter: grayscale(0.7);
+}
+.ach-item.unlocked {
+    background: linear-gradient(135deg, rgba(255,90,138,0.18), rgba(255,154,90,0.1));
+    border-color: rgba(255,90,138,0.35);
+    box-shadow: 0 0 14px rgba(255,90,138,0.15);
+}
+.ach-icon {
+    font-size: 24px;
+    width: 34px;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.ach-info { flex: 1; min-width: 0; }
+.ach-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: var(--text);
+}
+.ach-desc {
+    font-size: 11px;
+    opacity: 0.7;
+    line-height: 1.3;
+}
+.ach-progress {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
+.ach-item.unlocked .ach-progress {
+    background: rgba(255,90,138,0.25);
+    color: #fff;
+}
+
 /* ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ============ */
 .theme-switcher {
     position: fixed;
@@ -37,57 +189,6 @@ body {
     right: 20px;
     display: flex;
     gap: 8px;
-    /* ============ СЧЁТЧИК ДРУЖБЫ ============ */
-.friendship-counter {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    font-family: -apple-system, "Segoe UI", sans-serif;
-    z-index: 100;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: color 0.4s, transform 0.15s ease;
-    text-shadow: 0 0 8px rgba(0,0,0,0.35);
-}
-.friendship-counter.bump {
-    transform: scale(1.25);
-}
-.friendship-counter.lvl-1 { color: #ff9a9a; }
-.friendship-counter.lvl-2 { color: #ff5a8a; }
-.friendship-counter.lvl-3 { color: #ff2a6a; animation: friend-pulse 2s ease-in-out infinite; }
-.friendship-counter.lvl-4 { color: #ffd54a; animation: friend-pulse 1.4s ease-in-out infinite; }
-
-@keyframes friend-pulse {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.12); }
-}
-
-/* ============ ЧАСТИЦЫ-СЕРДЕЧКИ ============ */
-.heart-particle {
-    position: fixed;
-    pointer-events: none;
-    font-size: 22px;
-    color: #ff5a8a;
-    font-weight: 900;
-    z-index: 999;
-    text-shadow: 0 0 6px rgba(255,90,138,0.7);
-    transform: translate(-50%, -50%);
-    animation: heart-float 1.2s ease-out forwards;
-}
-.heart-particle.negative {
-    color: #ff3b3b;
-    text-shadow: 0 0 6px rgba(255,59,59,0.7);
-}
-@keyframes heart-float {
-    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.5) rotate(-10deg); }
-    30%  { opacity: 1; transform: translate(-50%, -80%) scale(1.2) rotate(10deg); }
-    100% { opacity: 0; transform: translate(-50%, -180%) scale(0.8) rotate(-15deg); }
-}
     z-index: 100;
 }
 .theme-btn {
@@ -125,14 +226,12 @@ body {
     transform-origin: center bottom;
 }
 
-/* ============ ДЫХАНИЕ ВО СНЕ ============ */
-/* Начинаем с кадра "вдох" (большой), в середине цикла уходим в "выдох" (маленький) */
 .pet-widget.sleeping .pet-layer {
     animation: breathe-scale 3.6s ease-in-out infinite;
 }
 @keyframes breathe-scale {
-    0%, 100% { transform: scaleY(1.02); }   /* вдох — чуть растянут */
-    50%      { transform: scaleY(1); }       /* выдох — обычный */
+    0%, 100% { transform: scaleY(1.02); }
+    50%      { transform: scaleY(1); }
 }
 
 /* ============ ИКОНКИ ============ */
@@ -144,7 +243,6 @@ body {
     z-index: 5;
 }
 
-/* «?» — над головой */
 .pet-question {
     top: -10px;
     left: 50%;
@@ -166,8 +264,6 @@ body {
     to   { transform: translateX(-50%) scale(1.15) translateY(-6px); }
 }
 
-/* ============ ЗНАЧОК «💢» ============ */
-/* Базовая (ЛЕЖАЧАЯ) позиция — она же позиция при пробуждении */
 .pet-angry-mark {
     top: 60px;
     left: 78%;
@@ -176,22 +272,18 @@ body {
     transform: scale(0.4) rotate(-15deg);
     filter: drop-shadow(0 0 4px rgba(0,0,0,0.8));
     opacity: 0;
-    transition: none;   /* ← при исчезновении меняется мгновенно, без "прыжка" */
+    transition: none;
 }
-
-/* СИДЯЧАЯ позиция — сдвинуто левее и выше, чтобы попасть на волосы */
 .pet-widget.mood-angry .pet-angry-mark {
-    top: 20px;      /* ⚙️ подправьте под себя */
-    left: 48%;      /* ⚙️ подправьте под себя */
+    top: 20px;
+    left: 48%;
 }
-
-/* Появление значка — только при пробуждении и в злых диалогах */
 .pet-widget.waking .pet-angry-mark,
 .pet-widget.mood-angry .pet-angry-mark {
     opacity: 1;
     transform: scale(1) rotate(-15deg);
     animation: pet-shake 0.3s infinite;
-    transition: opacity 0.25s ease;   /* ← при появлении — мягко */
+    transition: opacity 0.25s ease;
 }
 @keyframes pet-shake {
     0%, 100% { transform: scale(1) rotate(-22deg); }
@@ -238,3 +330,81 @@ body {
 }
 
 body.theme-light .pet-speech { color: #222; }
+
+/* ==========================================================
+   СОВРЕМЕННЫЕ ЭФФЕКТЫ КЛИКА (кликер-стиль)
+   ========================================================== */
+
+/* Всплывающие цифры "+3" / "-2" */
+.click-fx {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    font-weight: 800;
+    font-size: 22px;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: -0.5px;
+    transform: translate(-50%, -50%);
+    animation: fx-float 1.1s cubic-bezier(.2,.9,.3,1) forwards;
+}
+.click-fx.positive {
+    background: linear-gradient(135deg, #ff5a8a 0%, #ff9a5a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 10px rgba(255,90,138,0.7));
+}
+.click-fx.negative {
+    background: linear-gradient(135deg, #8a8a9a 0%, #5a5a6a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 8px rgba(140,140,160,0.5));
+}
+@keyframes fx-float {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    20%  { opacity: 1; transform: translate(-50%, -80%) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
+}
+
+/* Расширяющееся кольцо */
+.click-ring {
+    position: fixed;
+    pointer-events: none;
+    z-index: 998;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,90,138,0.8);
+    transform: translate(-50%, -50%);
+    animation: ring-expand 0.75s cubic-bezier(.2,.9,.3,1) forwards;
+}
+.click-ring.negative {
+    border-color: rgba(140,140,160,0.7);
+}
+@keyframes ring-expand {
+    0%   { opacity: 0.9; width: 10px; height: 10px; border-width: 3px; }
+    100% { opacity: 0; width: 90px; height: 90px; border-width: 1px; }
+}
+
+/* Мягкие частицы-искры (разлетаются) */
+.click-dot {
+    position: fixed;
+    pointer-events: none;
+    z-index: 998;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ff7aaa;
+    box-shadow: 0 0 8px rgba(255,90,138,0.9);
+    transform: translate(-50%, -50%);
+    animation: dot-burst 0.85s cubic-bezier(.2,.9,.3,1) forwards;
+}
+.click-dot.negative {
+    background: #8a8a9a;
+    box-shadow: 0 0 6px rgba(140,140,160,0.7);
+}
+@keyframes dot-burst {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); }
+}
