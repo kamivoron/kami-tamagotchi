@@ -183,7 +183,7 @@ body {
     color: #fff;
 }
 
-/* ============ БЕЙДЖ НЕПРОЧИТАННЫХ НА КНОПКЕ ============ */
+/* ============ БЕЙДЖ НЕПРОЧИТАННЫХ ============ */
 .ach-badge {
     display: inline-flex;
     align-items: center;
@@ -206,7 +206,7 @@ body {
     100% { transform: scale(1); }
 }
 
-/* ============ УВЕДОМЛЕНИЕ ОБ АЧИВКЕ (Steam-стиль) ============ */
+/* ============ УВЕДОМЛЕНИЕ ОБ АЧИВКЕ ============ */
 .ach-toast {
     position: fixed;
     bottom: 30px;
@@ -223,17 +223,29 @@ body {
         0 0 30px rgba(255,90,138,0.35),
         inset 0 0 20px rgba(255,90,138,0.08);
     transform: translateX(calc(100% + 60px));
-    transition: transform 0.55s cubic-bezier(.2,.9,.3,1), opacity 0.4s ease;
+    transition: transform 0.55s cubic-bezier(.2,.9,.3,1), opacity 0.4s ease, box-shadow 0.2s ease;
     z-index: 1000;
-    pointer-events: none;
     opacity: 0;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     max-width: 340px;
+    cursor: pointer;
+    pointer-events: none;
 }
 .ach-toast.show {
     transform: translateX(0);
     opacity: 1;
+    pointer-events: auto;
+}
+.ach-toast.show:hover {
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.55),
+        0 0 45px rgba(255,90,138,0.6),
+        inset 0 0 30px rgba(255,90,138,0.15);
+}
+.ach-toast.show:hover .ach-toast-sub {
+    opacity: 1;
+    color: #ffd0e4;
 }
 .ach-toast-icon {
     font-size: 32px;
@@ -268,6 +280,7 @@ body {
     opacity: 0.8;
     color: #fff;
     line-height: 1.3;
+    transition: color 0.2s ease, opacity 0.2s ease;
 }
 
 /* ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ============ */
@@ -486,7 +499,7 @@ body.theme-light .pet-speech { color: #222; }
 }
 
 /* ==========================================================
-   МИНИ-ФЕЙЕРВЕРКИ ПРИ ПОЛУЧЕНИИ АЧИВКИ
+   МИНИ-ФЕЙЕРВЕРКИ
    ========================================================== */
 .firework-particle {
     position: fixed;
