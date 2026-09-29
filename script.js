@@ -23,38 +23,85 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     Object.values(IMAGES).forEach(src => { const i = new Image(); i.src = src; });
 
+    /* ===== МОСКОВСКОЕ ВРЕМЯ ===== */
+    function getMoscowTime() {
+        return new Date().toLocaleTimeString('ru-RU', {
+            timeZone: 'Europe/Moscow',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /* Если phrase.text — функция, вызываем её, чтобы получить актуальный текст */
+    function getPhraseText(phrase) {
+        return typeof phrase.text === 'function' ? phrase.text() : phrase.text;
+    }
+
     /* ===== ДИАЛОГИ ===== */
     const DIALOGS = {
         welcome: [
-            { text: "ммм... что такое?",       mood: "neutral" },
-            { text: "я так сладко спала!...",   mood: "neutral" },
-            { text: "кто меня разбудил?",       mood: "neutral" },
-            { text: "и что тебе нужно?~",       mood: "happy"   }
+            { text: () => `*зевает* доброе утро... ого, уже ${getMoscowTime()}`, mood: "neutral" },
+            { text: "я соскучилась по тебе~",                     mood: "happy"   },
+            { text: "я уже боялась, что ты не вернёшься ко мне",   mood: "neutral" },
+            { text: "знакомые глаза читают этот текст!~",          mood: "happy"   },
+            { text: "утречка, рада тебя видеть!",                  mood: "happy"   },
+            { text: "упф, мне сейчас такооое снилось!",            mood: "neutral" },
+            { text: "ну капец, а я только начала засыпать...",      mood: "neutral" },
+            { text: "который раз вижу тебя, солнце?~",             mood: "happy"   },
+            { text: "каждое мое утро самое доброе, ведь я сразу вижу тебя~", mood: "happy" },
+            { text: "ммм... что такое?",                            mood: "neutral" },
+            { text: "я так сладко спала!...",                       mood: "neutral" },
+            { text: "кто меня разбудил?",                           mood: "neutral" },
+            { text: "и что тебе нужно?~",                           mood: "happy"   }
         ],
         body: [
-            { text: "ой! ты чего тыкаешь?",             mood: "neutral"  },
-            { text: "мне же щекотно!",                  mood: "happy"    },
-            { text: "думаешь, тут есть пасхалка?",      mood: "neutral"  },
-            { text: "ахахах, ну ты даёшь!",             mood: "laughing" },
-            { text: "я так и знала, что ты зайдёшь~",   mood: "happy"    },
-            { text: "ты пришла поиграть?",              mood: "happy"    }
+            { text: "ой! ты чего тыкаешь?",                        mood: "neutral"  },
+            { text: "мне же щекотно!",                             mood: "happy"    },
+            { text: "думаешь, тут есть пасхалка?",                 mood: "neutral"  },
+            { text: "ахахах, ну ты даёшь!",                        mood: "laughing" },
+            { text: "я так и знала, что ты зайдёшь~",              mood: "happy"    },
+            { text: "ты пришла поиграть?",                         mood: "happy"    },
+            { text: "красивая у меня одёжка, не так ли?)",         mood: "happy"    },
+            { text: "это японская школьная форма, моя любимая!~",  mood: "happy"    },
+            { text: "что, я испачкала форму? наверное, это от чизбургера..", mood: "neutral" },
+            { text: "клик, клик, какая же фраза следующая?",        mood: "neutral"  },
+            { text: "только не кликай слишком часто!",             mood: "neutral"  },
+            { text: "ты такой настойчивый, это смущает...",         mood: "teasing"  },
+            { text: "я сегодня попшикалась новыми духами, как тебе?", mood: "happy"  }
         ],
         hair: [
-            { text: "э! не трогай мои волосы!",       mood: "angry" },
-            { text: "ты меня гладишь?! я не милая!",  mood: "angry" },
-            { text: "ещё раз тронешь — укушу!",       mood: "angry" }
+            { text: "э! не трогай мои волосы!",                                        mood: "angry"   },
+            { text: "ты меня гладишь?! я не милая!",                                    mood: "angry"   },
+            { text: "ещё раз тронешь — укушу!",                                         mood: "angry"   },
+            { text: "и вовсе ты мне не нравишься!",                                     mood: "angry"   },
+            { text: "но я же только уложила их...",                                     mood: "neutral" },
+            { text: "у меня волосы кудрявятся, их сложно расчесать после такого знаешь ли!", mood: "neutral" },
+            { text: "з-зачем ты... меня гладишь...",                                    mood: "teasing" },
+            { text: "и вовсе мне не приятно!",                                          mood: "angry"   },
+            { text: "продолжай...",                                                     mood: "happy"   },
+            { text: "хватит называть меня милой!",                                      mood: "angry"   },
+            { text: "дурак ты...",                                                      mood: "teasing" }
         ],
         skirt: [
-            { text: "к-куда ты жмёшь?!",   mood: "angry"   },
-            { text: "извращенец!",          mood: "angry"   },
-            { text: "что ты только что-!",  mood: "teasing" }
+            { text: "к-куда ты жмёшь?!",                        mood: "angry"   },
+            { text: "извращенец!",                              mood: "angry"   },
+            { text: "что ты только что-!",                       mood: "teasing" },
+            { text: "что ты думаешь ты творишь?!",              mood: "angry"   },
+            { text: "тебе это доставляет удовольствие или что?!", mood: "angry" },
+            { text: "не трогай мою юбку.",                      mood: "angry"   },
+            { text: "мне это не нравится.",                     mood: "angry"   },
+            { text: "хватит.",                                  mood: "angry"   },
+            { text: "я обижусь, если ты продолжишь.",           mood: "angry"   }
         ]
     };
 
     const SPAM_PHRASES = [
-        { text: "ёмаё, поумерь свой пыл, бро",     mood: "angry" },
-        { text: "ты чего накинулся?",               mood: "angry" },
-        { text: "тише, тише, куда так жмёшь-то?",   mood: "angry" }
+        { text: "ёмаё, поумерь свой пыл, бро",              mood: "angry" },
+        { text: "ты чего накинулся?",                        mood: "angry" },
+        { text: "тише, тише, куда так жмёшь-то?",            mood: "angry" },
+        { text: "слишком быстро кликаешь!",                  mood: "angry" },
+        { text: "чилл, бро",                                 mood: "angry" },
+        { text: "я не успеваю так быстро реагировать...",     mood: "angry" }
     ];
 
     const THEME_REACTIONS = [
@@ -67,7 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const IDLE_PHRASES_FIRST = [
         { text: "ээ... ты там?",                       mood: "neutral" },
-        { text: "так и будем смотреть друг на друга?",  mood: "neutral" }
+        { text: "так и будем смотреть друг на друга?",  mood: "neutral" },
+        { text: "пупупу...",                            mood: "neutral" },
+        { text: "тут кто-нибудь есть?",                 mood: "neutral" },
+        { text: "я что, осталась одна?",                mood: "neutral" },
+        { text: "меня что, оставили одну?",             mood: "neutral" },
+        { text: "ты отошёл?",                           mood: "neutral" },
+        { text: "эээй, вернись...",                     mood: "neutral" },
+        { text: "скучновато чёт....",                   mood: "neutral" },
+        { text: "*зевает*",                             mood: "neutral" }
     ];
     const IDLE_PHRASE_SECOND = { text: "ты уснул? значит, мне тоже пора...", mood: "neutral" };
 
@@ -77,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
           text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral"  },
         { score: 25,  icon: "🌿", title: "знакомый",   desc: "кажется, у вас всё же есть что-то общее",
           text: "ладно, ты мне нравишься",                   mood: "happy"    },
-        { score: 50,  icon: "🌳", title: "друг",       desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов двадцатый раз?",
+        { score: 50,  icon: "🌳", title: "друг",       desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов в двадцатый раз?",
           text: "я тебя запомнила, знай!",                   mood: "happy"    },
         { score: 67,  icon: "🤖", title: "67",         desc: "67676767676767",
           text: "67... сикс севен... брейнрот detected",     mood: "laughing" },
@@ -266,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
     }
 
-    /* ===== ДЫХАНИЕ ВО СНЕ (простая смена кадров 1 ↔ 2) ===== */
+    /* ===== ДЫХАНИЕ ВО СНЕ ===== */
     function startBreathing() {
         stopBreathing();
         breathFrame = 0;
@@ -295,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state !== 'idle' || idlePhraseActive) return;
         idlePhraseActive = true;
 
-        petSpeech.textContent = phrase.text;
+        petSpeech.textContent = getPhraseText(phrase);
         showSpeech(true);
         setMood(phrase.mood);
 
@@ -327,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(blinkTimer);
         stopBreathing();
 
-        petSpeech.textContent = phrase.text;
+        petSpeech.textContent = getPhraseText(phrase);
         showSpeech(true);
         setMood(phrase.mood);
         startTalkAnim(phrase.mood);
