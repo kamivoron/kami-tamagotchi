@@ -1,125 +1,117 @@
-// Ждём, пока загрузится вся страница
 document.addEventListener('DOMContentLoaded', () => {
-    // Находим все элементы на странице
     const petWidget = document.getElementById('petWidget');
     const petLayer = document.getElementById('petLayer');
     const petSpeech = document.getElementById('petSpeech');
 
-    // ==== ЗАМЕНИ ЭТИ ССЫЛКИ НА СВОИ (если они изменятся) ====
+    /* ===== КАРТИНКИ (папка images, файлы 1.png … 12.png) ===== */
     const IMAGES = {
-        sleep1: 'https://i.ibb.co/LDzbkbMQ/123-20260929142127.png', // Сон, кадр 1
-        sleep2: 'https://i.ibb.co/nqYSCMBq/123-20260929142128.png', // Сон, кадр 2 (вдох)
-        wake: 'https://i.ibb.co/kg66b7RZ/123-20260929142329.png',   // Пробуждение (злой)
-        blink: 'https://i.ibb.co/4RLBHjPS/123-20260929151145.png',  // Моргает
-        idle: 'https://i.ibb.co/ccGkNxJj/123-20260929151146.png',   // Сидит, нейтральный
-        talk1: 'https://i.ibb.co/6cX7Bsy0/123-20260929151149.png',  // Говорит, рот приоткрыт
-        talk2: 'https://i.ibb.co/1GxDN6Jj/123-20260929151151.png',  // Говорит, рот широко открыт
-        happy1: 'https://i.ibb.co/67wsBBC5/123-20260929151153.png', // Радостный, рот приоткрыт
-        happy2: 'https://i.ibb.co/wFJsz5j0/123-20260929151154.png', // Радостный, рот открыт
-        angry: 'https://i.ibb.co/JwLGf1PC/123-20260929151156.png',  // Недовольный
-        laugh: 'https://i.ibb.co/HDXssT4L/123-20260929151157.png',  // Смеётся
-        tease: 'https://i.ibb.co/35ZVQ56V/123-20260929151159.png'   // Показывает язык
+        sleep1: 'images/1.png',
+        sleep2: 'images/2.png',
+        wake:   'images/3.png',
+        blink:  'images/4.png',
+        idle:   'images/5.png',
+        talk1:  'images/6.png',
+        talk2:  'images/7.png',
+        happy1: 'images/8.png',
+        happy2: 'images/9.png',
+        angry:  'images/10.png',
+        laugh:  'images/11.png',
+        tease:  'images/12.png'
     };
 
-    // ==== ТВОИ ДИАЛОГИ ====
+    /* Предзагрузка всех картинок, чтобы не мигали при смене кадров */
+    Object.values(IMAGES).forEach(src => {
+        const img = new Image();
+        img.src = src;
+    });
+
+    /* ===== ДИАЛОГИ =====
+       mood: neutral | happy | angry | laughing | teasing */
     const DIALOGS = {
         welcome: [
-            { text: "ммм... что такое?", mood: "neutral" },
-            { text: "я так сладко спала!...", mood: "neutral" },
-            { text: "ладно, встаю...", mood: "neutral" },
-            { text: "хотя нет, ещё 5 минуток...", mood: "neutral" },
-            { text: "и что тебе нужно на этот раз?~", mood: "happy" }
+            { text: "ммм... что такое?",              mood: "neutral" },
+            { text: "я так сладко спала!...",          mood: "neutral" },
+            { text: "ладно, встаю...",                 mood: "neutral" },
+            { text: "хотя нет, ещё 5 минуток...",      mood: "neutral" },
+            { text: "и что тебе нужно на этот раз?~",  mood: "happy"   }
         ],
         body: [
-            { text: "ой! ты чего тыкаешь?", mood: "neutral" },
-            { text: "я вообще-то занята!... ну ладно.", mood: "happy" },
+            { text: "ой! ты чего тыкаешь?",             mood: "neutral" },
+            { text: "я вообще-то занята!... ну ладно.", mood: "happy"   },
             { text: "думаешь, тут есть какая-то пасхалка?", mood: "neutral" },
-            { text: "я проснусь, когда выйдет фейт триггер", mood: "neutral" },
-            { text: "ну, или обнова в соларпанке", mood: "neutral" },
-            { text: "ну, или четвертый сезон звездного дитя", mood: "neutral" },
-            { text: "ладно, я слишком хочу спать, так что не проснусь.", mood: "neutral" },
-            { text: "почему ты всё ещё меня слушаешь?", mood: "neutral" },
-            { text: "что ты ожидаешь тут дальше увидеть?", mood: "neutral" },
-            { text: "67", mood: "neutral" },
-            { text: "сикс севен брееейнроооот", mood: "neutral" },
-            { text: "надеюсь ты щас была оч довольна юль", mood: "happy" },
-            { text: "...", mood: "neutral" },
-            { text: "ладно, всё, я уже... засыпаю...", mood: "neutral" },
-            { text: "*зевает*", mood: "neutral" },
-            { text: "😴", mood: "neutral" },
-            { text: "😴", mood: "neutral" },
-            { text: "😴", mood: "neutral" }
+            { text: "ахахах, ну ты даёшь!",             mood: "laughing" },
+            { text: "я так и знала, что ты зайдёшь~",   mood: "happy"   },
+            { text: "ты пришла поиграть?",              mood: "happy"   }
         ],
         hair: [
-            { text: "э! не трогай мои волосы!", mood: "angry" },
+            { text: "э! не трогай мои волосы!",          mood: "angry" },
             { text: "ты меня гладишь?! я совсем не милая!", mood: "angry" },
-            { text: "ещё раз тронешь - укушу!", mood: "angry" }
+            { text: "ещё раз тронешь — укушу!",          mood: "angry" }
         ],
         skirt: [
-            { text: "к-куда ты жмёшь?!", mood: "angry" },
-            { text: "извращенец!", mood: "angry" },
-            { text: "что ты только что-!", mood: "teasing" }
+            { text: "к-куда ты жмёшь?!",         mood: "angry"   },
+            { text: "извращенец!",                mood: "angry"   },
+            { text: "что ты только что-!",        mood: "teasing" }
         ]
     };
 
-    // ==== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ====
-    let state = 'sleeping'; // Текущее состояние: sleeping, waking, idle, talking
-    let talkTimer = null;   // Таймер для смены реплик
-    let blinkTimer = null;  // Таймер для моргания
-    let idleTimer = null;   // Таймер для начала "сна"
-    let sleepTimer = null;  // Таймер для засыпания
-    let phraseIndex = 0;    // Индекс текущей фразы в диалоге
-    let talkAnim = null;    // Таймер для анимации рта
+    /* ===== СОСТОЯНИЕ ===== */
+    let state       = 'sleeping';
+    let talkTimer   = null;
+    let blinkTimer  = null;
+    let idleTimer   = null;
+    let sleepTimer  = null;
+    let phraseIndex = 0;
+    let talkAnim    = null;
 
-    // ==== ФУНКЦИИ ====
+    /* ===== ФУНКЦИИ ===== */
 
-    // Показать определённый кадр
+    function setState(newState) {
+        state = newState;
+        ['sleeping', 'waking', 'idle', 'talking'].forEach(s => {
+            petWidget.classList.toggle(s, s === newState);
+        });
+    }
+
     function showLayer(name) {
         if (!IMAGES[name]) return;
         petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
     }
 
-    // Показать/скрыть облачко с текстом
     function showSpeech(visible) {
-        if (visible) petWidget.classList.add('awake');
-        else petWidget.classList.remove('awake');
+        petWidget.classList.toggle('awake', visible);
     }
 
-    // Анимация "рта" (смена кадров)
+    function setMood(mood) {
+        petWidget.classList.remove('mood-angry', 'mood-happy', 'mood-laughing', 'mood-teasing');
+        if (mood && mood !== 'neutral') petWidget.classList.add('mood-' + mood);
+    }
+
     function startTalkAnim(kind) {
         stopTalkAnim();
         let i = 0;
         let frames;
+        if (kind === 'happy')          frames = ['happy1', 'happy2'];
+        else if (kind === 'angry')     frames = ['angry'];
+        else if (kind === 'laughing')  frames = ['laugh'];
+        else if (kind === 'teasing')   frames = ['tease'];
+        else                            frames = ['talk1', 'talk2'];
 
-        if (kind === 'happy') frames = ['happy1', 'happy2'];
-        else if (kind === 'angry') frames = ['angry'];
-        else frames = ['talk1', 'talk2']; // 'neutral'
-
-        if (frames.length === 1) {
-            showLayer(frames[0]);
-            return;
-        }
+        if (frames.length === 1) { showLayer(frames[0]); return; }
 
         talkAnim = setInterval(() => {
             showLayer(frames[i % frames.length]);
             i++;
-        }, 220); // Скорость смены кадров
+        }, 220);
     }
 
-    // Остановить анимацию "рта"
     function stopTalkAnim() {
-        if (talkAnim) {
-            clearInterval(talkAnim);
-            talkAnim = null;
-        }
+        if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
     }
 
-    // Проиграть диалог
     function playDialog(phrasesArr, onFinish) {
         if (state === 'talking') return;
-
-        state = 'talking';
-        // Очищаем все таймеры
+        setState('talking');
         clearTimeout(idleTimer);
         clearTimeout(sleepTimer);
         clearInterval(blinkTimer);
@@ -133,48 +125,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (onFinish) onFinish();
                 return;
             }
-
             const cur = phrasesArr[phraseIndex];
             petSpeech.textContent = cur.text;
             showSpeech(true);
+            setMood(cur.mood);
 
-            petWidget.classList.remove('pet-mood-angry', 'pet-mood-happy');
-
-            // Определяем "настроение" и показываем кадр
-            if (cur.mood === 'angry') {
-                showLayer('angry');
-                petWidget.classList.add('pet-mood-angry');
-                startTalkAnim('angry');
-            } else if (cur.mood === 'happy') {
-                startTalkAnim('happy');
-            } else if (cur.mood === 'teasing') {
-                stopTalkAnim();
-                showLayer('tease');
-            } else {
-                startTalkAnim('neutral');
-            }
+            if (cur.mood === 'angry')          startTalkAnim('angry');
+            else if (cur.mood === 'happy')     startTalkAnim('happy');
+            else if (cur.mood === 'laughing')  startTalkAnim('laughing');
+            else if (cur.mood === 'teasing')   startTalkAnim('teasing');
+            else                                startTalkAnim('neutral');
 
             phraseIndex++;
         }
 
-        step(); // Показываем первую фразу сразу
-        talkTimer = setInterval(step, 2600); // Смена фраз каждые 2.6 сек
+        step();
+        talkTimer = setInterval(step, 2600);
     }
 
-    // Завершение диалога и возврат в состояние покоя
     function finishDialog() {
         stopTalkAnim();
         showSpeech(false);
-        petWidget.classList.remove('pet-mood-angry', 'pet-mood-happy');
+        setMood(null);
         enterIdle();
     }
 
-    // Вход в состояние "покоя" (сидит и моргает)
     function enterIdle() {
-        state = 'idle';
+        setState('idle');
         showLayer('idle');
 
-        // Настраиваем моргание
         clearInterval(blinkTimer);
         blinkTimer = setInterval(() => {
             if (state !== 'idle') return;
@@ -182,63 +161,64 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (state === 'idle') showLayer('idle');
             }, 160);
-        }, 4000); // Моргает каждые 4 секунды
+        }, 4000);
 
-        // Настраиваем "засыпание" через 30 секунд
         clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
             if (state !== 'idle') return;
-            showLayer('blink'); // Зевает
+            showLayer('blink');
             setTimeout(() => {
                 if (state !== 'idle') return;
                 clearTimeout(sleepTimer);
                 sleepTimer = setTimeout(() => {
                     if (state !== 'idle') return;
                     clearInterval(blinkTimer);
-                    state = 'sleeping';
-                    petWidget.classList.remove('awake');
+                    setState('sleeping');
+                    showSpeech(false);
                     showLayer('sleep1');
-                }, 10000); // Через 10 сек засыпает
+                }, 10000);
             }, 400);
-        }, 30000); // Через 30 сек начинает зевать
+        }, 30000);
     }
 
-    // Пробуждение
     function wakeUp() {
-        state = 'waking';
+        setState('waking');
         showLayer('wake');
-        petWidget.classList.add('pet-waking');
-        petWidget.classList.add('pet-mood-angry');
 
-        // Через 0.9 сек начинаем диалог
         setTimeout(() => {
-            petWidget.classList.remove('pet-waking');
-            petWidget.classList.remove('pet-mood-angry');
             playDialog(DIALOGS.welcome, finishDialog);
         }, 900);
     }
 
-    // ==== ОБРАБОТЧИК КЛИКОВ ====
+    /* ===== КЛИК ===== */
     petWidget.addEventListener('click', (e) => {
         const rect = petWidget.getBoundingClientRect();
-        const y = (e.clientY - rect.top) / rect.height; // Координата клика по вертикали (0..1)
+        const y = (e.clientY - rect.top) / rect.height;
 
-        if (state === 'sleeping') {
-            wakeUp();
-            return;
-        }
+        if (state === 'sleeping') { wakeUp(); return; }
+        if (state === 'talking')  return;
 
-        if (state === 'talking') return; // Если говорит, не перебиваем
-
-        let zone = 'body'; // По умолчанию - тело
-        if (y < 0.35) zone = 'hair'; // Верхняя часть - волосы
-        else if (y > 0.7) zone = 'skirt'; // Нижняя часть - юбка
+        let zone = 'body';
+        if (y < 0.35)       zone = 'hair';
+        else if (y > 0.7)   zone = 'skirt';
 
         const dlg = DIALOGS[zone] || DIALOGS.body;
         playDialog(dlg, finishDialog);
     });
 
-    // ==== СТАРТ ====
-    showLayer('sleep1'); // Начинаем со сна
-    petWidget.classList.add('pet-sleeping');
+    /* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ===== */
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
+            localStorage.setItem('petTheme', theme);
+        });
+    });
+
+    /* Восстанавливаем сохранённую тему */
+    const saved = localStorage.getItem('petTheme');
+    if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
+
+    /* ===== СТАРТ ===== */
+    showLayer('sleep1');
 });
