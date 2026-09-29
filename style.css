@@ -226,12 +226,40 @@ body {
     transform-origin: center bottom;
 }
 
+/* ============ ДЫХАНИЕ ВО СНЕ ============
+   Фазы: выдох (статично) → резкий переход на вдох →
+   растягивание вверх → задержка → сжатие обратно → выдох
+*/
 .pet-widget.sleeping .pet-layer {
-    animation: breathe-scale 3.6s ease-in-out infinite;
+    animation: breathe-cycle 4.5s ease-in-out infinite;
 }
-@keyframes breathe-scale {
-    0%, 100% { transform: scaleY(1.02); }
-    50%      { transform: scaleY(1); }
+
+@keyframes breathe-cycle {
+    /* Фаза 1: кадр 1 — выдох, статично */
+    0%, 30% {
+        background-image: url('images/1.png');
+        transform: scaleY(1);
+    }
+    /* Резкий переход на кадр 2 — начало вдоха */
+    30.01%, 45% {
+        background-image: url('images/2.png');
+        transform: scaleY(1);
+    }
+    /* Растянулись наверх и держим */
+    45%, 65% {
+        background-image: url('images/2.png');
+        transform: scaleY(1.03);
+    }
+    /* Плавно сжимаемся обратно, кадр пока ещё 2 */
+    65%, 74.99% {
+        background-image: url('images/2.png');
+        transform: scaleY(1);
+    }
+    /* Возвращаемся к кадру 1 — выдох */
+    75%, 100% {
+        background-image: url('images/1.png');
+        transform: scaleY(1);
+    }
 }
 
 /* ============ ИКОНКИ ============ */
