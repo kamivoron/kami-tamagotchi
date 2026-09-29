@@ -140,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShown') || '[]'));
 
-    /* ===== НЕПРОЧИТАННЫЕ АЧИВКИ ===== */
     let unreadAchievements = 0;
 
     /* ===== СЧЁТЧИК ДРУЖБЫ ===== */
@@ -206,33 +205,37 @@ document.addEventListener('DOMContentLoaded', () => {
         achToastEl.innerHTML = `
             <div class="ach-toast-icon">🏆</div>
             <div class="ach-toast-text">
-                <div class="ach-toast-title">получена ачивка!</div>
-                <div class="ach-toast-sub">открой список, чтобы узнать какая</div>
+                <div class="ach-toast-title">Получена ачивка!</div>
+                <div class="ach-toast-sub">Нажми сюда, чтобы открыть список</div>
             </div>
         `;
+        achToastEl.addEventListener('click', () => {
+            achPanel.classList.add('open');
+            unreadAchievements = 0;
+            updateAchBadge();
+            achToastEl.classList.remove('show');
+            clearTimeout(achToastHideTimer);
+        });
         document.body.appendChild(achToastEl);
         return achToastEl;
     }
 
     function showAchToast() {
         const toast = ensureAchToast();
-        /* Force reflow, чтобы анимация запускалась каждый раз */
         void toast.offsetWidth;
         toast.classList.add('show');
         clearTimeout(achToastHideTimer);
         achToastHideTimer = setTimeout(() => {
             toast.classList.remove('show');
-        }, 4500);
+        }, 5500);
     }
 
-    /* Звук ачивки (Steam-style восходящий чимс) */
     function playAchievementSound() {
         try {
             const Ctx = window.AudioContext || window.webkitAudioContext;
             if (!Ctx) return;
             const ctx = new Ctx();
             const now = ctx.currentTime;
-            /* E6 → A6 → C#7 — восходящий мажорный чимс */
             const notes = [
                 { freq: 1318.51, time: 0.00, dur: 0.40, vol: 0.10 },
                 { freq: 1760.00, time: 0.13, dur: 0.45, vol: 0.13 },
@@ -252,10 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 osc.start(t);
                 osc.stop(t + n.dur + 0.1);
             });
-        } catch (e) { /* звук опционален */ }
+        } catch (e) { }
     }
 
-    /* Мини-фейерверки вокруг персонажа */
     function spawnFireworks() {
         const rect = petWidget.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
@@ -288,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* Бейдж непрочитанных */
     function updateAchBadge() {
         let badge = achBtn.querySelector('.ach-badge');
         if (unreadAchievements > 0) {
@@ -298,7 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 achBtn.appendChild(badge);
             }
             badge.textContent = unreadAchievements;
-            /* Мини-анимация при каждом обновлении */
             badge.style.animation = 'none';
             void badge.offsetWidth;
             badge.style.animation = '';
@@ -307,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* ===== СОБЫТИЕ: АЧИВКА ПОЛУЧЕНА ===== */
     function onAchievementUnlocked() {
         unreadAchievements++;
         updateAchBadge();
@@ -315,8 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         playAchievementSound();
         spawnFireworks();
 
-        /* Фраза-поздравление, перебивающая любой диалог.
-           Небольшая задержка, чтобы тост и звук успели сработать. */
         clearTimeout(achPhraseTimer);
         achPhraseTimer = setTimeout(() => {
             showAchievementPhrase();
@@ -324,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showAchievementPhrase() {
-        /* Жёстко прерываем всё текущее */
         cancelIdlePhrase();
         clearTimeout(wakeTimer);
         clearTimeout(idleTimer);
@@ -481,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
     }
 
-    /* ===== ДЫХАНИЕ ВО СНЕ ===== */
     function startBreathing() {
         stopBreathing();
         breathFrame = 0;
