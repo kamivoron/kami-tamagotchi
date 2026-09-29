@@ -81,7 +81,6 @@ body {
 .friendship-counter.lvl-3 { color: #ff2a6a; }
 .friendship-counter.lvl-4 { color: #ffd54a; }
 
-/* Мягкое свечение вместо прыжка */
 .friendship-counter.pulse {
     text-shadow: 0 0 18px var(--accent), 0 0 6px var(--accent);
 }
@@ -227,8 +226,8 @@ body {
 }
 
 /* ============ ДЫХАНИЕ ВО СНЕ ============
-   Фазы: выдох (статично) → резкий переход на вдох →
-   растягивание вверх → задержка → сжатие обратно → выдох
+   Фазы: выдох (кадр 1, статично) → резкий переход на кадр 2 →
+   растягивание наверх → задержка → сжатие обратно → снова кадр 1
 */
 .pet-widget.sleeping .pet-layer {
     animation: breathe-cycle 4.5s ease-in-out infinite;
@@ -360,10 +359,9 @@ body {
 body.theme-light .pet-speech { color: #222; }
 
 /* ==========================================================
-   СОВРЕМЕННЫЕ ЭФФЕКТЫ КЛИКА (кликер-стиль)
+   СОВРЕМЕННЫЕ ЭФФЕКТЫ КЛИКА
    ========================================================== */
 
-/* Всплывающие цифры "+3" / "-2" */
 .click-fx {
     position: fixed;
     pointer-events: none;
@@ -395,7 +393,6 @@ body.theme-light .pet-speech { color: #222; }
     100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
 }
 
-/* Расширяющееся кольцо */
 .click-ring {
     position: fixed;
     pointer-events: none;
@@ -415,7 +412,6 @@ body.theme-light .pet-speech { color: #222; }
     100% { opacity: 0; width: 90px; height: 90px; border-width: 1px; }
 }
 
-/* Мягкие частицы-искры (разлетаются) */
 .click-dot {
     position: fixed;
     pointer-events: none;
