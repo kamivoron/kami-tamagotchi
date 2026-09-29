@@ -196,6 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let blinkTimer      = null;
     let idleTimer       = null;
     let sleepTimer      = null;
+    let breathTimer     = null;
+    let breathFrame     = 0;
     let talkAnim        = null;
 
     let idlePhrase1     = null;
@@ -232,8 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLayer(name) {
         if (!IMAGES[name]) return;
-        /* При сне НЕ трогаем картинку — её ведёт CSS-анимация */
-        if (state === 'sleeping') return;
         petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
     }
 
@@ -264,6 +264,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function stopTalkAnim() {
         if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
+    }
+
+    /* ===== ДЫХАНИЕ ВО СНЕ (простая смена кадров 1 ↔ 2) ===== */
+    function startBreathing() {
+        stopBreathing();
+        breathFrame = 0;
+        showLayer('sleep1');
+        breathTimer = setInterval(() => {
+            if (state !== 'sleeping') return;
+            breathFrame = 1 - breathFrame;
+            showLayer(breathFrame === 0 ? 'sleep1' : 'sleep2');
+        }, 1800);
+    }
+    function stopBreathing() {
+        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
     }
 
     function cancelIdlePhrase() {
@@ -310,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(idleTimer);
         clearTimeout(sleepTimer);
         clearInterval(blinkTimer);
+        stopBreathing();
 
         petSpeech.textContent = phrase.text;
         showSpeech(true);
@@ -381,18 +397,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function goToSleep() {
-        /* Сбрасываем inline-стиль, чтобы CSS-анимация сна работала с нуля */
-        petLayer.style.backgroundImage = '';
         setState('sleeping');
         showSpeech(false);
         setMood(null);
         themeChanges = 0;
+        startBreathing();
     }
 
     function wakeUp() {
-        /* Ставим кадр до переключения класса, чтобы не было мерцания */
-        petLayer.style.backgroundImage = `url(${IMAGES.wake})`;
+        stopBreathing();
         setState('waking');
+        showLayer('wake');
 
         setTimeout(() => {
             const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
@@ -459,4 +474,5 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFriendship(false);
     renderAchPanel();
     setState('sleeping');
+    startBreathing();
 });
