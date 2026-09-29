@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const petWidget = document.getElementById('petWidget');
     const petLayer = document.getElementById('petLayer');
     const petSpeech = document.getElementById('petSpeech');
+    const friendCounter = document.getElementById('friendCounter');
+    const achBtn = document.getElementById('achBtn');
+    const achPanel = document.getElementById('achPanel');
 
     /* ===== КАРТИНКИ ===== */
     const IMAGES = {
@@ -18,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         laugh:  'images/11.png',
         tease:  'images/12.png'
     };
-
     Object.values(IMAGES).forEach(src => { const i = new Image(); i.src = src; });
 
     /* ===== ДИАЛОГИ ===== */
@@ -49,6 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
+    /* Фразы при спаме кликов */
+    const SPAM_PHRASES = [
+        { text: "ёмаё, поумерь свой пыл, бро",     mood: "angry" },
+        { text: "ты чего накинулся?",               mood: "angry" },
+        { text: "тише, тише, куда так жмёшь-то?",   mood: "angry" }
+    ];
+
     /* Реакции на смену темы */
     const THEME_REACTIONS = [
         { text: "что-то изменилось вокруг...",      mood: "neutral" },
@@ -58,41 +67,38 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     let themeChanges = 0;
 
-    /* Idle-фразы: первый рандом (без "пора"), второй — всегда фиксированный */
+    /* Idle-фразы */
     const IDLE_PHRASES_FIRST = [
         { text: "ээ... ты там?",                       mood: "neutral" },
         { text: "так и будем смотреть друг на друга?",  mood: "neutral" }
     ];
     const IDLE_PHRASE_SECOND = { text: "ты уснул? значит, мне тоже пора...", mood: "neutral" };
 
-    /* Достижения за накопленные обнимашки */
+    /* ===== ДОСТИЖЕНИЯ ===== */
     const ACHIEVEMENTS = [
-        { score: 10,  text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral" },
-        { score: 25,  text: "ладно, ты мне нравишься",                   mood: "happy"   },
-        { score: 50,  text: "я тебя запомнила, знай!",                   mood: "happy"   },
-        { score: 100, text: "ты стала моим лучшим другом~",              mood: "laughing" }
+        { score: 10,  icon: "🌱", title: "Первые шаги",     desc: "Набрать 10 очков дружбы",  text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral"  },
+        { score: 25,  icon: "🌿", title: "Уже не чужой",    desc: "Набрать 25 очков дружбы",  text: "ладно, ты мне нравишься",                   mood: "happy"    },
+        { score: 50,  icon: "🌳", title: "Запомнила тебя",  desc: "Набрать 50 очков дружбы",  text: "я тебя запомнила, знай!",                   mood: "happy"    },
+        { score: 67,  icon: "🤖", title: "Сикс севен",      desc: "Набрать 67 очков дружбы",  text: "67... сикс севен... брейнрот detected",     mood: "laughing" },
+        { score: 100, icon: "💖", title: "Лучший друг",     desc: "Набрать 100 очков дружбы", text: "ты стала моим лучшим другом~",              mood: "laughing" }
     ];
-    const shownAchievements = new Set();
+    const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShown') || '[]'));
 
     /* ===== СЧЁТЧИК ДРУЖБЫ ===== */
     let friendship = parseInt(localStorage.getItem('petFriendship') || '0', 10);
     if (isNaN(friendship)) friendship = 0;
 
-    const friendEl = document.createElement('div');
-    friendEl.className = 'friendship-counter';
-    document.body.appendChild(friendEl);
-
-    function renderFriendship(bump) {
-        let icon = '❤';
-        friendEl.className = 'friendship-counter';
-        if (friendship >= 100)      friendEl.classList.add('lvl-4');
-        else if (friendship >= 50)  friendEl.classList.add('lvl-3');
-        else if (friendship >= 25)  friendEl.classList.add('lvl-2');
-        else if (friendship >= 10)  friendEl.classList.add('lvl-1');
-        friendEl.textContent = `${icon} ${friendship}`;
-        if (bump) {
-            friendEl.classList.add('bump');
-            setTimeout(() => friendEl.classList.remove('bump'), 180);
+    function renderFriendship(pulse) {
+        let cls = 'friendship-counter';
+        if (friendship >= 100)      cls += ' lvl-4';
+        else if (friendship >= 50)  cls += ' lvl-3';
+        else if (friendship >= 25)  cls += ' lvl-2';
+        else if (friendship >= 10)  cls += ' lvl-1';
+        friendCounter.className = cls;
+        friendCounter.textContent = '❤ ' + friendship;
+        if (pulse) {
+            friendCounter.classList.add('pulse');
+            setTimeout(() => friendCounter.classList.remove('pulse'), 400);
         }
     }
 
@@ -103,9 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('petFriendship', friendship);
         renderFriendship(true);
-        spawnHeart(x, y, delta < 0);
+
+        /* Эффекты клика (только если реально поменялось) */
+        if (typeof x === 'number' && typeof y === 'number') {
+            spawnClickFx(x, y, delta);
+        }
 
         if (delta > 0) checkAchievements(old, friendship);
+        renderAchPanel();
     }
 
     function checkAchievements(oldScore, newScore) {
@@ -113,6 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (shownAchievements.has(a.score)) return;
             if (oldScore < a.score && newScore >= a.score) {
                 shownAchievements.add(a.score);
+                localStorage.setItem('petAchShown', JSON.stringify([...shownAchievements]));
+                renderAchPanel();
                 setTimeout(() => {
                     if (state === 'talking' || state === 'waking') return;
                     forcePlayPhrase({ text: a.text, mood: a.mood }, finishDialog);
@@ -121,16 +134,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* Частица-сердечко в точке клика */
-    function spawnHeart(x, y, negative) {
-        const h = document.createElement('div');
-        h.className = 'heart-particle' + (negative ? ' negative' : '');
-        h.textContent = negative ? '✖' : '♥';
-        h.style.left = x + 'px';
-        h.style.top = y + 'px';
-        document.body.appendChild(h);
-        setTimeout(() => h.remove(), 1300);
+    /* ===== ВИЗУАЛЬНЫЕ ЭФФЕКТЫ КЛИКА ===== */
+    function spawnClickFx(x, y, delta) {
+        /* Кольцо */
+        const ring = document.createElement('div');
+        ring.className = 'click-ring' + (delta < 0 ? ' negative' : '');
+        ring.style.left = x + 'px';
+        ring.style.top = y + 'px';
+        document.body.appendChild(ring);
+        setTimeout(() => ring.remove(), 800);
+
+        /* Цифра */
+        const fx = document.createElement('div');
+        fx.className = 'click-fx ' + (delta < 0 ? 'negative' : 'positive');
+        fx.textContent = (delta > 0 ? '+' : '') + delta;
+        fx.style.left = x + 'px';
+        fx.style.top = y + 'px';
+        document.body.appendChild(fx);
+        setTimeout(() => fx.remove(), 1150);
+
+        /* Искры */
+        const dotCount = delta < 0 ? 3 : 5;
+        for (let i = 0; i < dotCount; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'click-dot' + (delta < 0 ? ' negative' : '');
+            const angle = (Math.PI * 2 / dotCount) * i + Math.random() * 0.5;
+            const dist = 30 + Math.random() * 30;
+            dot.style.left = x + 'px';
+            dot.style.top = y + 'px';
+            dot.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+            dot.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+            document.body.appendChild(dot);
+            setTimeout(() => dot.remove(), 900);
+        }
     }
+
+    /* ===== ПАНЕЛЬ ДОСТИЖЕНИЙ ===== */
+    function renderAchPanel() {
+        const unlockedCount = ACHIEVEMENTS.filter(a => friendship >= a.score).length;
+        let html = `<div class="ach-header">🏆 Достижения · ${unlockedCount}/${ACHIEVEMENTS.length}</div>`;
+        ACHIEVEMENTS.forEach(a => {
+            const unlocked = friendship >= a.score;
+            html += `
+                <div class="ach-item ${unlocked ? 'unlocked' : 'locked'}">
+                    <div class="ach-icon">${unlocked ? a.icon : '🔒'}</div>
+                    <div class="ach-info">
+                        <div class="ach-title">${unlocked ? a.title : '???'}</div>
+                        <div class="ach-desc">${unlocked ? a.desc : 'Продолжай общаться с Ками'}</div>
+                    </div>
+                    <div class="ach-progress">${Math.min(friendship, a.score)}/${a.score}</div>
+                </div>`;
+        });
+        achPanel.innerHTML = html;
+    }
+
+    achBtn.addEventListener('click', () => {
+        achPanel.classList.toggle('open');
+    });
 
     /* ===== СОСТОЯНИЕ ===== */
     let state           = 'sleeping';
@@ -147,6 +207,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let idlePhraseHide  = null;
     let idlePhraseAnim  = null;
     let idlePhraseActive = false;
+
+    /* Антиспам */
+    let clickTimes      = [];
+    let spamCooldown    = 0;
+    const SPAM_WINDOW   = 2000;
+    const SPAM_THRESHOLD = 5;
+
+    function isSpamming() {
+        const now = Date.now();
+        if (now < spamCooldown) return false;
+        clickTimes = clickTimes.filter(t => now - t < SPAM_WINDOW);
+        clickTimes.push(now);
+        if (clickTimes.length >= SPAM_THRESHOLD) {
+            clickTimes = [];
+            spamCooldown = now + 2500;
+            return true;
+        }
+        return false;
+    }
 
     /* ===== ФУНКЦИИ ===== */
     function setState(newState) {
@@ -292,7 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 160);
         }, 4000);
 
-        /* Первая idle-фраза — рандом из двух без "пора" */
         clearTimeout(idlePhrase1);
         clearTimeout(idlePhrase2);
         idlePhrase1 = setTimeout(() => {
@@ -300,8 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
             playIdlePhrase(p);
         }, 10000);
-
-        /* Вторая idle-фраза — всегда фиксированная */
         idlePhrase2 = setTimeout(() => {
             if (state !== 'idle') return;
             playIdlePhrase(IDLE_PHRASE_SECOND);
@@ -343,15 +419,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ===== КЛИК ===== */
     petWidget.addEventListener('click', (e) => {
+        /* Антиспам — прерывает всё */
+        if (isSpamming()) {
+            const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
+            forcePlayPhrase(p, finishDialog);
+            return;
+        }
+
         cancelIdlePhrase();
 
         const rect = petWidget.getBoundingClientRect();
         const y = (e.clientY - rect.top) / rect.height;
-        const x = e.clientX;
-        const cy = e.clientY;
 
         if (state === 'sleeping') {
-            changeFriendship(1, x, cy);
+            changeFriendship(1, e.clientX, e.clientY);
             wakeUp();
             return;
         }
@@ -361,11 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (y < 0.35)       zone = 'hair';
         else if (y > 0.7)   zone = 'skirt';
 
-        /* Очки дружбы */
         let delta = 1;
         if (zone === 'hair')  delta = 3;
         if (zone === 'skirt') delta = -2;
-        changeFriendship(delta, x, cy);
+        changeFriendship(delta, e.clientX, e.clientY);
 
         playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
     });
@@ -395,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ===== СТАРТ ===== */
     renderFriendship(false);
+    renderAchPanel();
     setState('sleeping');
     startBreathing();
 });
