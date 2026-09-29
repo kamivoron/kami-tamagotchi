@@ -51,14 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    /* Фразы при спаме кликов */
     const SPAM_PHRASES = [
         { text: "ёмаё, поумерь свой пыл, бро",     mood: "angry" },
         { text: "ты чего накинулся?",               mood: "angry" },
         { text: "тише, тише, куда так жмёшь-то?",   mood: "angry" }
     ];
 
-    /* Реакции на смену темы */
     const THEME_REACTIONS = [
         { text: "что-то изменилось вокруг...",      mood: "neutral" },
         { text: "да, этот цвет лучше прошлого",      mood: "happy"   },
@@ -67,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     let themeChanges = 0;
 
-    /* Idle-фразы */
     const IDLE_PHRASES_FIRST = [
         { text: "ээ... ты там?",                       mood: "neutral" },
         { text: "так и будем смотреть друг на друга?",  mood: "neutral" }
@@ -76,11 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ===== ДОСТИЖЕНИЯ ===== */
     const ACHIEVEMENTS = [
-        { score: 10,  icon: "🌱", title: "Первые шаги",     desc: "Набрать 10 очков дружбы",  text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral"  },
-        { score: 25,  icon: "🌿", title: "Уже не чужой",    desc: "Набрать 25 очков дружбы",  text: "ладно, ты мне нравишься",                   mood: "happy"    },
-        { score: 50,  icon: "🌳", title: "Запомнила тебя",  desc: "Набрать 50 очков дружбы",  text: "я тебя запомнила, знай!",                   mood: "happy"    },
-        { score: 67,  icon: "🤖", title: "Сикс севен",      desc: "Набрать 67 очков дружбы",  text: "67... сикс севен... брейнрот detected",     mood: "laughing" },
-        { score: 100, icon: "💖", title: "Лучший друг",     desc: "Набрать 100 очков дружбы", text: "ты стала моим лучшим другом~",              mood: "laughing" }
+        { score: 10,  icon: "🌱", title: "незнакомец", desc: "первая встреча, мимолетный взгляд",
+          text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral"  },
+        { score: 25,  icon: "🌿", title: "знакомый",   desc: "кажется, у вас всё же есть что-то общее",
+          text: "ладно, ты мне нравишься",                   mood: "happy"    },
+        { score: 50,  icon: "🌳", title: "друг",       desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов двадцатый раз?",
+          text: "я тебя запомнила, знай!",                   mood: "happy"    },
+        { score: 67,  icon: "🤖", title: "67",         desc: "67676767676767",
+          text: "67... сикс севен... брейнрот detected",     mood: "laughing" },
+        { score: 100, icon: "👤", title: "теневой",    desc: "когда вы успели стать так близки?",
+          text: "ты стала моим лучшим другом~",              mood: "laughing" }
     ];
     const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShown') || '[]'));
 
@@ -110,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('petFriendship', friendship);
         renderFriendship(true);
 
-        /* Эффекты клика (только если реально поменялось) */
         if (typeof x === 'number' && typeof y === 'number') {
             spawnClickFx(x, y, delta);
         }
@@ -136,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ===== ВИЗУАЛЬНЫЕ ЭФФЕКТЫ КЛИКА ===== */
     function spawnClickFx(x, y, delta) {
-        /* Кольцо */
         const ring = document.createElement('div');
         ring.className = 'click-ring' + (delta < 0 ? ' negative' : '');
         ring.style.left = x + 'px';
@@ -144,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(ring);
         setTimeout(() => ring.remove(), 800);
 
-        /* Цифра */
         const fx = document.createElement('div');
         fx.className = 'click-fx ' + (delta < 0 ? 'negative' : 'positive');
         fx.textContent = (delta > 0 ? '+' : '') + delta;
@@ -153,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(fx);
         setTimeout(() => fx.remove(), 1150);
 
-        /* Искры */
         const dotCount = delta < 0 ? 3 : 5;
         for (let i = 0; i < dotCount; i++) {
             const dot = document.createElement('div');
@@ -172,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ===== ПАНЕЛЬ ДОСТИЖЕНИЙ ===== */
     function renderAchPanel() {
         const unlockedCount = ACHIEVEMENTS.filter(a => friendship >= a.score).length;
-        let html = `<div class="ach-header">🏆 Достижения · ${unlockedCount}/${ACHIEVEMENTS.length}</div>`;
+        let html = `<div class="ach-header">🏆 твои ачивки · ${unlockedCount}/${ACHIEVEMENTS.length}</div>`;
         ACHIEVEMENTS.forEach(a => {
             const unlocked = friendship >= a.score;
             html += `
@@ -180,9 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="ach-icon">${unlocked ? a.icon : '🔒'}</div>
                     <div class="ach-info">
                         <div class="ach-title">${unlocked ? a.title : '???'}</div>
-                        <div class="ach-desc">${unlocked ? a.desc : 'Продолжай общаться с Ками'}</div>
+                        <div class="ach-desc">${unlocked ? a.desc : 'пока не открыто'}</div>
                     </div>
-                    <div class="ach-progress">${Math.min(friendship, a.score)}/${a.score}</div>
+                    <div class="ach-progress">${unlocked ? '✓' : '???'}</div>
                 </div>`;
         });
         achPanel.innerHTML = html;
@@ -198,8 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let blinkTimer      = null;
     let idleTimer       = null;
     let sleepTimer      = null;
-    let breathTimer     = null;
-    let breathFrame     = 0;
     let talkAnim        = null;
 
     let idlePhrase1     = null;
@@ -208,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let idlePhraseAnim  = null;
     let idlePhraseActive = false;
 
-    /* Антиспам */
     let clickTimes      = [];
     let spamCooldown    = 0;
     const SPAM_WINDOW   = 2000;
@@ -237,6 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLayer(name) {
         if (!IMAGES[name]) return;
+        /* При сне НЕ трогаем картинку — её ведёт CSS-анимация */
+        if (state === 'sleeping') return;
         petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
     }
 
@@ -267,20 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function stopTalkAnim() {
         if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
-    }
-
-    function startBreathing() {
-        stopBreathing();
-        breathFrame = 0;
-        showLayer('sleep2');
-        breathTimer = setInterval(() => {
-            if (state !== 'sleeping') return;
-            breathFrame = 1 - breathFrame;
-            showLayer(breathFrame === 0 ? 'sleep2' : 'sleep1');
-        }, 1800);
-    }
-    function stopBreathing() {
-        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
     }
 
     function cancelIdlePhrase() {
@@ -327,7 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(idleTimer);
         clearTimeout(sleepTimer);
         clearInterval(blinkTimer);
-        stopBreathing();
 
         petSpeech.textContent = phrase.text;
         showSpeech(true);
@@ -399,17 +381,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function goToSleep() {
+        /* Сбрасываем inline-стиль, чтобы CSS-анимация сна работала с нуля */
+        petLayer.style.backgroundImage = '';
         setState('sleeping');
         showSpeech(false);
         setMood(null);
         themeChanges = 0;
-        startBreathing();
     }
 
     function wakeUp() {
+        /* Ставим кадр до переключения класса, чтобы не было мерцания */
+        petLayer.style.backgroundImage = `url(${IMAGES.wake})`;
         setState('waking');
-        showLayer('wake');
-        stopBreathing();
 
         setTimeout(() => {
             const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
@@ -419,7 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ===== КЛИК ===== */
     petWidget.addEventListener('click', (e) => {
-        /* Антиспам — прерывает всё */
         if (isSpamming()) {
             const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
             forcePlayPhrase(p, finishDialog);
@@ -477,5 +459,4 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFriendship(false);
     renderAchPanel();
     setState('sleeping');
-    startBreathing();
 });
