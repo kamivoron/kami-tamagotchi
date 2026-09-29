@@ -37,6 +37,57 @@ body {
     right: 20px;
     display: flex;
     gap: 8px;
+    /* ============ СЧЁТЧИК ДРУЖБЫ ============ */
+.friendship-counter {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    z-index: 100;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.4s, transform 0.15s ease;
+    text-shadow: 0 0 8px rgba(0,0,0,0.35);
+}
+.friendship-counter.bump {
+    transform: scale(1.25);
+}
+.friendship-counter.lvl-1 { color: #ff9a9a; }
+.friendship-counter.lvl-2 { color: #ff5a8a; }
+.friendship-counter.lvl-3 { color: #ff2a6a; animation: friend-pulse 2s ease-in-out infinite; }
+.friendship-counter.lvl-4 { color: #ffd54a; animation: friend-pulse 1.4s ease-in-out infinite; }
+
+@keyframes friend-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.12); }
+}
+
+/* ============ ЧАСТИЦЫ-СЕРДЕЧКИ ============ */
+.heart-particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 22px;
+    color: #ff5a8a;
+    font-weight: 900;
+    z-index: 999;
+    text-shadow: 0 0 6px rgba(255,90,138,0.7);
+    transform: translate(-50%, -50%);
+    animation: heart-float 1.2s ease-out forwards;
+}
+.heart-particle.negative {
+    color: #ff3b3b;
+    text-shadow: 0 0 6px rgba(255,59,59,0.7);
+}
+@keyframes heart-float {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.5) rotate(-10deg); }
+    30%  { opacity: 1; transform: translate(-50%, -80%) scale(1.2) rotate(10deg); }
+    100% { opacity: 0; transform: translate(-50%, -180%) scale(0.8) rotate(-15deg); }
+}
     z-index: 100;
 }
 .theme-btn {
