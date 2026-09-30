@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             file: 'music/1.mp3',
             title: 'на грани болевого порога',
-            onFirstPlay: {
+            onPlay: {
                 text: 'опа, что-то знакомое играет...',
                 mood: 'happy'
             }
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'why,why?',
             events: [
                 { time: 6,  action: 'showFlashback' },
-                { time: 13, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark', waitEnd: true }
+                { time: 14, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark', waitEnd: true }
             ],
             singAfterVideo: [
                 'я сошла с ума, я сошла с ума...',
@@ -90,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* Для трека 2: отслеживание конца видео */
     let videoWaitEndActive = false;
-    let youtubeEndedHandler = null;
     let youtubeFallbackTimer = null;
 
     function formatTime(sec) {
@@ -156,21 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const track = TRACKS[currentTrack];
 
-        if (track && track.onFirstPlay) {
-            const key = 'petTrackFirstPlay_' + track.file;
-            if (!localStorage.getItem(key)) {
-                localStorage.setItem(key, '1');
-                setTimeout(() => {
-                    if (typeof forcePlayPhrase === 'function') {
-                        forcePlayPhrase({
-                            text: track.onFirstPlay.text,
-                            mood: track.onFirstPlay.mood || 'neutral'
-                        }, finishDialog);
-                    }
-                }, 900);
-            }
-        }
-
+        /* Фраза при каждом воспроизведении трека (один раз за сеанс трека) */
         if (track && track.onPlay && onPlayTriggeredForTrack !== currentTrack) {
             onPlayTriggeredForTrack = currentTrack;
             setTimeout(() => {
@@ -262,7 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
         if (startAt > 0) params.push('start=' + startAt);
 
-        /* Если нужно дождаться окончания — не зацикливаем */
         if (opts && opts.waitEnd) {
             videoWaitEndActive = true;
         } else {
@@ -274,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         youtubeIframe.src = 'https://www.youtube.com/embed/' + videoId + '?' + params.join('&');
         youtubeIframe.classList.add('active');
 
-        /* Активируем прослушивание API */
         setTimeout(() => {
             try {
                 youtubeIframe.contentWindow.postMessage(
@@ -284,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (_) {}
         }, 2000);
 
-        /* Fallback: если видео не закончилось за 3 минуты — принудительно скрываем */
         if (opts && opts.waitEnd) {
             clearTimeout(youtubeFallbackTimer);
             youtubeFallbackTimer = setTimeout(() => {
@@ -299,7 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 120);
     }
 
-    /* Обработка сообщений от YouTube iframe */
     window.addEventListener('message', (e) => {
         if (typeof e.data !== 'string') return;
         let data;
@@ -317,7 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(youtubeFallbackTimer);
         hideVideoOverlay();
 
-        /* Если это трек 2 — запускаем подпевание */
         if (currentTrack === 1) {
             setTimeout(() => startTrack2Singing(), 800);
         }
@@ -438,8 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
         petSpeech.textContent = text;
         showSpeech(true);
         setMood('happy');
-
-        /* Показываемся кадром с пением */
         showLayer('happy1');
 
         clearTimeout(talkTimer);
@@ -494,7 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isPlaying = true;
         updatePlayBtn();
         startMusicNotes();
-        /* Пока музыка играет — не засыпаем */
         if (state === 'idle') {
             clearTimeout(idleTimer);
             clearTimeout(idlePhrase1);
@@ -507,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePlayBtn();
         stopMusicNotes();
         stopTrack2Singing();
-        /* Музыка остановлена — возобновляем обычную логику */
         if (state === 'idle') enterIdle();
     });
 
@@ -1659,7 +1635,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playIdlePhrase(phrase) {
-        /* Пока музыка играет — не показываем idle-фразы */
         if (isPlaying) return;
         if (state !== 'idle' || idlePhraseActive) return;
         idlePhraseActive = true;
@@ -1729,7 +1704,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(idlePhrase2);
         clearTimeout(idleTimer);
 
-        /* Если музыка играет — таймеры не запускаем */
         if (isPlaying) return;
 
         idlePhrase1 = setTimeout(() => {
@@ -1781,7 +1755,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function goToSleep() {
-        /* Если музыка играет — не засыпаем */
         if (isPlaying) return;
         setState('sleeping');
         showSpeech(false);
