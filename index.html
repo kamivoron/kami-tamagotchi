@@ -63,6 +63,7 @@
         <div class="youtube-overlay" id="youtubeOverlay">
             <iframe id="youtubeIframe" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
             <video id="localVideo" playsinline muted preload="metadata"></video>
+            <button class="fullscreen-btn" id="fullscreenBtn" title="на весь экран">⛶</button>
         </div>
         <div class="pet-layer" id="petLayer"></div>
         <div class="pet-icon pet-question" id="petQuestion">?</div>
@@ -71,6 +72,9 @@
     </div>
 
     <div class="chat-panel" id="chatPanel">
+        <div class="chat-header" id="chatHeader">
+            <span class="chat-drag-dots">⋮⋮</span>
+        </div>
         <div class="chat-status" id="chatStatus"></div>
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-input-row">
