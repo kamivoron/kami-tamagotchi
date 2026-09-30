@@ -6,12 +6,17 @@
     --speech-bg: rgba(20, 15, 15, 0.92);
     --speech-border: #e26a6a;
 }
-body.theme-gray   { --bg: #4a4a4a; }
-body.theme-night  { --bg: #1a1a2e; --accent: #8a7fd4; --speech-border: #8a7fd4; }
-body.theme-rose   { --bg: #3d2222; --accent: #ff9a9a; --speech-border: #ff9a9a; }
-body.theme-forest { --bg: #1e2f1e; --accent: #8bc34a; --speech-border: #8bc34a; }
-body.theme-ocean  { --bg: #1a2a3a; --accent: #5eb3e4; --speech-border: #5eb3e4; }
-body.theme-light  { --bg: #e8e8e8; --text: #222; --speech-bg: rgba(255,255,255,0.95); --speech-border: #b55; }
+body.theme-gray     { --bg: #4a4a4a; }
+body.theme-night    { --bg: #1a1a2e; --accent: #8a7fd4; --speech-border: #8a7fd4; }
+body.theme-rose     { --bg: #3d2222; --accent: #ff9a9a; --speech-border: #ff9a9a; }
+body.theme-forest   { --bg: #1e2f1e; --accent: #8bc34a; --speech-border: #8bc34a; }
+body.theme-ocean    { --bg: #1a2a3a; --accent: #5eb3e4; --speech-border: #5eb3e4; }
+body.theme-light    { --bg: #e8e8e8; --text: #222; --speech-bg: rgba(255,255,255,0.95); --speech-border: #b55; }
+
+/* Фиолетовые */
+body.theme-violet   { --bg: #1a0f2e; --accent: #b88fe8; --speech-bg: rgba(20, 12, 40, 0.95); --speech-border: #b88fe8; }
+body.theme-lavender { --bg: #2e1f42; --accent: #d4a5f5; --speech-bg: rgba(30, 20, 50, 0.94); --speech-border: #d4a5f5; }
+body.theme-lilac    { --bg: #4a3560; --accent: #e8c8ff; --speech-bg: rgba(60, 45, 85, 0.92); --speech-border: #e8c8ff; }
 
 /* ============ БАЗА ============ */
 * { box-sizing: border-box; }
@@ -63,9 +68,7 @@ body {
     border-color: var(--accent);
     box-shadow: 0 6px 14px rgba(0,0,0,0.25);
 }
-.ach-btn:active {
-    transform: translateY(0);
-}
+.ach-btn:active { transform: translateY(0); }
 
 /* ============ СЧЁТЧИК ДРУЖБЫ ============ */
 .friendship-counter {
@@ -84,9 +87,260 @@ body {
 .friendship-counter.lvl-2 { color: #ff5a8a; }
 .friendship-counter.lvl-3 { color: #ff2a6a; }
 .friendship-counter.lvl-4 { color: #ffd54a; }
-
 .friendship-counter.pulse {
     text-shadow: 0 0 18px var(--accent), 0 0 6px var(--accent);
+}
+
+/* ============ ТАЙМЕР ============ */
+.timer-panel {
+    position: fixed;
+    top: 62px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    user-select: none;
+}
+.timer-current {
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
+}
+.timer-total {
+    color: var(--text);
+    opacity: 0.7;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============ ПЛЕЕР ============ */
+.music-player {
+    position: fixed;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 620px;
+    max-width: calc(100vw - 40px);
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 16px;
+    z-index: 100;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease;
+}
+.music-player:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+
+.music-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+}
+
+.music-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: inherit;
+    padding: 0;
+    line-height: 1;
+}
+.music-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.06);
+}
+.music-btn:active { transform: scale(0.94); }
+.music-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+.music-play {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ff5a8a, #ff7a5a);
+    color: #fff;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(255,90,138,0.35);
+}
+.music-play:hover {
+    background: linear-gradient(135deg, #ff6a94, #ff8a6a);
+    box-shadow: 0 6px 18px rgba(255,90,138,0.5);
+}
+
+.music-repeat.active {
+    background: linear-gradient(135deg, #ff5a8a, #ff7a5a);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255,90,138,0.6);
+}
+
+.music-expand {
+    font-size: 11px;
+    transition: transform 0.25s ease, background 0.15s;
+}
+.music-expand.open { transform: rotate(180deg); }
+
+.music-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 6px;
+}
+.music-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.2px;
+}
+
+.music-progress-wrap {
+    height: 6px;
+    width: 100%;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+.music-progress-wrap:hover { height: 8px; transition: height 0.15s; }
+.music-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff5a8a, #ff9a5a);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(255,90,138,0.6);
+}
+
+.music-time {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.75;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.music-volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+.music-vol-icon {
+    font-size: 13px;
+    opacity: 0.75;
+}
+.music-volume {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 70px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.15);
+    outline: none;
+    cursor: pointer;
+}
+.music-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5a8a;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(255,90,138,0.7);
+    transition: transform 0.15s;
+}
+.music-volume::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.music-volume::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5a8a;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 6px rgba(255,90,138,0.7);
+}
+
+.music-list {
+    max-height: 0;
+    overflow-y: auto;
+    transition: max-height 0.35s ease;
+    border-top: 0 solid transparent;
+    padding: 0 12px;
+}
+.music-list.open {
+    max-height: 220px;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.music-list::-webkit-scrollbar { width: 5px; }
+.music-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+.music-track {
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+.music-track:hover { background: rgba(255,255,255,0.08); }
+.music-track.active {
+    background: linear-gradient(135deg, rgba(255,90,138,0.25), rgba(255,154,90,0.15));
+    color: #fff;
+    font-weight: 700;
+}
+.music-track-num {
+    width: 18px;
+    font-size: 11px;
+    opacity: 0.5;
+    flex-shrink: 0;
+    text-align: right;
+}
+.music-track.active .music-track-num {
+    opacity: 1;
+    color: #ff9a9a;
 }
 
 /* ============ ПАНЕЛЬ ДОСТИЖЕНИЙ ============ */
@@ -185,7 +439,7 @@ body {
     color: #fff;
 }
 
-/* ============ БЕЙДЖ НЕПРОЧИТАННЫХ ============ */
+/* ============ БЕЙДЖ ============ */
 .ach-badge {
     display: inline-flex;
     align-items: center;
@@ -291,17 +545,21 @@ body {
     top: 20px;
     right: 20px;
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
     z-index: 100;
+    max-width: 180px;
+    justify-content: flex-end;
 }
 .theme-btn {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.25);
     cursor: pointer;
     padding: 0;
     transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
 }
 .theme-btn:hover {
     transform: scale(1.15);
@@ -319,7 +577,6 @@ body {
     transition: transform 0.35s cubic-bezier(.2,.9,.3,1);
 }
 
-/* Двигаем персонажа вверх, когда открыт чат */
 body.chat-open .pet-widget {
     transform: translateY(-130px);
 }
@@ -332,6 +589,39 @@ body.chat-open .pet-widget {
     background-size: contain;
     pointer-events: none;
     transition: opacity 0.15s ease;
+}
+
+/* ============ ЮТУБ-ОВЕРЛЕЙ (флешбек) ============ */
+.youtube-overlay {
+    position: absolute;
+    top: -95px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.7);
+    width: 220px;
+    height: 124px;
+    border-radius: 14px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.9s ease, transform 0.7s cubic-bezier(.2,.9,.3,1);
+    pointer-events: none;
+    z-index: 10;
+    box-shadow:
+        0 8px 30px rgba(0,0,0,0.5),
+        0 0 50px rgba(184, 143, 232, 0.55),
+        0 0 90px rgba(184, 143, 232, 0.25);
+    border: 1px solid rgba(200, 160, 255, 0.45);
+    background: rgba(10, 5, 20, 0.5);
+}
+.youtube-overlay.show {
+    opacity: 0.72;
+    transform: translateX(-50%) scale(1);
+    pointer-events: auto;
+}
+.youtube-overlay iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
 }
 
 /* ============ ИКОНКИ ============ */
@@ -390,7 +680,6 @@ body.chat-open .pet-widget {
     50%      { transform: scale(1.1) rotate(-8deg); }
 }
 
-/* Обижена — 💢 видно всегда, пока сидит (не спит) */
 .pet-widget.offended:not(.sleeping):not(.waking) .pet-angry-mark {
     opacity: 1;
     transform: scale(1) rotate(-15deg);
@@ -437,7 +726,6 @@ body.chat-open .pet-widget {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
-
 body.theme-light .pet-speech { color: #222; }
 
 /* ==========================================================
@@ -485,9 +773,7 @@ body.theme-light .pet-speech { color: #222; }
     transform: translate(-50%, -50%);
     animation: ring-expand 0.75s cubic-bezier(.2,.9,.3,1) forwards;
 }
-.click-ring.negative {
-    border-color: rgba(140,140,160,0.7);
-}
+.click-ring.negative { border-color: rgba(140,140,160,0.7); }
 @keyframes ring-expand {
     0%   { opacity: 0.9; width: 10px; height: 10px; border-width: 3px; }
     100% { opacity: 0; width: 90px; height: 90px; border-width: 1px; }
@@ -528,23 +814,11 @@ body.theme-light .pet-speech { color: #222; }
     animation: firework-burst 1.5s cubic-bezier(.2,.9,.3,1) forwards;
     box-shadow: 0 0 10px currentColor, 0 0 4px currentColor;
 }
-.firework-particle.large {
-    width: 8px;
-    height: 8px;
-}
+.firework-particle.large { width: 8px; height: 8px; }
 @keyframes firework-burst {
-    0% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    60% {
-        opacity: 1;
-        transform: translate(calc(-50% + var(--dx) * 0.85), calc(-50% + var(--dy) * 0.85)) scale(1.15);
-    }
-    100% {
-        opacity: 0;
-        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2);
-    }
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    60%  { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.85), calc(-50% + var(--dy) * 0.85)) scale(1.15); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); }
 }
 
 /* ==========================================================
@@ -579,7 +853,6 @@ body.theme-light .pet-speech { color: #222; }
     transform: translateX(-50%) translateY(0);
 }
 
-/* Статус-строка вверху */
 .chat-status {
     font-size: 11px;
     text-align: center;
@@ -592,7 +865,6 @@ body.theme-light .pet-speech { color: #222; }
 }
 .chat-status.visible { display: block; }
 
-/* Сообщения */
 .chat-messages {
     flex: 1;
     overflow-y: auto;
@@ -629,7 +901,6 @@ body.theme-light .pet-speech { color: #222; }
     color: #fff;
     border-bottom-right-radius: 4px;
 }
-
 .chat-msg.pet {
     align-self: flex-start;
     background: rgba(255,255,255,0.08);
@@ -637,7 +908,6 @@ body.theme-light .pet-speech { color: #222; }
     border-bottom-left-radius: 4px;
     border: 1px solid rgba(255,255,255,0.06);
 }
-
 .chat-msg.system {
     align-self: center;
     background: transparent;
@@ -649,14 +919,12 @@ body.theme-light .pet-speech { color: #222; }
     text-align: center;
     max-width: 100%;
 }
-
 body.theme-light .chat-msg.pet {
     background: rgba(0,0,0,0.06);
     color: #222;
     border-color: rgba(0,0,0,0.08);
 }
 
-/* Индикатор печатания */
 .chat-typing {
     display: inline-flex;
     gap: 5px;
@@ -680,12 +948,8 @@ body.theme-light .chat-msg.pet {
     0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
     30% { opacity: 1; transform: translateY(-4px); }
 }
+body.theme-light .chat-typing { background: rgba(0,0,0,0.06); }
 
-body.theme-light .chat-typing {
-    background: rgba(0,0,0,0.06);
-}
-
-/* Строка ввода */
 .chat-input-row {
     display: flex;
     gap: 8px;
@@ -705,11 +969,7 @@ body.theme-light .chat-typing {
 }
 .chat-input:focus { border-color: var(--accent); }
 .chat-input::placeholder { color: rgba(255,255,255,0.35); }
-.chat-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
+.chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
 body.theme-light .chat-input {
     background: rgba(0,0,0,0.05);
     color: #222;
