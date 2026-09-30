@@ -152,6 +152,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let friendship = parseInt(localStorage.getItem('petFriendship') || '0', 10);
     if (isNaN(friendship)) friendship = 0;
 
+    /* ===== СОСТОЯНИЕ ОБИДЫ ===== */
+    let isOffended = localStorage.getItem('petOffended') === 'true';
+
+    function setOffended(v) {
+        isOffended = v;
+        localStorage.setItem('petOffended', v ? 'true' : 'false');
+        petWidget.classList.toggle('offended', v);
+    }
+
     function renderFriendship(pulse) {
         let cls = 'friendship-counter';
         if (friendship >= 100)      cls += ' lvl-4';
@@ -211,8 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         achToastEl.innerHTML = `
             <div class="ach-toast-icon">🏆</div>
             <div class="ach-toast-text">
-                <div class="ach-toast-title">Получена ачивка!</div>
-                <div class="ach-toast-sub">Нажми сюда, чтобы открыть список</div>
+                <div class="ach-toast-title">получена ачивка!</div>
+                <div class="ach-toast-sub">нажми сюда, чтобы открыть список</div>
             </div>
         `;
         achToastEl.addEventListener('click', () => {
@@ -438,8 +447,26 @@ document.addEventListener('DOMContentLoaded', () => {
         "я на такие темы не умею разговаривать("
     ];
 
+    const OFFENDED_REPLIES = [
+        "я обиделась, знаешь ли.",
+        "извинись, и я подумаю над ответом тебе.",
+        "...",
+        "ты меня обидел, я с тобой не разговариваю.",
+        "ты злюка, я с такими не общаюсь!",
+        "не слышу тебя, ла-ла-ла."
+    ];
+
+    const FORGIVE_REPLIES = [
+        "ладно, так уж и быть, прощаю тебя.",
+        "ну ладно, прощаю",
+        "всё-всё, не обижаюсь!",
+        "в следующий раз думай, что говоришь!"
+    ];
+
+    const APOLOGY_KEYWORDS = ['извини', 'прости', 'сорри', 'соррян', 'соррянчик', 'прошу прощения', 'виноват', 'виновата'];
+
     const CHAT_TRIGGERS = [
-        /* ---- Политика ---- */
+        /* ---- спасибо ---- */
         {
             keywords: ['спасибо', 'благодарю', 'спс', 'сенкс', 'thanks', 'thx'],
             replies: [
@@ -449,9 +476,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "не за что-не за что!",
                 "ой, да ладно тебе~"
             ],
-            score: 1
+            score: 1,
+            mood: 'happy'
         },
-        /* ---- Комплименты ---- */
+        /* ---- комплименты ---- */
         {
             keywords: ['красивая', 'красивые', 'нежная', 'можно утонуть', 'красотка', 'дива', 'хорошка', 'милая', 'милашка', 'няшка', 'няшная', 'ты классная', 'ты прикольная', 'ты забавная', 'ты смешная', 'ты хорошая'],
             replies: [
@@ -461,9 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "т-ты тоже, знаешь ли...",
                 "на себя посмотри!! (смущенно отвернулась)"
             ],
-            score: 5
+            score: 5,
+            mood: 'teasing'
         },
-        /* ---- Грубость ---- */
+        /* ---- грубость ---- */
         {
             keywords: ['идиот', 'идиота', 'дура', 'дурак', 'плохая', 'тупая', 'глупая', 'глупышка', 'хватит', 'отстань', 'падла', 'тварь', 'мразь', 'ублюдище'],
             replies: [
@@ -473,26 +502,166 @@ document.addEventListener('DOMContentLoaded', () => {
                 "я обиделась.",
                 "я больше не хочу с тобой разговаривать."
             ],
-            score: -5
+            score: -5,
+            mood: 'angry',
+            rudeness: true
         },
-        /* ---- Еда ---- */
+        /* ---- любовь ---- */
         {
-            keywords: ['еда', 'кушать', 'хавать', 'покушать', 'голодна', 'вкусно', 'чизбургер', 'чизбурбе', 'картошка', 'картошку', 'фри', 'картошечка', 'картошечку', 'тархун', 'трахун', 'тархунчик'],
+            keywords: ['люблю тебя', 'тебя люблю', 'сердечко', 'любимая', 'любимка'],
             replies: [
-                "ммм, чизбурбе....",
-                "хочу чизбурбе :(",
-                "покорми меня...",
-                "я хочу кушать...",
-                "я бы сейчас что-нибудь скушала...",
-                "а? картошечка??",
-                "хочууу~",
-                "ням-ням!",
-                "фтоо, мой любимый напиток??",
-                "хочуу тархунчик!!"
+                "о-ой.. я... т-ты это серьезно?",
+                "и я тебя люблю, знаешь ли...",
+                "не говори такое вслух, дурак!!",
+                "*отвернулась в смущении* и вовсе ты мне не нравишься! д-дурак...",
+                "я тоже тебя люблю, солнце!!~",
+                "и ты моя любимка... только не говори никому!"
             ],
-            score: 2
+            score: 10,
+            mood: 'teasing'
         },
-        /* ---- Звёздное дитя ---- */
+        /* ---- спящая ками ---- */
+        {
+            keywords: ['не спи', 'не засыпай', 'не усыпай'],
+            replies: [
+                "не могуу, мне очень хочется спать...",
+                "я не могу устоять перед сном...",
+                "извини, я не смогу не спать..."
+            ],
+            mood: 'neutral'
+        },
+        /* ---- погода ---- */
+        {
+            keywords: ['погода', 'погодой', 'погоду', 'погоды'],
+            replies: [
+                "а у меня сегодня солнце~ это ты!",
+                "а у меня всегда тепло, я же в кармане!"
+            ],
+            mood: 'happy'
+        },
+        {
+            keywords: ['дождь', 'дожди', 'дождик', 'гроза', 'грозу', 'грозы', 'ливень', 'ливни', 'гром'],
+            replies: [
+                "а я люблю дожди, они эстетичные",
+                "ля, щас бы грозу..",
+                "хотела бы я грозу прямо сейчас, да погромче..."
+            ],
+            mood: 'neutral'
+        },
+        {
+            keywords: ['снег', 'метель', 'льдышка', 'холодно', 'холодина', 'холодрыга', 'прохладно', 'ветер', 'ветрище'],
+            replies: [
+                "ойй, звучит холодно...",
+                "скорее укрывайся пледом да заваривай какаву!!",
+                "оойй, утепляйся, солнце 🥺",
+                "не замерзай!! моя любовь согреет тебя!!",
+                "иди обниму, согрею тебя~"
+            ],
+            mood: 'happy'
+        },
+        {
+            keywords: ['жарко', 'жарища', 'парилка', 'тепло', 'сжарился', 'сжарилась'],
+            replies: [
+                "фуф, я уже от одного прочтения этого сообщения сжарилась..",
+                "боже, как же мне сейчас хорошо с моими +10...",
+                "я плавлюсь только лишь от чтения твоих буковок 😭😭"
+            ],
+            mood: 'laughing'
+        },
+        /* ---- действия ---- */
+        {
+            keywords: ['обнимать', 'обнимаю', 'объятия', 'обними', 'обнимашки', 'объятие', 'обнял', 'обняла', 'обнять'],
+            replies: [
+                "*робко обняла* 🥺",
+                "*нежно обнимаю* 🥺"
+            ],
+            score: 2,
+            mood: 'happy'
+        },
+        {
+            keywords: ['поцелуй', 'поцелую', 'целуй', 'целую', 'чмок', 'муа', 'поцелуйчик'],
+            replies: [
+                "*посылаю воздушный поцелуй* 😋",
+                "умф... *робко целую в щёчку* 🥺",
+                "я... я же стесняюсь...",
+                "*целую в лобик*"
+            ],
+            mood: 'teasing'
+        },
+        /* ---- настроение ---- */
+        {
+            keywords: ['грустно', 'грустново', 'плохо', 'плоховато', 'тяжело', 'тяжеловато', 'депресся', 'депрессия', 'тоскливо', 'печально', 'печалька'],
+            replies: [
+                "э-эй, не грусти!! я тут, знаешь ли",
+                "ну-у чего ты? 🥺 иди обниму!",
+                "расскажи, что случилось?"
+            ],
+            mood: 'neutral'
+        },
+        /* ---- игры ---- */
+        {
+            keywords: ['стринова', 'стринову', 'стриновы', 'стриновой', 'подрыв', 'вспышка', 'вспышкой', 'вспышку', 'вспышке'],
+            replies: [
+                "блин, может каточку во вспышку?)",
+                "о, гоу со мной во вспышку!!",
+                "там в стринове скоро добавят экстракшен мод...",
+                "мне немного одиноко играть одной :(",
+                "жаль, что ты не пойдешь со мной играть.."
+            ],
+            mood: 'happy'
+        },
+        {
+            keywords: ['рафт', 'рафтом', 'рафту'],
+            replies: [
+                "ох, я там такой кораблище забацала!",
+                "обожаю рафт блин, жаль, что мы нечасто собираемся в него...",
+                "мне нужны доски, БОЛЬШЕ ДОСОК!",
+                "э-эй, я приготовила кучу рыбы, почему никто не ест?!"
+            ],
+            mood: 'happy'
+        },
+        {
+            keywords: ['мимесис', 'прэтфолл', 'пратфолл', 'претфолл', 'скамлайн', 'скам лайн', 'мека хамелеон', 'мека', 'хамелеон', 'фазма', 'фазмафобия', 'гамба', 'солар', 'соларпанк', 'сигаме', 'сигама', 'сигейм', 'богос', 'чикен хорс', 'курица лошадь', 'джекбокс', 'пати бокс', 'патибокс', 'гартик', 'бункер', 'меме полис', 'мемеполис'],
+            replies: [
+                "может, однажды ещё соберемся в эту веселую игрульку, однажды...",
+                "когда-нибудь точно у всех совпадут расписания и мы пойдём играть в это..."
+            ],
+            mood: 'neutral'
+        },
+        /* ---- твич ---- */
+        {
+            keywords: ['хес', 'хесус', 'авгн', 'jesusavgn', 'hesus', 'avgn'],
+            replies: [
+                "110",
+                "ихихяхя",
+                "это уже ихи или это хяхя?",
+                "нина, голова болит",
+                "вот и дымайте, вот те на те"
+            ],
+            mood: 'laughing'
+        },
+        {
+            keywords: ['хрен в томате'],
+            replies: ["вот те на те)"],
+            mood: 'laughing'
+        },
+        {
+            keywords: ['мазеллов', 'илья', 'мзлфф', 'мзифф', 'мазелов', 'mzlff', 'mazellovvv', 'коряков'],
+            replies: [
+                "кому мы оставим мир, если даже всех нас некому спасти?...",
+                "мало ребёнком быть, сложней остаться им взрослым...",
+                "и в твоих руках моё сердце, оставь себе ❤️",
+                "спасибо всем, дальше — хуже, путь долгий, но будет что вспомнить...",
+                "вас побеждает ворона, нас побеждаете вы!",
+                "и души переплетаясь, тянут всё за собой в этот мерзкий медленный танец...",
+                "давай меняться: тебе это, тебе это — по рукам",
+                "а чё грустить? можно кататься без очереди все дни!",
+                "альфред, держи себя в руках... 🐻",
+                "нас сюжет куда-то несёт, о нам достаточно в жизни счастливый конец — и всё..."
+            ],
+            mood: 'neutral'
+        },
+        /* ---- звёздное дитя ---- */
         {
             keywords: ['звездное дитя', 'звёздное дитя', 'ребенок идола', 'ребёнок идола', 'oshi no ko', 'арима', 'кана', 'мемчо', 'мемто', 'ай хошино', 'хошино', 'аква', 'руби', 'бикомачи', 'би комачи'],
             replies: [
@@ -501,24 +670,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 "ля, щас бы опенинги оттуда сыграть на пианинко",
                 "кана, моя любимая каночка...",
                 "anata no aidoru, sign wa B! chu!~ ой, запелась я что-то."
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- Steins;Gate ---- */
+        /* ---- врата штейна ---- */
         {
             keywords: ['врата штейна', 'steins gate', 'штейн', 'курису', 'макисэ', 'окабэ', 'ринтаро', 'фэйрис', 'маюши', 'маюри'],
             replies: [
                 "ой, часики маюши опять остановились..."
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Басня ---- */
+        /* ---- басня ---- */
         {
             keywords: ['басня', 'басню', 'басне', 'фэйбл', 'фейбл', 'fable'],
             replies: [
                 "да, я поставила этому аниме 9 баллов, и что с того?!",
                 "ну, это забавное аниме, смешнявое"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Аниме ---- */
+        /* ---- аниме ---- */
         {
             keywords: ['аниме', 'анимехи', 'анимеха', 'анимешки', 'анимешка', 'аниму', 'что смотришь', 'какое смотришь'],
             replies: [
@@ -526,9 +698,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "думаю-думаю, какое бы аниме ещё заспидранить на 3х...",
                 "думаю, может, пересмотреть лов лайв?",
                 "пока не знаю что посмотреть, посоветуешь что-нибудь?"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Манга ---- */
+        /* ---- манга ---- */
         {
             keywords: ['манга', 'маньхуа', 'манхва', 'мангу', 'что читаешь', 'какое читаешь'],
             replies: [
@@ -536,24 +709,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 "ой, я что-то и забыла, что можно что-то читать...",
                 "манга - тоже литература!",
                 "ой, мне так лень читать, многа букаф...."
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Пианино ---- */
+        /* ---- пианино ---- */
         {
             keywords: ['пианино', 'синтезатор', 'пианинко', 'потрунькать'],
             replies: [
                 "ля, после такого аж захотелось потрунькать",
                 "ооо, щас бы на пианинко сыграть!",
                 "ой, а если я сыграю тебе в дсе на пианино, ты послушаешь? 🥺"
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- О дружбе ---- */
+        /* ---- о дружбе ---- */
         {
             keywords: ['дружба', 'друзья', 'очки', 'счёт', 'очков', 'насколько мы близки'],
             replies: [
                 () => `у нас сейчас ${friendship} очков дружбы, между прочим!`,
                 () => `наша с тобой дружба числится в очках, их целых ${friendship}!`
-            ]
+            ],
+            mood: 'happy'
         },
         /* ---- 67 ---- */
         {
@@ -563,46 +739,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 "67 67 67 67 67 67 67 67 67",
                 "сикс севен бреееейнроооот",
                 "да этот мем уже устарел, не?"
-            ]
+            ],
+            mood: 'laughing'
         },
-        /* ---- Шика ---- */
+        /* ---- шика ---- */
         {
             keywords: ['шика', 'шиканоко', 'shika shikanoko', 'олениха', 'олень'],
             replies: [
                 "шиканоко ноко ноко коштантан! 🦌"
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- Юля ---- */
+        /* ---- юля ---- */
         {
             keywords: ['юля', 'юле', 'юлю', 'юлей', 'юлька', 'юся', 'юлечка', 'манривата', 'мандарин', 'мандариновая'],
             replies: [
                 "о, про мою любимку говоришь",
                 "не говори про неё так. я ревную.",
                 "хихихи юлька иди корову подои",
-                "Юся, ты уже покушала? 👀",
+                "юся, ты уже покушала? 👀",
                 "все мои меме только для неё...",
                 "про юлю либо хорошо, либо никак"
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- Грандон ---- */
+        /* ---- грандон ---- */
         {
             keywords: ['грандон', 'грандона', 'грандону', 'грандоном', 'вася', 'васей', 'васю', 'васе', 'атхос'],
             replies: [
                 "вася? знаю такого",
                 "я грр! ты мне?",
                 "жить надо как вася - танцевать и музон погромче."
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Форум ---- */
+        /* ---- форум ---- */
         {
             keywords: ['форум', 'саша', 'саше', 'сашей', 'сашу', 'форума', 'форуму', 'фовум'],
             replies: [
                 "фооооовуууумм!!!!",
                 "форум? интересно, когда он ещё приедет к нам....",
                 "о, речь про любителя бабушек?"
-            ]
+            ],
+            mood: 'laughing'
         },
-        /* ---- Привоз ---- */
+        /* ---- привоз ---- */
         {
             keywords: ['привоз', 'привозу', 'привоза', 'привозом', 'приводя', 'приводей', 'приводю', 'привадя', 'вадя', 'вадей', 'вадю', 'вадим', 'вадима'],
             replies: [
@@ -617,17 +798,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 "о, опездун.",
                 "что? он снова проспал?",
                 "а? он вновь забыл?"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Даня ---- */
+        /* ---- даня ---- */
         {
             keywords: ['даня', 'дане', 'даней', 'даню'],
             replies: [
                 "даня? он, должно быть, снова опоздает или не придет вовсе",
                 "даня - киберкотлета марвела"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Ками ---- */
+        /* ---- ками ---- */
         {
             keywords: ['ками', 'камичка', 'камушка', 'камушко', 'диячка', 'диана'],
             replies: [
@@ -635,9 +818,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "я тууут~",
                 "слышу-слышу!",
                 "я здесь!!"
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- Смешное ---- */
+        /* ---- смешное ---- */
         {
             keywords: ['лол', 'ржу', 'пхпх', 'ахах', 'кек'],
             replies: [
@@ -645,48 +829,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 "ахахаха, ты меня рассмеши... рассмешнил... ра.. ну ты пон",
                 "ахаххаха, как ты это ваще придумал",
                 "лол, согласна"
-            ]
+            ],
+            mood: 'laughing'
         },
-        /* ---- Творчество ---- */
+        /* ---- творчество ---- */
         {
             keywords: ['арт', 'арты', 'рисовать', 'рисунки', 'меме', 'анимации', 'анимация'],
             replies: [
                 "скоро-скоро будет новьё, чееестно",
                 "да рисую я, рисую..."
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Форма ---- */
+        /* ---- форма ---- */
         {
             keywords: ['форма', 'юбка', 'платье', 'матроска'],
             replies: [
                 "это моя японская школьная форма, между прочим!"
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- Волосы ---- */
+        /* ---- волосы ---- */
         {
             keywords: ['волосы', 'кудри', 'волосики'],
             replies: [
                 "ой, тебе нравится?...🥺 не то, чтобы мне приятно это слышать!",
                 "волосы у меня кудрявятся, знаешь, как это сложно?"
-            ]
+            ],
+            mood: 'teasing'
         },
-        /* ---- Глаза ---- */
+        /* ---- глаза ---- */
         {
             keywords: ['глаза', 'гетерохромия'],
             replies: [
                 "глаза? да, я родилась такой..."
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Кто она ---- */
+        /* ---- кто ты ---- */
         {
             keywords: ['кто ты', 'как тебя зовут', 'сколько тебе лет'],
             replies: [
                 "я ками, просто ками",
                 "а что, не видно? я ками, самая настоящая",
                 "я - ками! а остальное секрет, хихи~"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Вместе ---- */
+        /* ---- вместе ---- */
         {
             keywords: ['со мной', 'вместе', 'го', 'давай'],
             replies: [
@@ -694,9 +884,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "погналии!!",
                 "приглашаешь? соглашаюсь!",
                 "ну, если ты настаиваешь..."
-            ]
+            ],
+            mood: 'happy'
         },
-        /* ---- Сон ---- */
+        /* ---- сон ---- */
         {
             keywords: ['спать', 'сон', 'устал', 'устала', 'хочу спать'],
             replies: [
@@ -704,9 +895,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "сон - это святое!!",
                 "я тоже хочу спать, но я здесь, пока ты со мной",
                 "а может пойдем спать вместе?"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Прощание ---- */
+        /* ---- прощание ---- */
         {
             keywords: ['пока', 'до свидания', 'увидимся', 'я пойду', 'я отойду', 'я ушел', 'я ушла', 'прощай', 'спокойной ночи', 'бб'],
             replies: [
@@ -714,9 +906,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "не уходи надолго, ладно?...",
                 "ох, я буду тебя ждать... здесь...",
                 "нет, не покидай меня..."
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Как дела ---- */
+        /* ---- как дела ---- */
         {
             keywords: ['как дела', 'как ты', 'что делаешь', 'чем занята', 'кд', 'чд', 'шо делаешь', 'чего делаешь', 'шо скажешь'],
             replies: [
@@ -725,9 +918,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 "да так, чиллю, валяюсь",
                 "да так, работу всё ищу...",
                 "мне немножко было скучно, но с тобой теперь мне весело!!"
-            ]
+            ],
+            mood: 'neutral'
         },
-        /* ---- Приветствия ---- */
+        /* ---- приветствия ---- */
         {
             keywords: ['привет', 'прив', 'ку', 'хай', 'здаров', 'здравствуй', 'хаюшки', 'доброе утро', 'добрый день', 'добрый вечер', 'доброй ночи'],
             replies: [
@@ -736,11 +930,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 "доброго времени суток!~ как ты?",
                 "урааа!! ты пришёл~",
                 "прив!! я соскучилась~"
-            ]
+            ],
+            mood: 'happy'
         }
     ];
 
-    /* ===== ФУНКЦИЯ МАТЧИНГА ===== */
     function matchesTrigger(text, keyword) {
         const lowerText = text.toLowerCase();
         const lowerKeyword = keyword.toLowerCase();
@@ -754,37 +948,59 @@ document.addEventListener('DOMContentLoaded', () => {
     function findChatReply(text) {
         const trimmed = text.trim().toLowerCase();
 
-        /* Чит-коды */
-        if (trimmed === '!null') {
-            return { cheat: 'null' };
-        }
+        /* читы работают всегда */
+        if (trimmed === '!null') return { cheat: 'null' };
         if (trimmed.startsWith('!give ')) {
             const amount = parseInt(trimmed.slice(6).trim(), 10);
-            if (!isNaN(amount)) {
-                return { cheat: 'give', amount: amount };
-            }
+            if (!isNaN(amount)) return { cheat: 'give', amount: amount };
         }
 
-        /* Триггеры */
+        /* если обижена — сначала проверяем извинения */
+        if (isOffended) {
+            for (const kw of APOLOGY_KEYWORDS) {
+                if (matchesTrigger(trimmed, kw)) {
+                    return {
+                        apology: true,
+                        text: FORGIVE_REPLIES[Math.floor(Math.random() * FORGIVE_REPLIES.length)],
+                        score: 2,
+                        mood: 'happy'
+                    };
+                }
+            }
+            return {
+                text: OFFENDED_REPLIES[Math.floor(Math.random() * OFFENDED_REPLIES.length)],
+                mood: 'angry'
+            };
+        }
+
+        /* обычные триггеры */
         for (const t of CHAT_TRIGGERS) {
             for (const kw of t.keywords) {
                 if (matchesTrigger(trimmed, kw)) {
                     const reply = t.replies[Math.floor(Math.random() * t.replies.length)];
                     const replyText = typeof reply === 'function' ? reply() : reply;
-                    return { text: replyText, score: t.score || 0 };
+                    return {
+                        text: replyText,
+                        score: t.score || 0,
+                        mood: t.mood || 'neutral',
+                        rudeness: t.rudeness === true
+                    };
                 }
             }
         }
 
         /* Да? */
         if (/^да\?*$/i.test(trimmed)) {
-            const yesNo = Math.random() < 0.5 ? "да!" : "нет конечно!";
-            return { text: yesNo };
+            return {
+                text: Math.random() < 0.5 ? "да!" : "нет конечно!",
+                mood: 'neutral'
+            };
         }
 
         /* Fallback */
         return {
-            text: CHAT_FALLBACK[Math.floor(Math.random() * CHAT_FALLBACK.length)]
+            text: CHAT_FALLBACK[Math.floor(Math.random() * CHAT_FALLBACK.length)],
+            mood: 'neutral'
         };
     }
 
@@ -852,15 +1068,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /* ===== ЭМОЦИИ ВО ВРЕМЯ ЧАТА ===== */
+    let chatReactionAnim = null;
+    let chatReactionTimer = null;
+
+    function showChatReaction(mood) {
+        if (state !== 'idle') return;
+        if (!mood || mood === 'neutral') return;
+
+        cancelIdlePhrase();
+        clearInterval(blinkTimer);
+        clearInterval(chatReactionAnim);
+        clearTimeout(chatReactionTimer);
+
+        setMood(mood);
+
+        let frames;
+        if (mood === 'happy')          frames = ['happy1', 'happy2'];
+        else if (mood === 'angry')     frames = ['angry'];
+        else if (mood === 'laughing')  frames = ['laugh'];
+        else if (mood === 'teasing')   frames = ['tease'];
+        else                            frames = ['talk1', 'talk2'];
+
+        let i = 0;
+        chatReactionAnim = setInterval(() => {
+            if (state !== 'idle') { clearInterval(chatReactionAnim); return; }
+            showLayer(frames[i % frames.length]);
+            i++;
+        }, 220);
+
+        chatReactionTimer = setTimeout(() => {
+            clearInterval(chatReactionAnim);
+            if (state === 'idle') {
+                setMood(null);
+                enterIdle();
+            }
+        }, 2400);
+    }
+
     /* ===== ОТПРАВКА СООБЩЕНИЯ ===== */
     function sendChatMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        /* Читы: разрешены всегда */
         const isCheat = text.startsWith('!');
 
-        /* Если спит и не чит — не отправляем */
         if (state === 'sleeping' && !isCheat) {
             addSystemMessage('сначала разбуди меня, чтобы чаттиться!');
             chatInput.value = '';
@@ -871,7 +1123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.value = '';
         updateChatState();
 
-        /* Обрабатываем чит */
+        /* Персонаж не засыпает во время чата */
+        resetIdleCountdown();
+
         if (isCheat) {
             const result = findChatReply(text);
             if (result.cheat === 'null') {
@@ -891,17 +1145,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        /* Обычный ответ */
         const result = findChatReply(text);
+
+        if (result.apology) setOffended(false);
+        if (result.rudeness) setOffended(true);
+
         const typing = addTypingIndicator();
         const delay = 600 + Math.random() * 900;
 
         setTimeout(() => {
             typing.remove();
             addChatMessage('pet', result.text);
-            if (result.score) {
-                changeFriendship(result.score);
-            }
+            if (result.mood) showChatReaction(result.mood);
+            if (result.score) changeFriendship(result.score);
         }, delay);
     }
 
@@ -927,6 +1183,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    chatInput.addEventListener('input', () => {
+        resetIdleCountdown();
+    });
+
     /* ===== СОСТОЯНИЕ ===== */
     let state           = 'sleeping';
     let talkTimer       = null;
@@ -947,273 +1207,4 @@ document.addEventListener('DOMContentLoaded', () => {
     let clickTimes      = [];
     let spamCooldown    = 0;
     const SPAM_WINDOW   = 2000;
-    const SPAM_THRESHOLD = 5;
-
-    function isSpamming() {
-        const now = Date.now();
-        if (now < spamCooldown) return false;
-        clickTimes = clickTimes.filter(t => now - t < SPAM_WINDOW);
-        clickTimes.push(now);
-        if (clickTimes.length >= SPAM_THRESHOLD) {
-            clickTimes = [];
-            spamCooldown = now + 2500;
-            return true;
-        }
-        return false;
-    }
-
-    /* ===== ФУНКЦИИ ===== */
-    function setState(newState) {
-        state = newState;
-        ['sleeping', 'waking', 'idle', 'talking'].forEach(s => {
-            petWidget.classList.toggle(s, s === newState);
-        });
-        /* Обновляем состояние чата при смене стадии */
-        updateChatState();
-    }
-
-    function showLayer(name) {
-        if (!IMAGES[name]) return;
-        petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
-    }
-
-    function showSpeech(visible) {
-        petWidget.classList.toggle('awake', visible);
-    }
-
-    function setMood(mood) {
-        petWidget.classList.remove('mood-angry', 'mood-happy', 'mood-laughing', 'mood-teasing');
-        if (mood && mood !== 'neutral') petWidget.classList.add('mood-' + mood);
-    }
-
-    function startTalkAnim(mood) {
-        stopTalkAnim();
-        let i = 0;
-        let frames;
-        if (mood === 'happy')          frames = ['happy1', 'happy2'];
-        else if (mood === 'angry')     frames = ['angry'];
-        else if (mood === 'laughing')  frames = ['laugh'];
-        else if (mood === 'teasing')   frames = ['tease'];
-        else                            frames = ['talk1', 'talk2'];
-
-        if (frames.length === 1) { showLayer(frames[0]); return; }
-        talkAnim = setInterval(() => {
-            showLayer(frames[i % frames.length]);
-            i++;
-        }, 220);
-    }
-    function stopTalkAnim() {
-        if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
-    }
-
-    function startBreathing() {
-        stopBreathing();
-        breathFrame = 0;
-        showLayer('sleep1');
-        breathTimer = setInterval(() => {
-            if (state !== 'sleeping') return;
-            breathFrame = 1 - breathFrame;
-            showLayer(breathFrame === 0 ? 'sleep1' : 'sleep2');
-        }, 1800);
-    }
-    function stopBreathing() {
-        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
-    }
-
-    function cancelIdlePhrase() {
-        if (!idlePhraseActive) return;
-        idlePhraseActive = false;
-        clearInterval(idlePhraseAnim);
-        clearTimeout(idlePhraseHide);
-        showSpeech(false);
-        setMood(null);
-        if (state === 'idle') showLayer('idle');
-    }
-
-    function playIdlePhrase(phrase) {
-        if (state !== 'idle' || idlePhraseActive) return;
-        idlePhraseActive = true;
-
-        petSpeech.textContent = getPhraseText(phrase);
-        showSpeech(true);
-        setMood(phrase.mood);
-
-        let i = 0;
-        const frames = ['talk1', 'talk2'];
-        clearInterval(idlePhraseAnim);
-        idlePhraseAnim = setInterval(() => {
-            if (!idlePhraseActive) return;
-            showLayer(frames[i % 2]);
-            i++;
-        }, 220);
-
-        clearTimeout(idlePhraseHide);
-        idlePhraseHide = setTimeout(() => {
-            if (!idlePhraseActive) return;
-            idlePhraseActive = false;
-            clearInterval(idlePhraseAnim);
-            showSpeech(false);
-            setMood(null);
-            if (state === 'idle') showLayer('idle');
-        }, 3500);
-    }
-
-    function forcePlayPhrase(phrase, onFinish) {
-        cancelIdlePhrase();
-        setState('talking');
-        clearTimeout(idleTimer);
-        clearTimeout(sleepTimer);
-        clearInterval(blinkTimer);
-        stopBreathing();
-
-        petSpeech.textContent = getPhraseText(phrase);
-        showSpeech(true);
-        setMood(phrase.mood);
-        startTalkAnim(phrase.mood);
-
-        clearTimeout(talkTimer);
-        talkTimer = setTimeout(() => {
-            if (onFinish) onFinish();
-        }, 3500);
-    }
-
-    function playPhrase(phrase, onFinish) {
-        if (state === 'talking') return;
-        forcePlayPhrase(phrase, onFinish);
-    }
-
-    function playRandom(arr, onFinish) {
-        const phrase = arr[Math.floor(Math.random() * arr.length)];
-        playPhrase(phrase, onFinish);
-    }
-
-    function finishDialog() {
-        stopTalkAnim();
-        showSpeech(false);
-        setMood(null);
-        enterIdle();
-    }
-
-    function enterIdle() {
-        setState('idle');
-        showLayer('idle');
-        idlePhraseActive = false;
-
-        clearInterval(blinkTimer);
-        blinkTimer = setInterval(() => {
-            if (state !== 'idle' || idlePhraseActive) return;
-            showLayer('blink');
-            setTimeout(() => {
-                if (state === 'idle' && !idlePhraseActive) showLayer('idle');
-            }, 160);
-        }, 4000);
-
-        clearTimeout(idlePhrase1);
-        clearTimeout(idlePhrase2);
-        idlePhrase1 = setTimeout(() => {
-            if (state !== 'idle') return;
-            const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
-            playIdlePhrase(p);
-        }, 10000);
-        idlePhrase2 = setTimeout(() => {
-            if (state !== 'idle') return;
-            playIdlePhrase(IDLE_PHRASE_SECOND);
-        }, 20000);
-
-        clearTimeout(idleTimer);
-        idleTimer = setTimeout(() => {
-            if (state !== 'idle') return;
-            cancelIdlePhrase();
-            clearTimeout(idlePhrase1);
-            clearTimeout(idlePhrase2);
-            showLayer('blink');
-            setTimeout(() => {
-                if (state !== 'idle') return;
-                clearInterval(blinkTimer);
-                goToSleep();
-            }, 400);
-        }, 30000);
-    }
-
-    function goToSleep() {
-        setState('sleeping');
-        showSpeech(false);
-        setMood(null);
-        themeChanges = 0;
-        startBreathing();
-    }
-
-    function wakeUp() {
-        stopBreathing();
-        setState('waking');
-        showLayer('wake');
-
-        clearTimeout(wakeTimer);
-        wakeTimer = setTimeout(() => {
-            if (state !== 'waking') return;
-            const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
-            forcePlayPhrase(phrase, finishDialog);
-        }, 900);
-    }
-
-    /* ===== КЛИК ===== */
-    petWidget.addEventListener('click', (e) => {
-        if (isSpamming()) {
-            const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
-            forcePlayPhrase(p, finishDialog);
-            return;
-        }
-
-        cancelIdlePhrase();
-
-        const rect = petWidget.getBoundingClientRect();
-        const y = (e.clientY - rect.top) / rect.height;
-
-        if (state === 'sleeping') {
-            changeFriendship(1, e.clientX, e.clientY);
-            wakeUp();
-            return;
-        }
-        if (state === 'talking' || state === 'waking') return;
-
-        let zone = 'body';
-        if (y < 0.35)       zone = 'hair';
-        else if (y > 0.7)   zone = 'skirt';
-
-        let delta = 1;
-        if (zone === 'hair')  delta = 3;
-        if (zone === 'skirt') delta = -2;
-        changeFriendship(delta, e.clientX, e.clientY);
-
-        playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
-    });
-
-    /* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ===== */
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const theme = btn.dataset.theme;
-            document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
-            localStorage.setItem('petTheme', theme);
-
-            cancelIdlePhrase();
-
-            if (state === 'sleeping' || state === 'waking') return;
-            if (state === 'talking') return;
-            if (themeChanges >= THEME_REACTIONS.length) return;
-
-            const reaction = THEME_REACTIONS[themeChanges];
-            themeChanges++;
-            playPhrase(reaction, finishDialog);
-        });
-    });
-
-    /* Восстановление темы */
-    const saved = localStorage.getItem('petTheme');
-    if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
-
-    /* ===== СТАРТ ===== */
-    renderFriendship(false);
-    renderAchPanel();
-    setState('sleeping');
-    startBreathing();
-});
+    const SPAM_THRESHOLD =
