@@ -1207,4 +1207,286 @@ document.addEventListener('DOMContentLoaded', () => {
     let clickTimes      = [];
     let spamCooldown    = 0;
     const SPAM_WINDOW   = 2000;
-    const SPAM_THRESHOLD =
+    const SPAM_THRESHOLD = 5;
+
+    function isSpamming() {
+        const now = Date.now();
+        if (now < spamCooldown) return false;
+        clickTimes = clickTimes.filter(t => now - t < SPAM_WINDOW);
+        clickTimes.push(now);
+        if (clickTimes.length >= SPAM_THRESHOLD) {
+            clickTimes = [];
+            spamCooldown = now + 2500;
+            return true;
+        }
+        return false;
+    }
+
+    /* ===== ФУНКЦИИ ===== */
+    function setState(newState) {
+        state = newState;
+        ['sleeping', 'waking', 'idle', 'talking'].forEach(s => {
+            petWidget.classList.toggle(s, s === newState);
+        });
+        updateChatState();
+    }
+
+    function showLayer(name) {
+        if (!IMAGES[name]) return;
+        petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
+    }
+
+    function showSpeech(visible) {
+        petWidget.classList.toggle('awake', visible);
+    }
+
+    function setMood(mood) {
+        petWidget.classList.remove('mood-angry', 'mood-happy', 'mood-laughing', 'mood-teasing');
+        if (mood && mood !== 'neutral') petWidget.classList.add('mood-' + mood);
+    }
+
+    function startTalkAnim(mood) {
+        stopTalkAnim();
+        let i = 0;
+        let frames;
+        if (mood === 'happy')          frames = ['happy1', 'happy2'];
+        else if (mood === 'angry')     frames = ['angry'];
+        else if (mood === 'laughing')  frames = ['laugh'];
+        else if (mood === 'teasing')   frames = ['tease'];
+        else                            frames = ['talk1', 'talk2'];
+
+        if (frames.length === 1) { showLayer(frames[0]); return; }
+        talkAnim = setInterval(() => {
+            showLayer(frames[i % frames.length]);
+            i++;
+        }, 220);
+    }
+    function stopTalkAnim() {
+        if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
+    }
+
+    function startBreathing() {
+        stopBreathing();
+        breathFrame = 0;
+        showLayer('sleep1');
+        breathTimer = setInterval(() => {
+            if (state !== 'sleeping') return;
+            breathFrame = 1 - breathFrame;
+            showLayer(breathFrame === 0 ? 'sleep1' : 'sleep2');
+        }, 1800);
+    }
+    function stopBreathing() {
+        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
+    }
+
+    function cancelIdlePhrase() {
+        if (!idlePhraseActive) return;
+        idlePhraseActive = false;
+        clearInterval(idlePhraseAnim);
+        clearTimeout(idlePhraseHide);
+        showSpeech(false);
+        setMood(null);
+        if (state === 'idle') showLayer('idle');
+    }
+
+    function playIdlePhrase(phrase) {
+        if (state !== 'idle' || idlePhraseActive) return;
+        idlePhraseActive = true;
+
+        petSpeech.textContent = getPhraseText(phrase);
+        showSpeech(true);
+        setMood(phrase.mood);
+
+        let i = 0;
+        const frames = ['talk1', 'talk2'];
+        clearInterval(idlePhraseAnim);
+        idlePhraseAnim = setInterval(() => {
+            if (!idlePhraseActive) return;
+            showLayer(frames[i % 2]);
+            i++;
+        }, 220);
+
+        clearTimeout(idlePhraseHide);
+        idlePhraseHide = setTimeout(() => {
+            if (!idlePhraseActive) return;
+            idlePhraseActive = false;
+            clearInterval(idlePhraseAnim);
+            showSpeech(false);
+            setMood(null);
+            if (state === 'idle') showLayer('idle');
+        }, 3500);
+    }
+
+    function forcePlayPhrase(phrase, onFinish) {
+        cancelIdlePhrase();
+        setState('talking');
+        clearTimeout(idleTimer);
+        clearTimeout(sleepTimer);
+        clearInterval(blinkTimer);
+        stopBreathing();
+
+        petSpeech.textContent = getPhraseText(phrase);
+        showSpeech(true);
+        setMood(phrase.mood);
+        startTalkAnim(phrase.mood);
+
+        clearTimeout(talkTimer);
+        talkTimer = setTimeout(() => {
+            if (onFinish) onFinish();
+        }, 3500);
+    }
+
+    function playPhrase(phrase, onFinish) {
+        if (state === 'talking') return;
+        forcePlayPhrase(phrase, onFinish);
+    }
+
+    function playRandom(arr, onFinish) {
+        const phrase = arr[Math.floor(Math.random() * arr.length)];
+        playPhrase(phrase, onFinish);
+    }
+
+    function finishDialog() {
+        stopTalkAnim();
+        showSpeech(false);
+        setMood(null);
+        enterIdle();
+    }
+
+    function scheduleIdleTimers() {
+        clearTimeout(idlePhrase1);
+        clearTimeout(idlePhrase2);
+        clearTimeout(idleTimer);
+
+        idlePhrase1 = setTimeout(() => {
+            if (state !== 'idle') return;
+            const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
+            playIdlePhrase(p);
+        }, 10000);
+
+        idlePhrase2 = setTimeout(() => {
+            if (state !== 'idle') return;
+            playIdlePhrase(IDLE_PHRASE_SECOND);
+        }, 20000);
+
+        idleTimer = setTimeout(() => {
+            if (state !== 'idle') return;
+            cancelIdlePhrase();
+            clearTimeout(idlePhrase1);
+            clearTimeout(idlePhrase2);
+            showLayer('blink');
+            setTimeout(() => {
+                if (state !== 'idle') return;
+                clearInterval(blinkTimer);
+                goToSleep();
+            }, 400);
+        }, 30000);
+    }
+
+    function resetIdleCountdown() {
+        if (state !== 'idle') return;
+        scheduleIdleTimers();
+    }
+
+    function enterIdle() {
+        setState('idle');
+        showLayer('idle');
+        idlePhraseActive = false;
+
+        clearInterval(blinkTimer);
+        blinkTimer = setInterval(() => {
+            if (state !== 'idle' || idlePhraseActive) return;
+            showLayer('blink');
+            setTimeout(() => {
+                if (state === 'idle' && !idlePhraseActive) showLayer('idle');
+            }, 160);
+        }, 4000);
+
+        scheduleIdleTimers();
+    }
+
+    function goToSleep() {
+        setState('sleeping');
+        showSpeech(false);
+        setMood(null);
+        themeChanges = 0;
+        startBreathing();
+    }
+
+    function wakeUp() {
+        stopBreathing();
+        setState('waking');
+        showLayer('wake');
+
+        clearTimeout(wakeTimer);
+        wakeTimer = setTimeout(() => {
+            if (state !== 'waking') return;
+            const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
+            forcePlayPhrase(phrase, finishDialog);
+        }, 900);
+    }
+
+    /* ===== КЛИК ===== */
+    petWidget.addEventListener('click', (e) => {
+        if (isSpamming()) {
+            const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
+            forcePlayPhrase(p, finishDialog);
+            return;
+        }
+
+        cancelIdlePhrase();
+
+        const rect = petWidget.getBoundingClientRect();
+        const y = (e.clientY - rect.top) / rect.height;
+
+        if (state === 'sleeping') {
+            changeFriendship(1, e.clientX, e.clientY);
+            wakeUp();
+            return;
+        }
+        if (state === 'talking' || state === 'waking') return;
+
+        let zone = 'body';
+        if (y < 0.35)       zone = 'hair';
+        else if (y > 0.7)   zone = 'skirt';
+
+        let delta = 1;
+        if (zone === 'hair')  delta = 3;
+        if (zone === 'skirt') delta = -2;
+        changeFriendship(delta, e.clientX, e.clientY);
+
+        playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
+    });
+
+    /* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ===== */
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
+            localStorage.setItem('petTheme', theme);
+
+            cancelIdlePhrase();
+
+            if (state === 'sleeping' || state === 'waking') return;
+            if (state === 'talking') return;
+            if (themeChanges >= THEME_REACTIONS.length) return;
+
+            const reaction = THEME_REACTIONS[themeChanges];
+            themeChanges++;
+            playPhrase(reaction, finishDialog);
+        });
+    });
+
+    /* Восстановление темы */
+    const saved = localStorage.getItem('petTheme');
+    if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
+
+    /* Восстановление обиды */
+    if (isOffended) petWidget.classList.add('offended');
+
+    /* ===== СТАРТ ===== */
+    renderFriendship(false);
+    renderAchPanel();
+    setState('sleeping');
+    startBreathing();
+});
