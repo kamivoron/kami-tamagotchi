@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ==========================================================
-       СОСТОЯНИЕ (объявляем в самом начале, чтобы функции ниже могли обращаться)
+       СОСТОЯНИЕ
        ========================================================== */
     let state            = 'sleeping';
     let talkTimer        = null;
@@ -28,10 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
        ПЛЕЕР
        ========================================================== */
 
-    /* ===== ТРЕКИ =====
-       onFirstPlay — сообщение, которое персонаж скажет ОДИН РАЗ за всё время
-       events — события по времени (в секундах) при каждом запуске трека
-    */
     const TRACKS = [
         {
             file: 'music/1.mp3',
@@ -46,7 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'why,why?',
             events: [
                 { time: 6,  action: 'showFlashback' },
-                { time: 13, action: 'showVideo', videoId: 'tqHkZMLq7Qw', theme: 'dark' }
+                { time: 13, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 13, theme: 'dark' }
+            ]
+        },
+        {
+            file: 'music/3.mp3',
+            title: 'u and i (runaway)',
+            onPlay: {
+                text: 'о, это же любимое меме юли!',
+                mood: 'happy'
+            },
+            events: [
+                { time: 33,  action: 'showLocalVideo', src: 'video/u_and_i.mp4', onEnd: 'kamiiFirstUAndIEnd' },
+                { time: 133, action: 'showLocalVideo', src: 'video/u_and_i.mp4' }
             ]
         }
     ];
@@ -65,12 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicList           = document.getElementById('musicList');
     const youtubeOverlay      = document.getElementById('youtubeOverlay');
     const youtubeIframe       = document.getElementById('youtubeIframe');
+    const localVideo          = document.getElementById('localVideo');
 
     let currentTrack   = -1;
     let isPlaying      = false;
     let isRepeat       = false;
     let isExpanded     = false;
     let firedEvents    = new Set();
+    let onPlayTriggeredForTrack = -1;
 
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) sec = 0;
@@ -113,15 +123,15 @@ document.addEventListener('DOMContentLoaded', () => {
         musicTime.textContent = '0:00 / 0:00';
         updateListActive();
 
-        /* Сброс событий трека и визуальных эффектов */
         firedEvents = new Set();
+        onPlayTriggeredForTrack = -1;
         resetTrackVisuals();
 
         if (autoplay) playTrack();
     }
 
     function resetTrackVisuals() {
-        hideYouTubeVideo();
+        hideVideoOverlay();
         if (state === 'idle') {
             setMood(null);
             enterIdle();
@@ -134,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const track = TRACKS[currentTrack];
 
-        /* Фраза при первом проигрывании (один раз за всё время) */
+        /* Первое воспроизведение за всё время */
         if (track && track.onFirstPlay) {
             const key = 'petTrackFirstPlay_' + track.file;
             if (!localStorage.getItem(key)) {
@@ -148,6 +158,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }, 900);
             }
+        }
+
+        /* Каждое воспроизведение (один раз за сеанс трека) */
+        if (track && track.onPlay && onPlayTriggeredForTrack !== currentTrack) {
+            onPlayTriggeredForTrack = currentTrack;
+            setTimeout(() => {
+                if (typeof forcePlayPhrase === 'function') {
+                    forcePlayPhrase({
+                        text: track.onPlay.text,
+                        mood: track.onPlay.mood || 'neutral'
+                    }, finishDialog);
+                }
+            }, 900);
         }
 
         const p = audioEl.play();
@@ -170,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         musicPlayBtn.disabled = empty;
     }
 
-    /* ===== Проверка событий трека по времени ===== */
     function checkTrackEvents() {
         const track = TRACKS[currentTrack];
         if (!track || !track.events) return;
@@ -187,16 +209,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ev.action === 'showFlashback') {
             showFlashback();
         } else if (ev.action === 'showVideo') {
-            showYouTubeVideo(ev.videoId);
+            showYouTubeVideo(ev.videoId, ev.startAt || 0);
             if (ev.theme) {
                 const t = ev.theme;
                 document.body.className = t === 'dark' ? '' : 'theme-' + t;
                 localStorage.setItem('petTheme', t);
             }
+        } else if (ev.action === 'showLocalVideo') {
+            showLocalVideo(ev.src, ev.onEnd);
         }
     }
 
-    /* ===== Флешбек: показать 13-й кадр ===== */
+    /* ===== Флешбек: 13-й кадр ===== */
     function showFlashback() {
         cancelIdlePhrase();
         clearInterval(blinkTimer);
@@ -209,20 +233,93 @@ document.addEventListener('DOMContentLoaded', () => {
         setMood('happy');
     }
 
-    /* ===== Ютуб-видео над головой ===== */
-    function showYouTubeVideo(videoId) {
+    /* ===== YouTube-оверлей ===== */
+    function showYouTubeVideo(videoId, startAt) {
         if (!youtubeIframe || !youtubeOverlay) return;
-        const params = 'autoplay=1&mute=1&controls=0&loop=1&playlist=' + videoId + '&modestbranding=1&rel=0';
-        youtubeIframe.src = 'https://www.youtube.com/embed/' + videoId + '?' + params;
-        youtubeOverlay.classList.add('show');
+
+        localVideo.pause();
+        localVideo.removeAttribute('src');
+        localVideo.classList.remove('active');
+
+        const params = [
+            'autoplay=1',
+            'mute=1',
+            'controls=0',
+            'loop=1',
+            'playlist=' + videoId,
+            'modestbranding=1',
+            'rel=0'
+        ];
+        if (startAt > 0) params.push('start=' + startAt);
+
+        youtubeIframe.src = 'https://www.youtube.com/embed/' + videoId + '?' + params.join('&');
+        youtubeIframe.classList.add('active');
+
+        /* Небольшая задержка перед показом, чтобы всё успело подгрузиться */
+        setTimeout(() => {
+            youtubeOverlay.classList.add('show');
+        }, 120);
     }
 
-    function hideYouTubeVideo() {
+    /* ===== Локальное видео ===== */
+    function showLocalVideo(src, endAction) {
+        if (!localVideo || !youtubeOverlay) return;
+
+        youtubeIframe.src = '';
+        youtubeIframe.classList.remove('active');
+
+        localVideo.onended = null;
+
+        if (endAction === 'kamiiFirstUAndIEnd') {
+            localVideo.onended = kamiiFirstUAndIEnded;
+        }
+
+        localVideo.src = src;
+        localVideo.currentTime = 0;
+        localVideo.muted = true;
+        localVideo.classList.add('active');
+
+        setTimeout(() => {
+            youtubeOverlay.classList.add('show');
+            const p = localVideo.play();
+            if (p && p.catch) p.catch(() => {});
+        }, 120);
+    }
+
+    function hideVideoOverlay() {
         if (!youtubeOverlay) return;
         youtubeOverlay.classList.remove('show');
         setTimeout(() => {
-            if (youtubeIframe) youtubeIframe.src = '';
-        }, 800);
+            if (youtubeIframe) {
+                youtubeIframe.src = '';
+                youtubeIframe.classList.remove('active');
+            }
+            if (localVideo) {
+                localVideo.pause();
+                localVideo.removeAttribute('src');
+                localVideo.classList.remove('active');
+                localVideo.onended = null;
+            }
+        }, 1600);
+    }
+
+    /* ===== Специальный сценарий трека 3: речь после видео ===== */
+    function kamiiFirstUAndIEnded() {
+        hideVideoOverlay();
+        setTimeout(() => {
+            if (typeof forcePlayPhrase !== 'function') return;
+            forcePlayPhrase({
+                text: 'да, хорошее меме...',
+                mood: 'happy'
+            }, () => {
+                setTimeout(() => {
+                    forcePlayPhrase({
+                        text: 'хочу посмотреть его ещё раз!',
+                        mood: 'happy'
+                    }, finishDialog);
+                }, 300);
+            });
+        }, 700);
     }
 
     /* События audio */
@@ -244,6 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEl.addEventListener('ended', () => {
         if (isRepeat) {
             firedEvents = new Set();
+            onPlayTriggeredForTrack = -1;
             audioEl.currentTime = 0;
             playTrack();
         } else {
@@ -283,13 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
         musicExpandBtn.title = isExpanded ? 'свернуть' : 'плейлист';
     });
 
-    /* Клик по прогресс-бару для перемотки */
     musicProgressWrap.addEventListener('click', (e) => {
         if (!audioEl.duration || !isFinite(audioEl.duration)) return;
         const rect = musicProgressWrap.getBoundingClientRect();
         const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         audioEl.currentTime = audioEl.duration * p;
-        /* События, которые уже прошли, отмечаем как «сработавшие», чтобы не сработали заново */
         const track = TRACKS[currentTrack];
         if (track && track.events) {
             track.events.forEach((ev, idx) => {
@@ -298,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* Громкость */
     musicVolume.addEventListener('input', () => {
         audioEl.volume = parseFloat(musicVolume.value);
         localStorage.setItem('petVolume', audioEl.volume);
@@ -324,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePlayBtn();
 
     /* ==========================================================
-       ТАЙМЕР ПРОВЕДЁННОГО ВРЕМЕНИ
+       ТАЙМЕР
        ========================================================== */
 
     const timerCurrent = document.getElementById('timerCurrent');
@@ -376,10 +471,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTimers();
 
     /* ==========================================================
-       ДАЛЬШЕ — ТАМАГОЧИ
+       ТАМАГОЧИ
        ========================================================== */
 
-    /* ===== КАРТИНКИ ===== */
     const IMAGES = {
         sleep1:    'images/1.png',
         sleep2:    'images/2.png',
@@ -409,7 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return typeof phrase.text === 'function' ? phrase.text() : phrase.text;
     }
 
-    /* ===== ДИАЛОГИ ===== */
     const DIALOGS = {
         welcome: [
             { text: () => `*зевает* доброе утро... ого, уже ${getMoscowTime()}`, mood: "neutral" },
