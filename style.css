@@ -89,7 +89,7 @@ body {
     text-shadow: 0 0 18px var(--accent), 0 0 6px var(--accent);
 }
 
-/* ============ ТАЙМЕР (опущен ниже, чтобы не накладывался на темы) ============ */
+/* ============ ТАЙМЕР ============ */
 .timer-panel {
     position: fixed;
     top: 118px;
@@ -573,11 +573,6 @@ body {
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.35s cubic-bezier(.2,.9,.3,1);
-}
-
-body.chat-open .pet-widget {
-    transform: translateY(-130px);
 }
 
 .pet-layer {
@@ -630,6 +625,37 @@ body.chat-open .pet-widget {
 }
 .youtube-overlay iframe.active,
 .youtube-overlay video.active { display: block; }
+
+/* Кнопка полного экрана */
+.fullscreen-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    z-index: 15;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    padding: 0;
+}
+.youtube-overlay.show:hover .fullscreen-btn {
+    opacity: 1;
+}
+.fullscreen-btn:hover {
+    background: rgba(255,90,138,0.85);
+    transform: scale(1.1);
+}
 
 /* ============ ИКОНКИ ============ */
 .pet-icon {
@@ -808,6 +834,29 @@ body.theme-light .pet-speech { color: #222; }
 }
 
 /* ==========================================================
+   НОТЫ (играют когда музыка играет)
+   ========================================================== */
+.note-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 996;
+    color: #ffb0d0;
+    text-shadow:
+        0 0 10px rgba(255,90,138,0.9),
+        0 0 20px rgba(255,90,138,0.5),
+        0 0 4px #fff;
+    transform: translate(-50%, -50%);
+    animation: note-float 2.4s ease-out forwards;
+    opacity: 0;
+    font-weight: 700;
+}
+@keyframes note-float {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-15deg); }
+    15%  { opacity: 1; transform: translate(-50%, -55%) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translate(-50%, -250%) scale(1.05) rotate(20deg); }
+}
+
+/* ==========================================================
    ФЕЙЕРВЕРКИ
    ========================================================== */
 .firework-particle {
@@ -829,7 +878,7 @@ body.theme-light .pet-speech { color: #222; }
 }
 
 /* ==========================================================
-   ЧАТ
+   ЧАТ (перетаскиваемый)
    ========================================================== */
 .chat-panel {
     position: fixed;
@@ -839,6 +888,7 @@ body.theme-light .pet-speech { color: #222; }
     max-width: calc(100vw - 40px);
     height: 340px;
     padding: 12px;
+    padding-top: 34px;
     background: var(--speech-bg);
     border: 1px solid var(--speech-border);
     border-radius: 16px;
@@ -848,8 +898,8 @@ body.theme-light .pet-speech { color: #222; }
     gap: 8px;
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-50%) translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateX(-50%);
+    transition: opacity 0.3s ease;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.45);
@@ -857,7 +907,38 @@ body.theme-light .pet-speech { color: #222; }
 .chat-panel.open {
     opacity: 1;
     pointer-events: auto;
-    transform: translateX(-50%) translateY(0);
+}
+
+/* Хэдер для перетаскивания */
+.chat-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    user-select: none;
+    transition: background 0.15s;
+}
+.chat-header:hover {
+    background: rgba(255,255,255,0.07);
+}
+.chat-header:active {
+    cursor: grabbing;
+}
+.chat-drag-dots {
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+    opacity: 0.55;
+    font-weight: 900;
 }
 
 .chat-status {
