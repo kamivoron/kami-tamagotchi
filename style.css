@@ -390,6 +390,15 @@ body.chat-open .pet-widget {
     50%      { transform: scale(1.1) rotate(-8deg); }
 }
 
+/* Обижена — 💢 видно всегда, пока сидит (не спит) */
+.pet-widget.offended:not(.sleeping):not(.waking) .pet-angry-mark {
+    opacity: 1;
+    transform: scale(1) rotate(-15deg);
+    animation: pet-shake 0.3s infinite;
+    top: 20px;
+    left: 48%;
+}
+
 /* ============ ОБЛАЧКО ============ */
 .pet-speech {
     position: absolute;
