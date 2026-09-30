@@ -28,6 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
        ПЛЕЕР
        ========================================================== */
 
+    /*  Трек 2 события:
+        - 6 сек — флешбек (13 кадр)
+        - 11 сек — показать YouTube-видео (старт с 14 сек видео)
+        - 62 сек (1:02) — скрыть видео, начать рандомное подпевание
+        - 88 сек — пауза рандома (перед специфичными фразами)
+        - 89, 92, 95, 98, 101, 105, 108, 111 — точные фразы подпевания
+        - 114 сек — снять паузу рандома (продолжает подпевать)
+    */
     const TRACKS = [
         {
             file: 'music/1.mp3',
@@ -41,13 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
             file: 'music/2.mp3',
             title: 'why,why?',
             events: [
-                { time: 6,  action: 'showFlashback' },
-                { time: 11, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark', waitEnd: true }
-            ],
-            singAfterVideo: [
-                'я сошла с ума, я сошла с ума...',
-                'мне нужна онаааа',
-                'яяя сооошлааа с умааа'
+                { time: 6,   action: 'showFlashback' },
+                { time: 11,  action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark' },
+                { time: 62,  action: 'hideVideo' },
+                { time: 62,  action: 'randomSingOn' },
+                { time: 88,  action: 'specificSingOn' },
+                { time: 89,  action: 'singLine', text: 'без тебя я не я, без тебя меня нет...' },
+                { time: 92,  action: 'singLine', text: 'а они говорят, говорят это бред...' },
+                { time: 95,  action: 'singLine', text: 'это солнечный яд, золотые лучи...' },
+                { time: 98,  action: 'singLine', text: 'а они говорят, надо срочно лечить...' },
+                { time: 101, action: 'singLine', text: 'я хотела забыть, до упора и вниз...' },
+                { time: 105, action: 'singLine', text: 'я считала столбы и растерянных птиц...' },
+                { time: 108, action: 'singLine', text: 'без тебя меня нет, отпусти-отпусти...' },
+                { time: 111, action: 'singLine', text: 'до угла по стене, мама, папа, прости...' },
+                { time: 114, action: 'specificSingOff' }
             ]
         },
         {
@@ -87,8 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isExpanded     = false;
     let firedEvents    = new Set();
     let onPlayTriggeredForTrack = -1;
-
-    let videoWaitEndActive = false;
     let youtubeFallbackTimer = null;
 
     function formatTime(sec) {
@@ -108,10 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('div');
             row.className = 'music-track' + (i === currentTrack ? ' active' : '');
             row.innerHTML = `<span class="music-track-num">${i + 1}</span><span>${t.title}</span>`;
-            row.addEventListener('click', () => {
-                loadTrack(i);
-                playTrack();
-            });
+            row.addEventListener('click', () => { loadTrack(i); playTrack(); });
             musicList.appendChild(row);
         });
     }
@@ -134,7 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         firedEvents = new Set();
         onPlayTriggeredForTrack = -1;
-        stopTrack2Singing();
+        stopRandomSing();
+        specificSingActive = false;
         resetTrackVisuals();
 
         if (autoplay) playTrack();
@@ -170,9 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p && p.catch) p.catch(() => {});
     }
 
-    function pauseTrack() {
-        audioEl.pause();
-    }
+    function pauseTrack() { audioEl.pause(); }
 
     function updatePlayBtn() {
         musicPlayBtn.textContent = isPlaying ? '⏸' : '▶';
@@ -202,14 +211,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ev.action === 'showFlashback') {
             showFlashback();
         } else if (ev.action === 'showVideo') {
-            showYouTubeVideo(ev.videoId, ev.startAt || 0, ev);
+            showYouTubeVideo(ev.videoId, ev.startAt || 0);
             if (ev.theme) {
-                const t = ev.theme;
-                document.body.className = t === 'dark' ? '' : 'theme-' + t;
-                localStorage.setItem('petTheme', t);
+                document.body.className = ev.theme === 'dark' ? '' : 'theme-' + ev.theme;
+                localStorage.setItem('petTheme', ev.theme);
             }
+        } else if (ev.action === 'hideVideo') {
+            hideVideoOverlay();
         } else if (ev.action === 'showLocalVideo') {
             showLocalVideo(ev.src, ev.onEnd);
+        } else if (ev.action === 'singLine') {
+            showSingLine(ev.text, 2800);
+        } else if (ev.action === 'randomSingOn') {
+            startRandomSing();
+        } else if (ev.action === 'randomSingOff') {
+            stopRandomSing();
+        } else if (ev.action === 'specificSingOn') {
+            specificSingActive = true;
+        } else if (ev.action === 'specificSingOff') {
+            specificSingActive = false;
         }
     }
 
@@ -225,91 +245,31 @@ document.addEventListener('DOMContentLoaded', () => {
         setMood('happy');
     }
 
-    function showYouTubeVideo(videoId, startAt, opts) {
+    function showYouTubeVideo(videoId, startAt) {
         if (!youtubeIframe || !youtubeOverlay) return;
-
         localVideo.pause();
         localVideo.removeAttribute('src');
         localVideo.classList.remove('active');
 
         const params = [
-            'autoplay=1',
-            'mute=1',
-            'controls=0',
-            'modestbranding=1',
-            'rel=0',
-            'enablejsapi=1',
-            'origin=' + encodeURIComponent(location.origin)
+            'autoplay=1', 'mute=1', 'controls=0',
+            'modestbranding=1', 'rel=0',
+            'loop=1', 'playlist=' + videoId
         ];
         if (startAt > 0) params.push('start=' + startAt);
-
-        if (opts && opts.waitEnd) {
-            videoWaitEndActive = true;
-        } else {
-            params.push('loop=1');
-            params.push('playlist=' + videoId);
-            videoWaitEndActive = false;
-        }
 
         youtubeIframe.src = 'https://www.youtube.com/embed/' + videoId + '?' + params.join('&');
         youtubeIframe.classList.add('active');
 
-        setTimeout(() => {
-            try {
-                youtubeIframe.contentWindow.postMessage(
-                    JSON.stringify({ event: 'listening', id: 1 }),
-                    '*'
-                );
-            } catch (_) {}
-        }, 2000);
-
-        if (opts && opts.waitEnd) {
-            clearTimeout(youtubeFallbackTimer);
-            youtubeFallbackTimer = setTimeout(() => {
-                if (videoWaitEndActive) {
-                    handleYouTubeVideoEnded();
-                }
-            }, 180000);
-        }
-
-        setTimeout(() => {
-            youtubeOverlay.classList.add('show');
-        }, 120);
-    }
-
-    window.addEventListener('message', (e) => {
-        if (typeof e.data !== 'string') return;
-        let data;
-        try { data = JSON.parse(e.data); } catch (_) { return; }
-        if (data.event === 'onStateChange' && data.info === 0) {
-            if (videoWaitEndActive) {
-                handleYouTubeVideoEnded();
-            }
-        }
-    });
-
-    function handleYouTubeVideoEnded() {
-        if (!videoWaitEndActive) return;
-        videoWaitEndActive = false;
-        clearTimeout(youtubeFallbackTimer);
-        hideVideoOverlay();
-
-        if (currentTrack === 1) {
-            setTimeout(() => startTrack2Singing(), 800);
-        }
+        setTimeout(() => { youtubeOverlay.classList.add('show'); }, 120);
     }
 
     function showLocalVideo(src, endAction) {
         if (!localVideo || !youtubeOverlay) return;
-
         youtubeIframe.src = '';
         youtubeIframe.classList.remove('active');
-
         localVideo.onended = null;
-
-        if (endAction === 'kamiiFirstUAndIEnd') {
-            localVideo.onended = kamiiFirstUAndIEnded;
-        }
+        if (endAction === 'kamiiFirstUAndIEnd') localVideo.onended = kamiiFirstUAndIEnded;
 
         localVideo.src = src;
         localVideo.currentTime = 0;
@@ -327,17 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!youtubeOverlay) return;
         youtubeOverlay.classList.remove('show');
         setTimeout(() => {
-            if (youtubeIframe) {
-                youtubeIframe.src = '';
-                youtubeIframe.classList.remove('active');
-            }
+            if (youtubeIframe) { youtubeIframe.src = ''; youtubeIframe.classList.remove('active'); }
             if (localVideo) {
                 localVideo.pause();
                 localVideo.removeAttribute('src');
                 localVideo.classList.remove('active');
                 localVideo.onended = null;
             }
-        }, 1600);
+        }, 1200);
     }
 
     if (fullscreenBtn) {
@@ -355,89 +312,81 @@ document.addEventListener('DOMContentLoaded', () => {
         hideVideoOverlay();
         setTimeout(() => {
             if (typeof forcePlayPhrase !== 'function') return;
-            forcePlayPhrase({
-                text: 'да, хорошее меме...',
-                mood: 'happy'
-            }, () => {
+            forcePlayPhrase({ text: 'да, хорошее меме...', mood: 'happy' }, () => {
                 setTimeout(() => {
-                    forcePlayPhrase({
-                        text: 'хочу посмотреть его ещё раз!',
-                        mood: 'happy'
-                    }, finishDialog);
+                    forcePlayPhrase({ text: 'хочу посмотреть его ещё раз!', mood: 'happy' }, finishDialog);
                 }, 300);
             });
         }, 700);
     }
 
-    let singTimers = [];
-    let singBusy = false;
+    /* ===== Трек 2: рандомное и специфичное подпевание ===== */
+    const RANDOM_SING_PHRASES = [
+        'я сошла с ума, я сошла с ума...',
+        'мне нужна онаааа',
+        'яяя сооошлааа с умааа'
+    ];
+    let randomSingTimer = null;
+    let randomSingActive = false;
+    let specificSingActive = false;
 
-    function startTrack2Singing() {
-        if (currentTrack !== 1) return;
-        const track = TRACKS[1];
-        if (!track || !track.singAfterVideo) return;
-        singBusy = true;
-
-        let i = 0;
-        function sing() {
-            if (currentTrack !== 1 || !singBusy) return;
-            if (i >= track.singAfterVideo.length) {
-                singBusy = false;
-                return;
-            }
-            showSingLine(track.singAfterVideo[i], 2800);
-            i++;
-            singTimers.push(setTimeout(sing, 4500));
-        }
-        singTimers.push(setTimeout(sing, 500));
+    function startRandomSing() {
+        stopRandomSing();
+        randomSingActive = true;
+        scheduleNextRandomSing();
     }
 
-    function stopTrack2Singing() {
-        singBusy = false;
-        singTimers.forEach(t => clearTimeout(t));
-        singTimers = [];
+    function scheduleNextRandomSing() {
+        if (!randomSingActive) return;
+        randomSingTimer = setTimeout(() => {
+            if (currentTrack !== 1 || !randomSingActive) return;
+            if (specificSingActive) {
+                scheduleNextRandomSing();
+                return;
+            }
+            const phrase = RANDOM_SING_PHRASES[Math.floor(Math.random() * RANDOM_SING_PHRASES.length)];
+            showSingLine(phrase, 2800);
+            scheduleNextRandomSing();
+        }, 4500 + Math.random() * 2500);
+    }
+
+    function stopRandomSing() {
+        randomSingActive = false;
+        if (randomSingTimer) {
+            clearTimeout(randomSingTimer);
+            randomSingTimer = null;
+        }
     }
 
     function showSingLine(text, duration) {
         if (currentTrack !== 1) return;
-
         cancelIdlePhrase();
         clearTimeout(idleTimer);
         clearTimeout(idlePhrase1);
         clearTimeout(idlePhrase2);
         clearInterval(blinkTimer);
-
         petSpeech.textContent = text;
         showSpeech(true);
         setMood('happy');
         showLayer('happy1');
-
         clearTimeout(talkTimer);
         talkTimer = setTimeout(() => {
             showSpeech(false);
             setMood(null);
-            if (state !== 'sleeping') {
-                showLayer('idle');
-            }
+            if (state === 'idle') showLayer('idle');
         }, duration);
     }
 
+    /* ===== Ноты ===== */
     let noteSpawnTimer = null;
-
     function startMusicNotes() {
         stopMusicNotes();
-        spawnNote();
-        spawnNote();
+        spawnNote(); spawnNote();
         noteSpawnTimer = setInterval(spawnNote, 550);
     }
-
     function stopMusicNotes() {
-        if (noteSpawnTimer) {
-            clearInterval(noteSpawnTimer);
-            noteSpawnTimer = null;
-        }
+        if (noteSpawnTimer) { clearInterval(noteSpawnTimer); noteSpawnTimer = null; }
     }
-
     function spawnNote() {
         if (!petWidget) return;
         const rect = petWidget.getBoundingClientRect();
@@ -445,15 +394,10 @@ document.addEventListener('DOMContentLoaded', () => {
         note.className = 'note-particle';
         const symbols = ['♪', '♫', '♬', '♩', '🎵', '🎶'];
         note.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-
-        const x = rect.left + Math.random() * rect.width;
-        const y = rect.top + rect.height * 0.55 + Math.random() * 40;
-
-        note.style.left = x + 'px';
-        note.style.top = y + 'px';
+        note.style.left = (rect.left + Math.random() * rect.width) + 'px';
+        note.style.top = (rect.top + rect.height * 0.55 + Math.random() * 40) + 'px';
         note.style.fontSize = (16 + Math.random() * 16) + 'px';
         note.style.animationDuration = (2 + Math.random() * 1.2) + 's';
-
         document.body.appendChild(note);
         setTimeout(() => note.remove(), 3400);
     }
@@ -473,7 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isPlaying = false;
         updatePlayBtn();
         stopMusicNotes();
-        stopTrack2Singing();
+        stopRandomSing();
+        specificSingActive = false;
         if (state === 'idle') enterIdle();
     });
 
@@ -493,7 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRepeat) {
             firedEvents = new Set();
             onPlayTriggeredForTrack = -1;
-            stopTrack2Singing();
+            stopRandomSing();
+            specificSingActive = false;
             audioEl.currentTime = 0;
             playTrack();
         } else {
@@ -501,23 +447,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    musicPlayBtn.addEventListener('click', () => {
-        if (isPlaying) pauseTrack();
-        else playTrack();
-    });
+    musicPlayBtn.addEventListener('click', () => { if (isPlaying) pauseTrack(); else playTrack(); });
 
     musicPrevBtn.addEventListener('click', () => {
-        if (audioEl.currentTime > 3) {
-            audioEl.currentTime = 0;
-            firedEvents = new Set();
-        } else {
-            loadTrack(currentTrack - 1, true);
-        }
+        if (audioEl.currentTime > 3) { audioEl.currentTime = 0; firedEvents = new Set(); }
+        else loadTrack(currentTrack - 1, true);
     });
 
-    musicNextBtn.addEventListener('click', () => {
-        loadTrack(currentTrack + 1, true);
-    });
+    musicNextBtn.addEventListener('click', () => { loadTrack(currentTrack + 1, true); });
 
     musicRepeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
@@ -529,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isExpanded = !isExpanded;
         musicList.classList.toggle('open', isExpanded);
         musicExpandBtn.classList.toggle('open', isExpanded);
-        musicExpandBtn.title = isExpanded ? 'свернуть' : 'плейлист';
     });
 
     musicProgressWrap.addEventListener('click', (e) => {
@@ -554,23 +490,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedVol = localStorage.getItem('petVolume');
     if (savedVol !== null) {
         const v = parseFloat(savedVol);
-        if (!isNaN(v)) {
-            audioEl.volume = v;
-            musicVolume.value = v;
-        }
+        if (!isNaN(v)) { audioEl.volume = v; musicVolume.value = v; }
     }
 
-    if (TRACKS.length > 0) {
-        loadTrack(0, false);
-    } else {
-        musicTitle.textContent = 'нет треков';
-    }
+    if (TRACKS.length > 0) loadTrack(0, false);
+    else musicTitle.textContent = 'нет треков';
     renderTrackList();
     updateButtonsDisabled();
     updatePlayBtn();
 
     /* ==========================================================
-       ТАЙМЕР + ФРАЗЫ ЗА ВРЕМЯ
+       ТАЙМЕР
        ========================================================== */
     const timerCurrent = document.getElementById('timerCurrent');
     const timerTotal = document.getElementById('timerTotal');
@@ -579,17 +509,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalSeconds = parseInt(localStorage.getItem('petTotalSeconds') || '0', 10);
     if (isNaN(totalSeconds)) totalSeconds = 0;
 
-    /* Вехи времени, каждая срабатывает один раз за сессию */
+    /* Вехи фраз по сессии */
     const TIME_MILESTONES = [
-        { sec: 5 * 60,    text: 'мы с тобой вместе уже 5 минут! хороший старт',                            shown: false },
-        { sec: 10 * 60,   text: '10 минут вместе! кажется, это начало чего-то большего?',                  shown: false },
-        { sec: 30 * 60,   text: 'ты провёл со мной 30 минут... спасибо тебе за это время!',                shown: false },
-        { sec: 60 * 60,   text: 'ого, мы вместе уже целый час! надеюсь, это не предел~',                   shown: false },
-        { sec: 2 * 3600,  text: 'и сколько это будет длиться? 2 часа?! мать твою!',                        shown: false },
-        { sec: 3 * 3600,  text: 'вау, 3 часа.. я благодарна тебе за каждую секунду проведённую вместе!',   shown: false },
-        { sec: 4 * 3600,  text: 'боже мой, 4 часа с таким солнцем - это рай!',                             shown: false },
-        { sec: 5 * 3600,  text: 'кажется, ты обезумел... какие 5 часов вместе?!',                          shown: false },
-        { sec: 10 * 3600, text: 'теперь ты точно мой теневой...',                                          shown: false }
+        { sec: 5 * 60,    text: 'мы с тобой вместе уже 5 минут! хороший старт',                          shown: false },
+        { sec: 10 * 60,   text: '10 минут вместе! кажется, это начало чего-то большего?',                shown: false },
+        { sec: 30 * 60,   text: 'ты провёл со мной 30 минут... спасибо тебе за это время!',              shown: false },
+        { sec: 60 * 60,   text: 'ого, мы вместе уже целый час! надеюсь, это не предел~',                 shown: false },
+        { sec: 2 * 3600,  text: 'и сколько это будет длиться? 2 часа?! мать твою!',                      shown: false },
+        { sec: 3 * 3600,  text: 'вау, 3 часа.. я благодарна тебе за каждую секунду проведённую вместе!', shown: false },
+        { sec: 4 * 3600,  text: 'боже мой, 4 часа с таким солнцем - это рай!',                           shown: false },
+        { sec: 5 * 3600,  text: 'кажется, ты обезумел... какие 5 часов вместе?!',                        shown: false },
+        { sec: 10 * 3600, text: 'теперь ты точно мой теневой...',                                        shown: false }
     ];
 
     function checkTimeMilestones() {
@@ -607,15 +537,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = Math.floor(sec / 3600);
         const m = Math.floor((sec % 3600) / 60);
         const s = sec % 60;
-        if (h > 0) {
-            return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-        }
+        if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
         return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
-
-    function formatTotal(sec) {
-        return Math.floor(sec / 3600) + 'ч';
-    }
+    function formatTotal(sec) { return Math.floor(sec / 3600) + 'ч'; }
 
     function renderTimers() {
         timerCurrent.textContent = '⏱ ' + formatSession(sessionSeconds);
@@ -627,6 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalSeconds++;
         renderTimers();
         checkTimeMilestones();
+        checkAllAchievements();
     }, 1000);
 
     setInterval(() => {
@@ -636,11 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('beforeunload', () => {
         localStorage.setItem('petTotalSeconds', totalSeconds);
     });
-
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            localStorage.setItem('petTotalSeconds', totalSeconds);
-        }
+        if (document.hidden) localStorage.setItem('petTotalSeconds', totalSeconds);
     });
 
     renderTimers();
@@ -668,12 +591,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getMoscowTime() {
         return new Date().toLocaleTimeString('ru-RU', {
-            timeZone: 'Europe/Moscow',
-            hour: '2-digit',
-            minute: '2-digit'
+            timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit'
         });
     }
-
     function getPhraseText(phrase) {
         return typeof phrase.text === 'function' ? phrase.text() : phrase.text;
     }
@@ -695,110 +615,153 @@ document.addEventListener('DOMContentLoaded', () => {
             { text: "и что тебе нужно?~",                           mood: "happy"   }
         ],
         body: [
-            { text: "ой! ты чего тыкаешь?",                        mood: "neutral"  },
-            { text: "мне же щекотно!",                             mood: "happy"    },
-            { text: "думаешь, тут есть пасхалка?",                 mood: "neutral"  },
-            { text: "ахахах, ну ты даёшь!",                        mood: "laughing" },
-            { text: "я так и знала, что ты зайдёшь~",              mood: "happy"    },
-            { text: "ты пришла поиграть?",                         mood: "happy"    },
-            { text: "красивая у меня одёжка, не так ли?)",         mood: "happy"    },
-            { text: "это японская школьная форма, моя любимая!~",  mood: "happy"    },
+            { text: "ой! ты чего тыкаешь?", mood: "neutral" },
+            { text: "мне же щекотно!", mood: "happy" },
+            { text: "думаешь, тут есть пасхалка?", mood: "neutral" },
+            { text: "ахахах, ну ты даёшь!", mood: "laughing" },
+            { text: "я так и знала, что ты зайдёшь~", mood: "happy" },
+            { text: "ты пришла поиграть?", mood: "happy" },
+            { text: "красивая у меня одёжка, не так ли?)", mood: "happy" },
+            { text: "это японская школьная форма, моя любимая!~", mood: "happy" },
             { text: "что, я испачкала форму? наверное, это от чизбургера..", mood: "neutral" },
-            { text: "клик, клик, какая же фраза следующая?",        mood: "neutral"  },
-            { text: "только не кликай слишком часто!",             mood: "neutral"  },
-            { text: "ты такой настойчивый, это смущает...",         mood: "teasing"  },
-            { text: "я сегодня попшикалась новыми духами, как тебе?", mood: "happy"  }
+            { text: "клик, клик, какая же фраза следующая?", mood: "neutral" },
+            { text: "только не кликай слишком часто!", mood: "neutral" },
+            { text: "ты такой настойчивый, это смущает...", mood: "teasing" },
+            { text: "я сегодня попшикалась новыми духами, как тебе?", mood: "happy" }
         ],
         hair: [
-            { text: "э! не трогай мои волосы!",                                        mood: "angry"   },
-            { text: "ты меня гладишь?! я не милая!",                                    mood: "angry"   },
-            { text: "ещё раз тронешь — укушу!",                                         mood: "angry"   },
-            { text: "и вовсе ты мне не нравишься!",                                     mood: "angry"   },
-            { text: "но я же только уложила их...",                                     mood: "neutral" },
+            { text: "э! не трогай мои волосы!", mood: "angry" },
+            { text: "ты меня гладишь?! я не милая!", mood: "angry" },
+            { text: "ещё раз тронешь — укушу!", mood: "angry" },
+            { text: "и вовсе ты мне не нравишься!", mood: "angry" },
+            { text: "но я же только уложила их...", mood: "neutral" },
             { text: "у меня волосы кудрявятся, их сложно расчесать после такого знаешь ли!", mood: "neutral" },
-            { text: "з-зачем ты... меня гладишь...",                                    mood: "teasing" },
-            { text: "и вовсе мне не приятно!",                                          mood: "angry"   },
-            { text: "продолжай...",                                                     mood: "happy"   },
-            { text: "хватит называть меня милой!",                                      mood: "angry"   },
-            { text: "дурак ты...",                                                      mood: "teasing" }
+            { text: "з-зачем ты... меня гладишь...", mood: "teasing" },
+            { text: "и вовсе мне не приятно!", mood: "angry" },
+            { text: "продолжай...", mood: "happy" },
+            { text: "хватит называть меня милой!", mood: "angry" },
+            { text: "дурак ты...", mood: "teasing" }
         ],
         skirt: [
-            { text: "к-куда ты жмёшь?!",                        mood: "angry"   },
-            { text: "извращенец!",                              mood: "angry"   },
-            { text: "что ты только что-!",                       mood: "teasing" },
-            { text: "что ты думаешь ты творишь?!",              mood: "angry"   },
+            { text: "к-куда ты жмёшь?!", mood: "angry" },
+            { text: "извращенец!", mood: "angry" },
+            { text: "что ты только что-!", mood: "teasing" },
+            { text: "что ты думаешь ты творишь?!", mood: "angry" },
             { text: "тебе это доставляет удовольствие или что?!", mood: "angry" },
-            { text: "не трогай мою юбку.",                      mood: "angry"   },
-            { text: "мне это не нравится.",                     mood: "angry"   },
-            { text: "хватит.",                                  mood: "angry"   },
-            { text: "я обижусь, если ты продолжишь.",           mood: "angry"   }
+            { text: "не трогай мою юбку.", mood: "angry" },
+            { text: "мне это не нравится.", mood: "angry" },
+            { text: "хватит.", mood: "angry" },
+            { text: "я обижусь, если ты продолжишь.", mood: "angry" }
         ]
     };
 
     const SPAM_PHRASES = [
-        { text: "ёмаё, поумерь свой пыл, бро",              mood: "angry" },
-        { text: "ты чего накинулся?",                        mood: "angry" },
-        { text: "тише, тише, куда так жмёшь-то?",            mood: "angry" },
-        { text: "слишком быстро кликаешь!",                  mood: "angry" },
-        { text: "чилл, бро",                                 mood: "angry" },
-        { text: "я не успеваю так быстро реагировать...",     mood: "angry" }
+        { text: "ёмаё, поумерь свой пыл, бро", mood: "angry" },
+        { text: "ты чего накинулся?", mood: "angry" },
+        { text: "тише, тише, куда так жмёшь-то?", mood: "angry" },
+        { text: "слишком быстро кликаешь!", mood: "angry" },
+        { text: "чилл, бро", mood: "angry" },
+        { text: "я не успеваю так быстро реагировать...", mood: "angry" }
     ];
 
     const THEME_REACTIONS = [
-        { text: "что-то изменилось вокруг...",      mood: "neutral" },
-        { text: "да, этот цвет лучше прошлого",      mood: "happy"   },
+        { text: "что-то изменилось вокруг...", mood: "neutral" },
+        { text: "да, этот цвет лучше прошлого", mood: "happy" },
         { text: "ты просто кликаешь на всё подряд?", mood: "neutral" },
-        { text: "ладно, развлекайся",                mood: "neutral" }
+        { text: "ладно, развлекайся", mood: "neutral" }
     ];
     let themeChanges = 0;
 
     const IDLE_PHRASES_FIRST = [
-        { text: "ээ... ты там?",                       mood: "neutral" },
-        { text: "так и будем смотреть друг на друга?",  mood: "neutral" },
-        { text: "пупупу...",                            mood: "neutral" },
-        { text: "тут кто-нибудь есть?",                 mood: "neutral" },
-        { text: "я что, осталась одна?",                mood: "neutral" },
-        { text: "меня что, оставили одну?",             mood: "neutral" },
-        { text: "ты отошёл?",                           mood: "neutral" },
-        { text: "эээй, вернись...",                     mood: "neutral" },
-        { text: "скучновато чёт....",                   mood: "neutral" },
-        { text: "*зевает*",                             mood: "neutral" }
+        { text: "ээ... ты там?", mood: "neutral" },
+        { text: "так и будем смотреть друг на друга?", mood: "neutral" },
+        { text: "пупупу...", mood: "neutral" },
+        { text: "тут кто-нибудь есть?", mood: "neutral" },
+        { text: "я что, осталась одна?", mood: "neutral" },
+        { text: "меня что, оставили одну?", mood: "neutral" },
+        { text: "ты отошёл?", mood: "neutral" },
+        { text: "эээй, вернись...", mood: "neutral" },
+        { text: "скучновато чёт....", mood: "neutral" },
+        { text: "*зевает*", mood: "neutral" }
     ];
     const IDLE_PHRASE_SECOND = { text: "ты уснул? значит, мне тоже пора...", mood: "neutral" };
 
+    /* ==========================================================
+       ДОСТИЖЕНИЯ
+       type: 'friendship' | 'time' | 'messages'
+       target: число (очки / секунды / сообщения)
+       ========================================================== */
     const ACHIEVEMENTS = [
-        { score: 10,  icon: "🌱", title: "незнакомец", desc: "первая встреча, мимолетный взгляд",
-          text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral"  },
-        { score: 25,  icon: "🌿", title: "знакомый",   desc: "кажется, у вас всё же есть что-то общее",
-          text: "ладно, ты мне нравишься",                   mood: "happy"    },
-        { score: 50,  icon: "🌳", title: "друг",       desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов в двадцатый раз?",
-          text: "я тебя запомнила, знай!",                   mood: "happy"    },
-        { score: 67,  icon: "🤖", title: "67",         desc: "67676767676767",
-          text: "67... сикс севен... брейнрот detected",     mood: "laughing" },
-        { score: 100, icon: "👤", title: "теневой",    desc: "когда вы успели стать так близки?",
-          text: "ты стала моим лучшим другом~",              mood: "laughing" }
+        /* ---- Дружба ---- */
+        { type: 'friendship', target: 10,  icon: "🌱", title: "незнакомец", desc: "первая встреча, мимолетный взгляд",
+          text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral" },
+        { type: 'friendship', target: 25,  icon: "🦋", title: "знакомый", desc: "кажется, у вас всё же есть что-то общее",
+          text: "ладно, ты мне нравишься", mood: "happy" },
+        { type: 'friendship', target: 50,  icon: "🐝", title: "друг", desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов в двадцатый раз?",
+          text: "я тебя запомнила, знай!", mood: "happy" },
+        { type: 'friendship', target: 67,  icon: "🤖", title: "67", desc: "67676767676767",
+          text: "67... сикс севен... брейнрот detected", mood: "laughing" },
+        { type: 'friendship', target: 100, icon: "👤", title: "теневой", desc: "когда вы успели стать так близки?",
+          text: "ты стала моим лучшим другом~", mood: "laughing" },
+
+        /* ---- Время вместе (накопленное) ---- */
+        { type: 'time', target: 5 * 60,     icon: "⏱", title: "5 минут",   desc: "проведи с ками 5 минут",
+          text: "пять минут вместе — уже что-то!",            mood: "happy" },
+        { type: 'time', target: 10 * 60,    icon: "⏱", title: "10 минут",  desc: "проведи с ками 10 минут",
+          text: "десять минут! время летит~",                 mood: "happy" },
+        { type: 'time', target: 30 * 60,    icon: "⏳", title: "полчаса",   desc: "проведи с ками 30 минут",
+          text: "полчаса вместе, вот это да!",                mood: "happy" },
+        { type: 'time', target: 60 * 60,    icon: "⏰", title: "час",       desc: "проведи с ками 1 час",
+          text: "целый час! я тронута~",                       mood: "happy" },
+        { type: 'time', target: 2 * 3600,   icon: "🕐", title: "2 часа",    desc: "проведи с ками 2 часа",
+          text: "2 часа вместе, я впечатлена!",                mood: "laughing" },
+        { type: 'time', target: 5 * 3600,   icon: "🕔", title: "5 часов",   desc: "проведи с ками 5 часов",
+          text: "5 часов... ты серьёзно?!",                    mood: "laughing" },
+        { type: 'time', target: 10 * 3600,  icon: "🌙", title: "10 часов",  desc: "проведи с ками 10 часов",
+          text: "10 часов вместе... ты мой теневой теперь!",   mood: "laughing" },
+
+        /* ---- Сообщения ---- */
+        { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",   desc: "отправь ками первое сообщение",
+          text: "ты написал мне первое сообщение! ура!",       mood: "happy" },
+        { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",    desc: "отправь ками 5 сообщений",
+          text: "пять сообщений! мы болтаем!",                  mood: "happy" },
+        { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",   desc: "отправь ками 10 сообщений",
+          text: "десять сообщений, так держать!",               mood: "happy" },
+        { type: 'messages', target: 30,  icon: "💬", title: "30 сообщений",   desc: "отправь ками 30 сообщений",
+          text: "тридцать! ты разговорчивый~",                  mood: "happy" },
+        { type: 'messages', target: 50,  icon: "💬", title: "50 сообщений",   desc: "отправь ками 50 сообщений",
+          text: "пятьдесят! мы точно подружились",              mood: "laughing" },
+        { type: 'messages', target: 67,  icon: "🔢", title: "67 сообщений",   desc: "отправь ками 67 сообщений",
+          text: "67 сообщений... это судьба",                   mood: "laughing" },
+        { type: 'messages', target: 100, icon: "💯", title: "100 сообщений",  desc: "отправь ками 100 сообщений",
+          text: "сто сообщений! ты меня завалил болтовнёй~",    mood: "laughing" }
     ];
-    const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShown') || '[]'));
+    const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShownV2') || '[]'));
+
+    function achKey(a) { return a.type + '_' + a.target; }
 
     let unreadAchievements = 0;
-
     let friendship = parseInt(localStorage.getItem('petFriendship') || '0', 10);
     if (isNaN(friendship)) friendship = 0;
+    let messagesSent = parseInt(localStorage.getItem('petMessagesSent') || '0', 10);
+    if (isNaN(messagesSent)) messagesSent = 0;
 
     let isOffended = localStorage.getItem('petOffended') === 'true';
+
+    function getProgress(type) {
+        if (type === 'friendship') return friendship;
+        if (type === 'time') return totalSeconds;
+        if (type === 'messages') return messagesSent;
+        return 0;
+    }
 
     function setOffended(v) {
         isOffended = v;
         localStorage.setItem('petOffended', v ? 'true' : 'false');
         petWidget.classList.toggle('offended', v);
-        /* Обновляем кадр если сейчас сидим без диалога */
         if (state === 'idle') {
-            if (v) {
-                clearInterval(blinkTimer);
-                showLayer('angry');
-            } else {
-                enterIdle();
-            }
+            if (v) { clearInterval(blinkTimer); showLayer('angry'); }
+            else enterIdle();
         }
     }
 
@@ -824,26 +787,24 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('petFriendship', friendship);
         renderFriendship(true);
 
-        if (typeof x === 'number' && typeof y === 'number') {
-            spawnClickFx(x, y, delta);
-        }
+        if (typeof x === 'number' && typeof y === 'number') spawnClickFx(x, y, delta);
 
-        if (delta > 0) checkAchievements(old, friendship);
+        checkAllAchievements();
         renderAchPanel();
     }
 
-    function checkAchievements(oldScore, newScore) {
+    function checkAllAchievements() {
         let unlockedAny = false;
         ACHIEVEMENTS.forEach(a => {
-            if (shownAchievements.has(a.score)) return;
-            if (oldScore < a.score && newScore >= a.score) {
-                shownAchievements.add(a.score);
+            const key = achKey(a);
+            if (shownAchievements.has(key)) return;
+            if (getProgress(a.type) >= a.target) {
+                shownAchievements.add(key);
                 unlockedAny = true;
             }
         });
-
         if (unlockedAny) {
-            localStorage.setItem('petAchShown', JSON.stringify([...shownAchievements]));
+            localStorage.setItem('petAchShownV2', JSON.stringify([...shownAchievements]));
             renderAchPanel();
             onAchievementUnlocked();
         }
@@ -880,9 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
         void toast.offsetWidth;
         toast.classList.add('show');
         clearTimeout(achToastHideTimer);
-        achToastHideTimer = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 5500);
+        achToastHideTimer = setTimeout(() => toast.classList.remove('show'), 5500);
     }
 
     function playAchievementSound() {
@@ -891,12 +850,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Ctx) return;
             const ctx = new Ctx();
             const now = ctx.currentTime;
-            const notes = [
+            [
                 { freq: 1318.51, time: 0.00, dur: 0.40, vol: 0.10 },
                 { freq: 1760.00, time: 0.13, dur: 0.45, vol: 0.13 },
                 { freq: 2217.46, time: 0.27, dur: 0.60, vol: 0.11 }
-            ];
-            notes.forEach(n => {
+            ].forEach(n => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
@@ -917,24 +875,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const rect = petWidget.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-
         const colors = ['#ff5a8a', '#ff9a5a', '#ffd54a', '#8a7fd4', '#5eb3e4', '#8bc34a', '#ff7aaa'];
-        const burstCount = 4;
-
-        for (let b = 0; b < burstCount; b++) {
+        for (let b = 0; b < 4; b++) {
             setTimeout(() => {
                 const bx = cx + (Math.random() - 0.5) * 220;
                 const by = cy + (Math.random() - 0.5) * 160;
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                const count = 14;
-                for (let i = 0; i < count; i++) {
+                for (let i = 0; i < 14; i++) {
                     const p = document.createElement('div');
                     p.className = 'firework-particle' + (i % 3 === 0 ? ' large' : '');
                     p.style.left = bx + 'px';
                     p.style.top = by + 'px';
                     p.style.color = color;
                     p.style.background = color;
-                    const angle = (Math.PI * 2 / count) * i + Math.random() * 0.4;
+                    const angle = (Math.PI * 2 / 14) * i + Math.random() * 0.4;
                     const dist = 55 + Math.random() * 70;
                     p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
                     p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
@@ -957,9 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
             badge.style.animation = 'none';
             void badge.offsetWidth;
             badge.style.animation = '';
-        } else if (badge) {
-            badge.remove();
-        }
+        } else if (badge) badge.remove();
     }
 
     function onAchievementUnlocked() {
@@ -970,12 +922,11 @@ document.addEventListener('DOMContentLoaded', () => {
         spawnFireworks();
 
         clearTimeout(achPhraseTimer);
-        achPhraseTimer = setTimeout(() => {
-            showAchievementPhrase();
-        }, 900);
+        achPhraseTimer = setTimeout(() => showAchievementPhrase(), 900);
     }
 
     function showAchievementPhrase() {
+        if (state === 'sleeping') return;
         cancelIdlePhrase();
         clearTimeout(wakeTimer);
         clearTimeout(idleTimer);
@@ -991,9 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startTalkAnim('happy');
 
         clearTimeout(talkTimer);
-        talkTimer = setTimeout(() => {
-            finishDialog();
-        }, 3500);
+        talkTimer = setTimeout(() => finishDialog(), 3500);
     }
 
     function spawnClickFx(x, y, delta) {
@@ -1028,20 +977,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderAchPanel() {
-        const unlockedCount = ACHIEVEMENTS.filter(a => friendship >= a.score).length;
+        const unlockedCount = ACHIEVEMENTS.filter(a => shownAchievements.has(achKey(a))).length;
         let html = `<div class="ach-header">🏆 твои ачивки · ${unlockedCount}/${ACHIEVEMENTS.length}</div>`;
-        ACHIEVEMENTS.forEach(a => {
-            const unlocked = friendship >= a.score;
-            html += `
-                <div class="ach-item ${unlocked ? 'unlocked' : 'locked'}">
-                    <div class="ach-icon">${unlocked ? a.icon : '🔒'}</div>
-                    <div class="ach-info">
-                        <div class="ach-title">${unlocked ? a.title : '???'}</div>
-                        <div class="ach-desc">${unlocked ? a.desc : 'пока не открыто'}</div>
-                    </div>
-                    <div class="ach-progress">${unlocked ? '✓' : '???'}</div>
-                </div>`;
+
+        const groups = [
+            { type: 'friendship', label: '❤ дружба' },
+            { type: 'time',       label: '⏱ время вместе' },
+            { type: 'messages',   label: '💬 сообщения' }
+        ];
+
+        groups.forEach(g => {
+            const list = ACHIEVEMENTS.filter(a => a.type === g.type);
+            if (!list.length) return;
+            html += `<div class="ach-subheader">${g.label}</div>`;
+            list.forEach(a => {
+                const unlocked = shownAchievements.has(achKey(a));
+                html += `
+                    <div class="ach-item ${unlocked ? 'unlocked' : 'locked'}">
+                        <div class="ach-icon">${unlocked ? a.icon : '🔒'}</div>
+                        <div class="ach-info">
+                            <div class="ach-title">${unlocked ? a.title : '???'}</div>
+                            <div class="ach-desc">${unlocked ? a.desc : 'пока не открыто'}</div>
+                        </div>
+                        <div class="ach-progress">${unlocked ? '✓' : '???'}</div>
+                    </div>`;
+            });
         });
+
         achPanel.innerHTML = html;
     }
 
@@ -1056,7 +1018,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================================
        ЧАТ
        ========================================================== */
-
     const CHAT_HISTORY_KEY = 'petChatHistory';
     const CHAT_MAX_MESSAGES = 100;
     let chatHistory = [];
@@ -1066,9 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { chatHistory = []; }
 
     function saveChatHistory() {
-        if (chatHistory.length > CHAT_MAX_MESSAGES) {
-            chatHistory = chatHistory.slice(-CHAT_MAX_MESSAGES);
-        }
+        if (chatHistory.length > CHAT_MAX_MESSAGES) chatHistory = chatHistory.slice(-CHAT_MAX_MESSAGES);
         localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
     }
 
@@ -1103,27 +1062,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const APOLOGY_KEYWORDS = ['извини', 'прости', 'сорри', 'соррян', 'соррянчик', 'прошу прощения', 'виноват', 'виновата'];
 
     const CHAT_TRIGGERS = [
-        /* ---- спасибо ---- */
         { keywords: ['спасибо', 'благодарю', 'спс', 'сенкс', 'thanks', 'thx'],
           replies: ["ой, всегда пожалуйста~","рада помочь!!","хехе, обращайся~","не за что-не за что!","ой, да ладно тебе~"],
           score: 1, mood: 'happy' },
-        /* ---- комплименты ---- */
         { keywords: ['красивая', 'красивые', 'нежная', 'можно утонуть', 'красотка', 'дива', 'хорошка', 'милая', 'милашка', 'няшка', 'няшная', 'ты классная', 'ты прикольная', 'ты забавная', 'ты смешная', 'ты хорошая', 'молодец', 'крутая', 'ты солнце'],
           replies: ["о-ой, не смущай меня...","я... я не такая!! сам такой! хмпф!","хехе~ конечно я такая! но и ты не хуже)","т-ты тоже, знаешь ли...","на себя посмотри!! (смущенно отвернулась)"],
           score: 5, mood: 'teasing' },
-        /* ---- грубость ---- */
         { keywords: ['идиот', 'идиота', 'дура', 'дурак', 'плохая', 'тупая', 'глупая', 'глупышка', 'хватит', 'отстань', 'падла', 'тварь', 'мразь', 'ублюдище', 'сука', 'лох', 'лошара', 'лохушка', 'сучка', 'блядь'],
           replies: ["...я сделаю вид, что не слышала этого...","эй, без обзывательств!","я же обижусь...","я обиделась.","я больше не хочу с тобой разговаривать."],
           score: -5, mood: 'angry', rudeness: true },
-        /* ---- любовь ---- */
         { keywords: ['люблю тебя', 'тебя люблю', 'сердечко', 'любимая', 'любимка'],
           replies: ["о-ой.. я... т-ты это серьезно?","и я тебя люблю, знаешь ли...","не говори такое вслух, дурак!!","*отвернулась в смущении* и вовсе ты мне не нравишься! д-дурак...","я тоже тебя люблю, солнце!!~","и ты моя любимка... только не говори никому!"],
           score: 10, mood: 'teasing' },
-        /* ---- извинись ---- */
         { keywords: ['извинись'],
           replies: ["нет-нет, сам извиняйся!","так не прокатит, извиняйся сам!"],
           mood: 'angry' },
-        /* ---- месяцы ---- */
         { keywords: ['октябрь', 'октября', 'октябре'],
           replies: ["о, в этом месяце день рождения у моей любимки!","31 октября, запиши себе в блокнотик, чтобы поздравить юлю!"],
           mood: 'happy' },
@@ -1136,123 +1089,93 @@ document.addEventListener('DOMContentLoaded', () => {
         { keywords: ['июль', 'июля', 'июле'],
           replies: ["да, в июле мой день рождения!","6 числа моё др. ты приглашён, кстати!","6 июля мой день рождения, пометь это в календарике!"],
           mood: 'happy' },
-        /* ---- ты ---- */
         { keywords: ['ты'],
           replies: ["я!","я?"],
           mood: 'happy' },
-        /* ---- сколько тебе лет ---- */
         { keywords: ['сколько тебе лет'],
           replies: ["мне уже больше 20.","а зачем тебе такая информация?","для чего узнать хочешь?","я уже большая!!"],
           mood: 'teasing' },
-        /* ---- неправда ---- */
         { keywords: ['неправда'],
           replies: ["правда!"],
           mood: 'happy' },
-        /* ---- ложь ---- */
         { keywords: ['ложь', 'лгать'],
           replies: ["не лги мне..."],
           mood: 'neutral' },
-        /* ---- правда ---- */
         { keywords: ['правда'],
           replies: ["я верю","ага, уже поверила)","да-да, я поверив"],
           mood: 'happy' },
-        /* ---- космос ---- */
         { keywords: ['космос'],
           replies: ["да, космос такой необъятный...","почему космос не пишет про нас?"],
           mood: 'neutral' },
-        /* ---- чизбургер ---- */
         { keywords: ['чизбургер', 'чизбурбе'],
           replies: ["хочется чизбурбе...","хотю...","хацю чизбургер...."],
           score: 2, mood: 'happy' },
-        /* ---- лов лайв ---- */
-        { keywords: ['лов лайв', 'нико', 'ядзава', 'ловлайв', 'лл', 'живая любовь'],
+        { keywords: ['лов лайв', 'нико', 'ядзава', 'ловлайв', 'живая любовь'],
           replies: ["РЕЧЬ ПРО МОЕ ЛЮБИМОЕ АНИМЕ, Я ЧУЮ!","НИКО НИКО НИИИИИ~","посмотри все поколения, иначе я не буду отвечать тебе больше! шучу :)","почему я просто не родилась красивой школьницей-айдолом из токио?"],
           mood: 'happy' },
-        /* ---- коносуба ---- */
         { keywords: ['коносуба', 'коносубе', 'коносубой', 'мегумин', 'аква', 'акве', 'дантесс', 'лалатина', 'казума', 'казуме', 'казумой', 'аквой'],
           replies: ["моя любимая сейю - риэ такахаши! знай это!","омг я обожаю мегумин ❤️","EKSUPUROSION! 💥💥","я - высший архимаг! шучу)","когда уже новый сезоон, аааааа"],
           mood: 'happy' },
-        /* ---- маты ---- */
         { keywords: ['блять', 'ахуеть', 'пиздец', 'сук', 'пипец', 'блядство', 'охуеть', 'хуй', 'член', 'пизда', 'пенис', 'вагина', 'нахуй', 'бляха', 'ёкарный', 'ёк', 'ек'],
           replies: ["ой-ой, ты чего выражаешься?","что за выражения, блин?","выбирай выражения!"],
           mood: 'neutral' },
-        /* ---- плавать ---- */
         { keywords: ['плавать', 'плавание'],
           replies: ["ой, я люблю плавать"],
           mood: 'happy' },
-        /* ---- кем хотела бы стать ---- */
         { keywords: ['кем хотела бы стать', 'кем хотела бы быть'],
           replies: ["я бы хотела быть сейю аниме) или художником-фрилансером","я бы хотела быть котиком, спящим целыми днями~"],
           mood: 'happy' },
-        /* ---- бруно ---- */
         { keywords: ['бруно'],
           replies: ["не упоминай бруно!"],
           mood: 'angry' },
-        /* ---- клац ---- */
         { keywords: ['клац'],
           replies: ["клац-клац!","клацай больше!","клацаем вместе!"],
           mood: 'happy' },
-        /* ---- пони ---- */
         { keywords: ['пони', 'млп'],
           replies: ["мой кинн - флаттершай 🥺","мне очень нравится пинки пай :3","кексики...."],
           mood: 'happy' },
-        /* ---- ня ---- */
         { keywords: ['ня', 'мяу', 'мя', 'мур'],
           replies: ["ня~","мя~","мяу~","мур~"],
           mood: 'happy' },
-        /* ---- удар ---- */
         { keywords: ['удар', 'бью'],
           replies: ["ай!! больно...","ты сделал мне больно...","ай!! за что?...","чем я это заслужила...?"],
           mood: 'angry' },
-        /* ---- новки ---- */
         { keywords: ['новки'],
           replies: ["итд?!","это тот, что с красными волосами?"],
           mood: 'neutral' },
-        /* ---- утопия ---- */
         { keywords: ['утопия'],
           replies: ["вижу как ты мертвецки устал...."],
           mood: 'neutral' },
-        /* ---- день рождения ---- */
         { keywords: ['день рождения', 'др'],
           replies: ["я родилась 6 июля.","6 июля, запиши в календарике!","мой день рождения? 6 июля, не проспи!","теперь ты приглашён, 6 июля!"],
           mood: 'happy' },
-        /* ---- амням ---- */
         { keywords: ['амням'],
           replies: ["это и есть амням"],
           mood: 'happy' },
-        /* ---- где живёшь ---- */
         { keywords: ['где живёшь'],
           replies: ["в твоём сердечке, конечно! ❤️"],
           mood: 'happy' },
-        /* ---- соня ---- */
         { keywords: ['соня'],
           replies: ["я соня? или ты про сестру васи?"],
           mood: 'neutral' },
-        /* ---- сестра васи ---- */
         { keywords: ['сестра васи', 'сестру васи'],
           replies: ["сестру васи зовут соня! у нее день рождения 29 января"],
           mood: 'neutral' },
-        /* ---- лапки ---- */
         { keywords: ['лапки', 'руки'],
           replies: ["у меня лапки 🥺"],
           mood: 'happy' },
-        /* ---- сэм ---- */
         { keywords: ['сэм', 'сем'],
           replies: ["6?","7!","да не сэм, а сем"],
           mood: 'neutral' },
-        /* ---- секс ---- */
         { keywords: ['сех', 'секс', 'сэкс'],
           replies: ["ч-что ты такое говоришь?!","я думаю, нам пока рано об этом говорить..","я не хочу об этом..."],
           mood: 'teasing' },
-        /* ---- теневой ---- */
         { keywords: ['теневой', 'теневая'],
           replies: ["если мы с тобой достаточно близки, у тебя есть все шансы..","а у кого их нет?","кто, ты?","я бы хотела стать твоим теневым.. ❤️"],
           mood: 'teasing' },
-        /* ---- не спи ---- */
         { keywords: ['не спи', 'не засыпай', 'не усыпай'],
           replies: ["не могуу, мне очень хочется спать...","я не могу устоять перед сном...","извини, я не смогу не спать..."],
           mood: 'neutral' },
-        /* ---- погода ---- */
         { keywords: ['погода', 'погодой', 'погоду', 'погоды'],
           replies: ["а у меня сегодня солнце~ это ты!","а у меня всегда тепло, я же в кармане!"],
           mood: 'happy' },
@@ -1265,28 +1188,24 @@ document.addEventListener('DOMContentLoaded', () => {
         { keywords: ['жарко', 'жарища', 'парилка', 'тепло', 'сжарился', 'сжарилась'],
           replies: ["фуф, я уже от одного прочтения этого сообщения сжарилась..","боже, как же мне сейчас хорошо с моими +10...","я плавлюсь только лишь от чтения твоих буковок 😭😭"],
           mood: 'laughing' },
-        /* ---- действия ---- */
         { keywords: ['обнимать', 'обнимаю', 'объятия', 'обними', 'обнимашки', 'объятие', 'обнял', 'обняла', 'обнять'],
           replies: ["*робко обняла* 🥺","*нежно обнимаю* 🥺"],
           score: 2, mood: 'happy' },
         { keywords: ['поцелуй', 'поцелую', 'целуй', 'целую', 'чмок', 'муа', 'поцелуйчик'],
           replies: ["*посылаю воздушный поцелуй* 😋","умф... *робко целую в щёчку* 🥺","я... я же стесняюсь...","*целую в лобик*"],
           mood: 'teasing' },
-        /* ---- настроение ---- */
         { keywords: ['грустно', 'грустново', 'плохо', 'плоховато', 'тяжело', 'тяжеловато', 'депресся', 'депрессия', 'тоскливо', 'печально', 'печалька'],
           replies: ["э-эй, не грусти!! я тут, знаешь ли","ну-у чего ты? 🥺 иди обниму!","расскажи, что случилось?"],
           mood: 'neutral' },
-        /* ---- игры ---- */
         { keywords: ['стринова', 'стринову', 'стриновы', 'стриновой', 'подрыв', 'вспышка', 'вспышкой', 'вспышку', 'вспышке'],
           replies: ["блин, может каточку во вспышку?)","о, гоу со мной во вспышку!!","там в стринове скоро добавят экстракшен мод...","мне немного одиноко играть одной :(","жаль, что ты не пойдешь со мной играть.."],
           mood: 'happy' },
         { keywords: ['рафт', 'рафтом', 'рафту'],
           replies: ["ох, я там такой кораблище забацала!","обожаю рафт блин, жаль, что мы нечасто собираемся в него...","мне нужны доски, БОЛЬШЕ ДОСОК!","э-эй, я приготовила кучу рыбы, почему никто не ест?!"],
           mood: 'happy' },
-        { keywords: ['мимесис', 'прэтфолл', 'пратфолл', 'претфолл', 'скамлайн', 'скам лайн', 'мека хамелеон', 'мека', 'хамелеон', 'фазма', 'фазмафобия', 'гамба', 'солар', 'соларпанк', 'сигаме', 'сигама', 'сигейм', 'богос', 'чикен хорс', 'курица лошадь', 'джекбокс', 'пати бокс', 'патибокс', 'гартик', 'бункер', 'меме полис', 'мемеполис', 'шарарам', 'роблокс', 'фейт', 'триггер', 'фейт триггер'],
+        { keywords: ['мимесис', 'прэтфолл', 'пратфолл', 'претфолл', 'скамлайн', 'скам лайн', 'мека хамелеон', 'мека', 'хамелеон', 'фазма', 'фазмафобия', 'гамба', 'солар', 'соларпанк', 'сигаме', 'сигама', 'сигейм', 'богос', 'чикен хорс', 'курица лошадь', 'джекбокс', 'пати бокс', 'патибокс', 'гартик', 'бункер', 'меме полис', 'мемеполис', 'шарарам', 'роблокс', 'фейт', 'триггер'],
           replies: ["может, однажды ещё соберемся в эту веселую игрульку, однажды...","когда-нибудь точно у всех совпадут расписания и мы пойдём играть в это..."],
           mood: 'neutral' },
-        /* ---- твич ---- */
         { keywords: ['хес', 'хесус', 'авгн', 'jesusavgn', 'hesus', 'avgn'],
           replies: ["110","ихихяхя","это уже ихи или это хяхя?","нина, голова болит","вот и дымайте, вот те на те"],
           mood: 'laughing' },
@@ -1296,7 +1215,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { keywords: ['мазеллов', 'илья', 'мзлфф', 'мзифф', 'мазелов', 'mzlff', 'mazellovvv', 'коряков'],
           replies: ["кому мы оставим мир, если даже всех нас некому спасти?...","мало ребёнком быть, сложней остаться им взрослым...","и в твоих руках моё сердце, оставь себе ❤️","спасибо всем, дальше — хуже, путь долгий, но будет что вспомнить...","вас побеждает ворона, нас побеждаете вы!","и души переплетаясь, тянут всё за собой в этот мерзкий медленный танец...","давай меняться: тебе это, тебе это — по рукам","а чё грустить? можно кататься без очереди все дни!","альфред, держи себя в руках... 🐻","нас сюжет куда-то несёт, о нам достаточно в жизни счастливый конец — и всё..."],
           mood: 'neutral' },
-        /* ---- аниме ---- */
         { keywords: ['звездное дитя', 'звёздное дитя', 'ребенок идола', 'ребёнок идола', 'oshi no ko', 'арима', 'кана', 'мемчо', 'мемто', 'ай хошино', 'хошино', 'руби', 'бикомачи', 'би комачи'],
           replies: ["о, речь про моё любимое аниме!!","ах, звездное дитя... когда же 4 сезон уже?~","ля, щас бы опенинги оттуда сыграть на пианинко","кана, моя любимая каночка...","anata no aidoru, sign wa B! chu!~ ой, запелась я что-то."],
           mood: 'happy' },
@@ -1312,96 +1230,74 @@ document.addEventListener('DOMContentLoaded', () => {
         { keywords: ['манга', 'маньхуа', 'манхва', 'мангу', 'что читаешь', 'какое читаешь'],
           replies: ["я пока не читаю мангу, но аниме смотрю! онгоинги, в основном","ой, я что-то и забыла, что можно что-то читать...","манга - тоже литература!","ой, мне так лень читать, многа букаф...."],
           mood: 'neutral' },
-        /* ---- пианино ---- */
         { keywords: ['пианино', 'синтезатор', 'пианинко', 'потрунькать'],
           replies: ["ля, после такого аж захотелось потрунькать","ооо, щас бы на пианинко сыграть!","ой, а если я сыграю тебе в дсе на пианино, ты послушаешь? 🥺"],
           mood: 'happy' },
-        /* ---- дружба ---- */
         { keywords: ['дружба', 'друзья', 'друг', 'подруга', 'очки', 'счёт', 'очков', 'насколько мы близки'],
           replies: [
               () => `у нас сейчас ${friendship} очков дружбы, между прочим!`,
               () => `наша с тобой дружба числится в очках, их целых ${friendship}!`
           ],
           mood: 'happy' },
-        /* ---- 67 ---- */
         { keywords: ['67', 'сикс', 'севен', 'брейнрот'],
           replies: ["67","67 67 67 67 67 67 67 67 67","сикс севен бреееейнроооот","да этот мем уже устарел, не?"],
           mood: 'laughing' },
-        /* ---- шика ---- */
-        { keywords: ['шика', 'шиканоко', 'shika shikanoko', 'олениха', 'олень'],
+        { keywords: ['шика', 'шиканоко', 'олениха', 'олень'],
           replies: ["шиканоко ноко ноко коштантан! 🦌"],
           mood: 'happy' },
-        /* ---- юля ---- */
         { keywords: ['юля', 'юле', 'юлю', 'юлей', 'юлька', 'юся', 'юлечка', 'манривата', 'мандарин', 'мандариновая'],
           replies: ["о, про мою любимку говоришь","не говори про неё так. я ревную.","хихихи юлька иди корову подои","юся, ты уже покушала? 👀","все мои меме только для неё...","про юлю либо хорошо, либо никак"],
           mood: 'happy' },
-        /* ---- грандон ---- */
         { keywords: ['грандон', 'грандона', 'грандону', 'грандоном', 'вася', 'васей', 'васю', 'васе', 'атхос'],
           replies: ["вася? знаю такого","я грр! ты мне?","жить надо как вася - танцевать и музон погромче."],
           mood: 'neutral' },
-        /* ---- форум ---- */
         { keywords: ['форум', 'саша', 'саше', 'сашей', 'сашу', 'форума', 'форуму', 'фовум'],
           replies: ["фооооовуууумм!!!!","форум? интересно, когда он ещё приедет к нам....","о, речь про любителя бабушек?"],
           mood: 'laughing' },
-        /* ---- привоз ---- */
         { keywords: ['привоз', 'привозу', 'привоза', 'привозом', 'приводя', 'приводей', 'приводю', 'привадя', 'вадя', 'вадей', 'вадю', 'вадим', 'вадима'],
           replies: ["эх, когда мы с ним ещё пойдем в стринову?","привоз? да, пропал челик, даже не отвечает толком...","эх, я уже почти забыла кто это...","отвечу на это через месяц)","да уж, обновы у побегушек походу не будет...","я всё ещё жду, когда он пришлёт мне танец...","я всё ещё жду, когда мои спрайты для игры будут задействованы...","пиздун.","о, опездун.","что? он снова проспал?","а? он вновь забыл?"],
           mood: 'neutral' },
-        /* ---- даня ---- */
         { keywords: ['даня', 'дане', 'даней', 'даню'],
           replies: ["даня? он, должно быть, снова опоздает или не придет вовсе","даня - киберкотлета марвела"],
           mood: 'neutral' },
-        /* ---- ками ---- */
         { keywords: ['ками', 'камичка', 'камушка', 'камушко', 'диячка', 'диана'],
           replies: ["а? что?","я тууут~","слышу-слышу!","я здесь!!"],
           mood: 'happy' },
-        /* ---- смешное ---- */
         { keywords: ['лол', 'ржу', 'пхпх', 'ахах', 'кек'],
           replies: ["пхахахаха","ахахаха, ты меня рассмеши... рассмешнил... ра.. ну ты пон","ахаххаха, как ты это ваще придумал","лол, согласна"],
           mood: 'laughing' },
-        /* ---- творчество ---- */
         { keywords: ['арт', 'арты', 'рисовать', 'рисунки', 'меме', 'анимации', 'анимация', 'нарисуй', 'рисование', 'рисуй'],
           replies: ["скоро-скоро будет новьё, чееестно","да рисую я, рисую..."],
           mood: 'neutral' },
-        /* ---- форма ---- */
         { keywords: ['форма', 'юбка', 'платье', 'матроска'],
           replies: ["это моя японская школьная форма, между прочим!"],
           mood: 'happy' },
-        /* ---- волосы ---- */
         { keywords: ['волосы', 'кудри', 'волосики'],
           replies: ["ой, тебе нравится?...🥺 не то, чтобы мне приятно это слышать!","волосы у меня кудрявятся, знаешь, как это сложно?"],
           mood: 'teasing' },
-        /* ---- глаза ---- */
         { keywords: ['глаза', 'гетерохромия'],
           replies: ["глаза? да, я родилась такой..."],
           mood: 'neutral' },
-        /* ---- кто ты ---- */
         { keywords: ['кто ты', 'как тебя зовут'],
           replies: ["я ками, просто ками","а что, не видно? я ками, самая настоящая","я - ками! а остальное секрет, хихи~"],
           mood: 'neutral' },
-        /* ---- вместе ---- */
         { keywords: ['со мной', 'вместе', 'го', 'давай'],
           replies: ["ой, давай!!","погналии!!","приглашаешь? соглашаюсь!","ну, если ты настаиваешь..."],
           mood: 'happy' },
-        /* ---- сон ---- */
         { keywords: ['спать', 'сон', 'устал', 'устала', 'хочу спать'],
           replies: ["иди поспи, я подожду~","сон - это святое!!","я тоже хочу спать, но я здесь, пока ты со мной","а может пойдем спать вместе?"],
           mood: 'neutral' },
-        /* ---- прощание ---- */
-        { keywords: ['пока', 'до свидания', 'увидимся', 'я пойду', 'я отойду', 'я ушел', 'я ушла', 'прощай', 'спокойной ночи', 'бб'],
+        { keywords: ['пока', 'до свидания', 'увидимся', 'я пойду', 'я отойду', 'я ушел', 'я ушла', 'прощай', 'спокойной ночи'],
           replies: ["пока-пока, возвращайся скорее!","не уходи надолго, ладно?...","ох, я буду тебя ждать... здесь...","нет, не покидай меня..."],
           mood: 'neutral' },
-        /* ---- как дела ---- */
-        { keywords: ['как дела', 'как ты', 'что делаешь', 'чем занята', 'кд', 'чд', 'шо делаешь', 'чего делаешь', 'шо скажешь'],
+        { keywords: ['как дела', 'как ты', 'что делаешь', 'чем занята', 'шо делаешь', 'чего делаешь', 'шо скажешь'],
           replies: ["у меня всё хорошо, я спала вот... правда меня разбудили","скучала по тебе, если честно...","да так, чиллю, валяюсь","да так, работу всё ищу...","мне немножко было скучно, но с тобой теперь мне весело!!"],
           mood: 'neutral' },
-        /* ---- приветствия ---- */
-        { keywords: ['привет', 'прив', 'ку', 'хай', 'здаров', 'здравствуй', 'хаюшки', 'доброе утро', 'добрый день', 'добрый вечер', 'доброй ночи'],
+        { keywords: ['привет', 'прив', 'хай', 'здаров', 'здравствуй', 'хаюшки', 'доброе утро', 'добрый день', 'добрый вечер', 'доброй ночи'],
           replies: ["ооо, привет-привет~","приивеееет!! я ждала тебя~","доброго времени суток!~ как ты?","урааа!! ты пришёл~","прив!! я соскучилась~"],
           mood: 'happy' }
     ];
 
-    /* Триггер по целым словам: ключ "кана" не поймает "канал", "люблю тебя" требует оба слова */
     function matchesTrigger(text, keyword) {
         const lowerText = text.toLowerCase();
         const lowerKeyword = keyword.toLowerCase();
@@ -1426,8 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return {
                         apology: true,
                         text: FORGIVE_REPLIES[Math.floor(Math.random() * FORGIVE_REPLIES.length)],
-                        score: 2,
-                        mood: 'happy'
+                        score: 2, mood: 'happy'
                     };
                 }
             }
@@ -1453,10 +1348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (/^да\?*$/i.test(trimmed)) {
-            return {
-                text: Math.random() < 0.5 ? "да!" : "нет конечно!",
-                mood: 'neutral'
-            };
+            return { text: Math.random() < 0.5 ? "да!" : "нет конечно!", mood: 'neutral' };
         }
 
         return {
@@ -1482,7 +1374,6 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent = text;
         chatMessages.appendChild(el);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-
         chatHistory.push({ from, text, time: Date.now() });
         saveChatHistory();
     }
@@ -1533,34 +1424,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function showChatReaction(mood) {
         if (state !== 'idle') return;
         if (!mood || mood === 'neutral') return;
-
         cancelIdlePhrase();
         clearInterval(blinkTimer);
         clearInterval(chatReactionAnim);
         clearTimeout(chatReactionTimer);
-
         setMood(mood);
-
         let frames;
         if (mood === 'happy')          frames = ['happy1', 'happy2'];
         else if (mood === 'angry')     frames = ['angry'];
         else if (mood === 'laughing')  frames = ['laugh'];
         else if (mood === 'teasing')   frames = ['tease'];
         else                            frames = ['talk1', 'talk2'];
-
         let i = 0;
         chatReactionAnim = setInterval(() => {
             if (state !== 'idle') { clearInterval(chatReactionAnim); return; }
             showLayer(frames[i % frames.length]);
             i++;
         }, 220);
-
         chatReactionTimer = setTimeout(() => {
             clearInterval(chatReactionAnim);
-            if (state === 'idle') {
-                setMood(null);
-                enterIdle();
-            }
+            if (state === 'idle') { setMood(null); enterIdle(); }
         }, 2400);
     }
 
@@ -1579,7 +1462,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addChatMessage('user', text);
         chatInput.value = '';
         updateChatState();
-
         resetIdleCountdown();
 
         if (isCheat) {
@@ -1600,6 +1482,11 @@ document.addEventListener('DOMContentLoaded', () => {
             addSystemMessage('[чит] неизвестная команда.');
             return;
         }
+
+        /* Считаем сообщения */
+        messagesSent++;
+        localStorage.setItem('petMessagesSent', messagesSent);
+        checkAllAchievements();
 
         const result = findChatReply(text);
 
@@ -1622,25 +1509,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isOpen) {
             updateChatState();
             renderChatHistory();
-            setTimeout(() => {
-                if (!chatInput.disabled) chatInput.focus();
-            }, 300);
+            setTimeout(() => { if (!chatInput.disabled) chatInput.focus(); }, 300);
         }
     });
 
     chatSend.addEventListener('click', sendChatMessage);
-
     chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendChatMessage();
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
     });
+    chatInput.addEventListener('input', () => resetIdleCountdown());
 
-    chatInput.addEventListener('input', () => {
-        resetIdleCountdown();
-    });
-
+    /* ===== Перетаскивание чата ===== */
     const chatHeader = document.getElementById('chatHeader');
 
     let chatPos = null;
@@ -1655,43 +1534,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxY = window.innerHeight - 80;
         chatPos.x = Math.max(-chatPanel.offsetWidth + 80, Math.min(maxX, chatPos.x));
         chatPos.y = Math.max(0, Math.min(maxY, chatPos.y));
-
         chatPanel.style.left = chatPos.x + 'px';
         chatPanel.style.top = chatPos.y + 'px';
         chatPanel.style.right = 'auto';
         chatPanel.style.bottom = 'auto';
         chatPanel.style.transform = 'none';
     }
-
     applyChatPosition();
 
     let dragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let chatStartX = 0;
-    let chatStartY = 0;
+    let dragStartX = 0, dragStartY = 0, chatStartX = 0, chatStartY = 0;
 
     if (chatHeader) {
         chatHeader.addEventListener('mousedown', (e) => {
             e.preventDefault();
             const rect = chatPanel.getBoundingClientRect();
             dragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            chatStartX = rect.left;
-            chatStartY = rect.top;
+            dragStartX = e.clientX; dragStartY = e.clientY;
+            chatStartX = rect.left; chatStartY = rect.top;
             document.body.style.cursor = 'grabbing';
         });
-
         chatHeader.addEventListener('touchstart', (e) => {
             const t = e.touches[0];
             if (!t) return;
             const rect = chatPanel.getBoundingClientRect();
             dragging = true;
-            dragStartX = t.clientX;
-            dragStartY = t.clientY;
-            chatStartX = rect.left;
-            chatStartY = rect.top;
+            dragStartX = t.clientX; dragStartY = t.clientY;
+            chatStartX = rect.left; chatStartY = rect.top;
         }, { passive: true });
     }
 
@@ -1701,13 +1570,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const dy = clientY - dragStartY;
         let newX = chatStartX + dx;
         let newY = chatStartY + dy;
-
         const rect = chatPanel.getBoundingClientRect();
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        newX = Math.max(-rect.width + 80, Math.min(w - 80, newX));
-        newY = Math.max(0, Math.min(h - 80, newY));
-
+        newX = Math.max(-rect.width + 80, Math.min(window.innerWidth - 80, newX));
+        newY = Math.max(0, Math.min(window.innerHeight - 80, newY));
         chatPanel.style.left = newX + 'px';
         chatPanel.style.top = newY + 'px';
         chatPanel.style.right = 'auto';
@@ -1763,11 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!IMAGES[name]) return;
         petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
     }
-
-    function showSpeech(visible) {
-        petWidget.classList.toggle('awake', visible);
-    }
-
+    function showSpeech(visible) { petWidget.classList.toggle('awake', visible); }
     function setMood(mood) {
         petWidget.classList.remove('mood-angry', 'mood-happy', 'mood-laughing', 'mood-teasing');
         if (mood && mood !== 'neutral') petWidget.classList.add('mood-' + mood);
@@ -1775,23 +1636,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startTalkAnim(mood) {
         stopTalkAnim();
-        let i = 0;
-        let frames;
+        let i = 0, frames;
         if (mood === 'happy')          frames = ['happy1', 'happy2'];
         else if (mood === 'angry')     frames = ['angry'];
         else if (mood === 'laughing')  frames = ['laugh'];
         else if (mood === 'teasing')   frames = ['tease'];
         else                            frames = ['talk1', 'talk2'];
-
         if (frames.length === 1) { showLayer(frames[0]); return; }
-        talkAnim = setInterval(() => {
-            showLayer(frames[i % frames.length]);
-            i++;
-        }, 220);
+        talkAnim = setInterval(() => { showLayer(frames[i % frames.length]); i++; }, 220);
     }
-    function stopTalkAnim() {
-        if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
-    }
+    function stopTalkAnim() { if (talkAnim) { clearInterval(talkAnim); talkAnim = null; } }
 
     function startBreathing() {
         stopBreathing();
@@ -1803,9 +1657,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showLayer(breathFrame === 0 ? 'sleep1' : 'sleep2');
         }, 1800);
     }
-    function stopBreathing() {
-        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
-    }
+    function stopBreathing() { if (breathTimer) { clearInterval(breathTimer); breathTimer = null; } }
 
     function cancelIdlePhrase() {
         if (!idlePhraseActive) return;
@@ -1821,11 +1673,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isPlaying) return;
         if (state !== 'idle' || idlePhraseActive) return;
         idlePhraseActive = true;
-
         petSpeech.textContent = getPhraseText(phrase);
         showSpeech(true);
         setMood(phrase.mood);
-
         let i = 0;
         const frames = ['talk1', 'talk2'];
         clearInterval(idlePhraseAnim);
@@ -1834,7 +1684,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showLayer(frames[i % 2]);
             i++;
         }, 220);
-
         clearTimeout(idlePhraseHide);
         idlePhraseHide = setTimeout(() => {
             if (!idlePhraseActive) return;
@@ -1853,23 +1702,18 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(sleepTimer);
         clearInterval(blinkTimer);
         stopBreathing();
-
         petSpeech.textContent = getPhraseText(phrase);
         showSpeech(true);
         setMood(phrase.mood);
         startTalkAnim(phrase.mood);
-
         clearTimeout(talkTimer);
-        talkTimer = setTimeout(() => {
-            if (onFinish) onFinish();
-        }, 3500);
+        talkTimer = setTimeout(() => { if (onFinish) onFinish(); }, 3500);
     }
 
     function playPhrase(phrase, onFinish) {
         if (state === 'talking') return;
         forcePlayPhrase(phrase, onFinish);
     }
-
     function playRandom(arr, onFinish) {
         const phrase = arr[Math.floor(Math.random() * arr.length)];
         playPhrase(phrase, onFinish);
@@ -1886,7 +1730,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(idlePhrase1);
         clearTimeout(idlePhrase2);
         clearTimeout(idleTimer);
-
         if (isPlaying) return;
 
         idlePhrase1 = setTimeout(() => {
@@ -1894,12 +1737,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
             playIdlePhrase(p);
         }, 10000);
-
         idlePhrase2 = setTimeout(() => {
             if (state !== 'idle' || isPlaying) return;
             playIdlePhrase(IDLE_PHRASE_SECOND);
         }, 20000);
-
         idleTimer = setTimeout(() => {
             if (state !== 'idle' || isPlaying) return;
             cancelIdlePhrase();
@@ -1924,7 +1765,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setState('idle');
         idlePhraseActive = false;
 
-        /* Если обижена — не мигаем, показываем недовольный кадр */
         if (isOffended) {
             clearInterval(blinkTimer);
             showLayer('angry');
@@ -1932,7 +1772,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         showLayer('idle');
-
         clearInterval(blinkTimer);
         blinkTimer = setInterval(() => {
             if (state !== 'idle' || idlePhraseActive || isPlaying || isOffended) return;
@@ -1941,7 +1780,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (state === 'idle' && !idlePhraseActive && !isPlaying && !isOffended) showLayer('idle');
             }, 160);
         }, 4000);
-
         scheduleIdleTimers();
     }
 
@@ -1958,7 +1796,6 @@ document.addEventListener('DOMContentLoaded', () => {
         stopBreathing();
         setState('waking');
         showLayer('wake');
-
         clearTimeout(wakeTimer);
         wakeTimer = setTimeout(() => {
             if (state !== 'waking') return;
@@ -1973,9 +1810,7 @@ document.addEventListener('DOMContentLoaded', () => {
             forcePlayPhrase(p, finishDialog);
             return;
         }
-
         cancelIdlePhrase();
-
         const rect = petWidget.getBoundingClientRect();
         const y = (e.clientY - rect.top) / rect.height;
 
@@ -1994,7 +1829,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (zone === 'hair')  delta = 3;
         if (zone === 'skirt') delta = -2;
         changeFriendship(delta, e.clientX, e.clientY);
-
         playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
     });
 
@@ -2003,13 +1837,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const theme = btn.dataset.theme;
             document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
             localStorage.setItem('petTheme', theme);
-
             cancelIdlePhrase();
-
             if (state === 'sleeping' || state === 'waking') return;
             if (state === 'talking') return;
             if (themeChanges >= THEME_REACTIONS.length) return;
-
             const reaction = THEME_REACTIONS[themeChanges];
             themeChanges++;
             playPhrase(reaction, finishDialog);
@@ -2018,7 +1849,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const saved = localStorage.getItem('petTheme');
     if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
-
     if (isOffended) petWidget.classList.add('offended');
 
     renderFriendship(false);
