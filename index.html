@@ -13,19 +13,56 @@
         <div class="friendship-counter" id="friendCounter">❤ 0</div>
     </div>
 
-    <div class="ach-panel" id="achPanel"></div>
-
     <div class="theme-switcher">
-        <button class="theme-btn" data-theme="dark"   style="background:#2a2a2a" title="тёмная"></button>
-        <button class="theme-btn" data-theme="gray"   style="background:#4a4a4a" title="серая"></button>
-        <button class="theme-btn" data-theme="night"  style="background:#1a1a2e" title="ночь"></button>
-        <button class="theme-btn" data-theme="rose"   style="background:#3d2222" title="роза"></button>
-        <button class="theme-btn" data-theme="forest" style="background:#1e2f1e" title="лес"></button>
-        <button class="theme-btn" data-theme="ocean"  style="background:#1a2a3a" title="океан"></button>
-        <button class="theme-btn" data-theme="light"  style="background:#e8e8e8" title="светлая"></button>
+        <button class="theme-btn" data-theme="dark"     style="background:#2a2a2a" title="тёмная"></button>
+        <button class="theme-btn" data-theme="gray"     style="background:#4a4a4a" title="серая"></button>
+        <button class="theme-btn" data-theme="night"    style="background:#1a1a2e" title="ночь"></button>
+        <button class="theme-btn" data-theme="rose"     style="background:#3d2222" title="роза"></button>
+        <button class="theme-btn" data-theme="forest"   style="background:#1e2f1e" title="лес"></button>
+        <button class="theme-btn" data-theme="ocean"    style="background:#1a2a3a" title="океан"></button>
+        <button class="theme-btn" data-theme="light"    style="background:#e8e8e8" title="светлая"></button>
+        <button class="theme-btn" data-theme="violet"   style="background:#1a0f2e" title="фиолетовая тёмная"></button>
+        <button class="theme-btn" data-theme="lavender" style="background:#2e1f42" title="лаванда"></button>
+        <button class="theme-btn" data-theme="lilac"    style="background:#4a3560" title="лиловая"></button>
     </div>
 
+    <div class="timer-panel" id="timerPanel">
+        <div class="timer-current" id="timerCurrent">⏱ 00:00</div>
+        <div class="timer-total" id="timerTotal">всего: 0ч</div>
+    </div>
+
+    <div class="music-player" id="musicPlayer">
+        <div class="music-bar">
+            <button class="music-btn" id="musicPrev" title="предыдущий">⏮</button>
+            <button class="music-btn music-play" id="musicPlay" title="играть">▶</button>
+            <button class="music-btn" id="musicNext" title="следующий">⏭</button>
+
+            <div class="music-info">
+                <div class="music-title" id="musicTitle">нет треков</div>
+                <div class="music-progress-wrap" id="musicProgressWrap">
+                    <div class="music-progress-fill" id="musicProgressFill"></div>
+                </div>
+            </div>
+
+            <div class="music-time" id="musicTime">0:00 / 0:00</div>
+
+            <div class="music-volume-wrap" title="громкость">
+                <span class="music-vol-icon">🔊</span>
+                <input type="range" class="music-volume" id="musicVolume" min="0" max="1" step="0.01" value="0.7">
+            </div>
+
+            <button class="music-btn music-repeat" id="musicRepeat" title="повтор">🔁</button>
+            <button class="music-btn music-expand" id="musicExpand" title="плейлист">▼</button>
+        </div>
+        <div class="music-list" id="musicList"></div>
+    </div>
+
+    <div class="ach-panel" id="achPanel"></div>
+
     <div class="pet-widget sleeping" id="petWidget">
+        <div class="youtube-overlay" id="youtubeOverlay">
+            <iframe id="youtubeIframe" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
         <div class="pet-layer" id="petLayer"></div>
         <div class="pet-icon pet-question" id="petQuestion">?</div>
         <div class="pet-icon pet-angry-mark" id="petAngryMark">💢</div>
@@ -40,6 +77,8 @@
             <button class="chat-send" id="chatSend" aria-label="отправить">➤</button>
         </div>
     </div>
+
+    <audio id="audioEl" preload="metadata"></audio>
 
     <script src="script.js"></script>
 </body>
