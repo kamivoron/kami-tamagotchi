@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'why,why?',
             events: [
                 { time: 6,  action: 'showFlashback' },
-                { time: 14, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark', waitEnd: true }
+                { time: 12, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark', waitEnd: true }
             ],
             singAfterVideo: [
                 'я сошла с ума, я сошла с ума...',
