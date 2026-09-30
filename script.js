@@ -670,4 +670,550 @@ document.addEventListener('DOMContentLoaded', () => {
                 "волосы у меня кудрявятся, знаешь, как это сложно?"
             ]
         },
-        /*
+        /* ---- Глаза ---- */
+        {
+            keywords: ['глаза', 'гетерохромия'],
+            replies: [
+                "глаза? да, я родилась такой..."
+            ]
+        },
+        /* ---- Кто она ---- */
+        {
+            keywords: ['кто ты', 'как тебя зовут', 'сколько тебе лет'],
+            replies: [
+                "я ками, просто ками",
+                "а что, не видно? я ками, самая настоящая",
+                "я - ками! а остальное секрет, хихи~"
+            ]
+        },
+        /* ---- Вместе ---- */
+        {
+            keywords: ['со мной', 'вместе', 'го', 'давай'],
+            replies: [
+                "ой, давай!!",
+                "погналии!!",
+                "приглашаешь? соглашаюсь!",
+                "ну, если ты настаиваешь..."
+            ]
+        },
+        /* ---- Сон ---- */
+        {
+            keywords: ['спать', 'сон', 'устал', 'устала', 'хочу спать'],
+            replies: [
+                "иди поспи, я подожду~",
+                "сон - это святое!!",
+                "я тоже хочу спать, но я здесь, пока ты со мной",
+                "а может пойдем спать вместе?"
+            ]
+        },
+        /* ---- Прощание ---- */
+        {
+            keywords: ['пока', 'до свидания', 'увидимся', 'я пойду', 'я отойду', 'я ушел', 'я ушла', 'прощай', 'спокойной ночи', 'бб'],
+            replies: [
+                "пока-пока, возвращайся скорее!",
+                "не уходи надолго, ладно?...",
+                "ох, я буду тебя ждать... здесь...",
+                "нет, не покидай меня..."
+            ]
+        },
+        /* ---- Как дела ---- */
+        {
+            keywords: ['как дела', 'как ты', 'что делаешь', 'чем занята', 'кд', 'чд', 'шо делаешь', 'чего делаешь', 'шо скажешь'],
+            replies: [
+                "у меня всё хорошо, я спала вот... правда меня разбудили",
+                "скучала по тебе, если честно...",
+                "да так, чиллю, валяюсь",
+                "да так, работу всё ищу...",
+                "мне немножко было скучно, но с тобой теперь мне весело!!"
+            ]
+        },
+        /* ---- Приветствия ---- */
+        {
+            keywords: ['привет', 'прив', 'ку', 'хай', 'здаров', 'здравствуй', 'хаюшки', 'доброе утро', 'добрый день', 'добрый вечер', 'доброй ночи'],
+            replies: [
+                "ооо, привет-привет~",
+                "приивеееет!! я ждала тебя~",
+                "доброго времени суток!~ как ты?",
+                "урааа!! ты пришёл~",
+                "прив!! я соскучилась~"
+            ]
+        }
+    ];
+
+    /* ===== ФУНКЦИЯ МАТЧИНГА ===== */
+    function matchesTrigger(text, keyword) {
+        const lowerText = text.toLowerCase();
+        const lowerKeyword = keyword.toLowerCase();
+        if (lowerKeyword.length <= 3) {
+            const normalized = ' ' + lowerText.replace(/[^\p{L}\p{N}]+/gu, ' ') + ' ';
+            return normalized.includes(' ' + lowerKeyword + ' ');
+        }
+        return lowerText.includes(lowerKeyword);
+    }
+
+    function findChatReply(text) {
+        const trimmed = text.trim().toLowerCase();
+
+        /* Чит-коды */
+        if (trimmed === '!null') {
+            return { cheat: 'null' };
+        }
+        if (trimmed.startsWith('!give ')) {
+            const amount = parseInt(trimmed.slice(6).trim(), 10);
+            if (!isNaN(amount)) {
+                return { cheat: 'give', amount: amount };
+            }
+        }
+
+        /* Триггеры */
+        for (const t of CHAT_TRIGGERS) {
+            for (const kw of t.keywords) {
+                if (matchesTrigger(trimmed, kw)) {
+                    const reply = t.replies[Math.floor(Math.random() * t.replies.length)];
+                    const replyText = typeof reply === 'function' ? reply() : reply;
+                    return { text: replyText, score: t.score || 0 };
+                }
+            }
+        }
+
+        /* Да? */
+        if (/^да\?*$/i.test(trimmed)) {
+            const yesNo = Math.random() < 0.5 ? "да!" : "нет конечно!";
+            return { text: yesNo };
+        }
+
+        /* Fallback */
+        return {
+            text: CHAT_FALLBACK[Math.floor(Math.random() * CHAT_FALLBACK.length)]
+        };
+    }
+
+    /* ===== РЕНДЕР ЧАТА ===== */
+    function renderChatHistory() {
+        chatMessages.innerHTML = '';
+        chatHistory.forEach(m => {
+            const el = document.createElement('div');
+            el.className = 'chat-msg ' + m.from;
+            el.textContent = m.text;
+            chatMessages.appendChild(el);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addChatMessage(from, text) {
+        const el = document.createElement('div');
+        el.className = 'chat-msg ' + from;
+        el.textContent = text;
+        chatMessages.appendChild(el);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        chatHistory.push({ from, text, time: Date.now() });
+        saveChatHistory();
+    }
+
+    function addSystemMessage(text) {
+        const el = document.createElement('div');
+        el.className = 'chat-msg system';
+        el.textContent = text;
+        chatMessages.appendChild(el);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        const el = document.createElement('div');
+        el.className = 'chat-typing';
+        el.innerHTML = '<span></span><span></span><span></span>';
+        chatMessages.appendChild(el);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return el;
+    }
+
+    /* ===== ОБНОВЛЕНИЕ СТАТУСА И ЗАБЛОКИРОВКИ ===== */
+    function updateChatState() {
+        const sleeping = (state === 'sleeping');
+        if (sleeping) {
+            chatInput.disabled = true;
+            chatInput.placeholder = 'сначала разбуди меня, чтобы чаттиться!';
+            chatSend.disabled = true;
+            chatStatus.textContent = 'сначала разбуди меня, чтобы чаттиться!';
+            chatStatus.classList.add('visible');
+        } else {
+            chatInput.disabled = false;
+            chatInput.placeholder = chatHistory.length === 0
+                ? 'напиши, чтобы начать общение со мной'
+                : 'напиши что-нибудь...';
+            chatSend.disabled = false;
+            if (chatHistory.length === 0) {
+                chatStatus.textContent = 'напиши, чтобы начать общение со мной';
+                chatStatus.classList.add('visible');
+            } else {
+                chatStatus.classList.remove('visible');
+            }
+        }
+    }
+
+    /* ===== ОТПРАВКА СООБЩЕНИЯ ===== */
+    function sendChatMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        /* Читы: разрешены всегда */
+        const isCheat = text.startsWith('!');
+
+        /* Если спит и не чит — не отправляем */
+        if (state === 'sleeping' && !isCheat) {
+            addSystemMessage('сначала разбуди меня, чтобы чаттиться!');
+            chatInput.value = '';
+            return;
+        }
+
+        addChatMessage('user', text);
+        chatInput.value = '';
+        updateChatState();
+
+        /* Обрабатываем чит */
+        if (isCheat) {
+            const result = findChatReply(text);
+            if (result.cheat === 'null') {
+                friendship = 0;
+                localStorage.setItem('petFriendship', friendship);
+                renderFriendship(true);
+                renderAchPanel();
+                addSystemMessage('[чит] счётчик дружбы обнулён.');
+                return;
+            }
+            if (result.cheat === 'give') {
+                changeFriendship(result.amount);
+                addSystemMessage(`[чит] добавлено ${result.amount} очков. теперь ${friendship}.`);
+                return;
+            }
+            addSystemMessage('[чит] неизвестная команда.');
+            return;
+        }
+
+        /* Обычный ответ */
+        const result = findChatReply(text);
+        const typing = addTypingIndicator();
+        const delay = 600 + Math.random() * 900;
+
+        setTimeout(() => {
+            typing.remove();
+            addChatMessage('pet', result.text);
+            if (result.score) {
+                changeFriendship(result.score);
+            }
+        }, delay);
+    }
+
+    /* ===== СОБЫТИЯ ЧАТА ===== */
+    chatBtn.addEventListener('click', () => {
+        const isOpen = chatPanel.classList.toggle('open');
+        document.body.classList.toggle('chat-open', isOpen);
+        if (isOpen) {
+            updateChatState();
+            renderChatHistory();
+            setTimeout(() => {
+                if (!chatInput.disabled) chatInput.focus();
+            }, 300);
+        }
+    });
+
+    chatSend.addEventListener('click', sendChatMessage);
+
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+
+    /* ===== СОСТОЯНИЕ ===== */
+    let state           = 'sleeping';
+    let talkTimer       = null;
+    let blinkTimer      = null;
+    let idleTimer       = null;
+    let sleepTimer      = null;
+    let breathTimer     = null;
+    let breathFrame     = 0;
+    let talkAnim        = null;
+    let wakeTimer       = null;
+
+    let idlePhrase1     = null;
+    let idlePhrase2     = null;
+    let idlePhraseHide  = null;
+    let idlePhraseAnim  = null;
+    let idlePhraseActive = false;
+
+    let clickTimes      = [];
+    let spamCooldown    = 0;
+    const SPAM_WINDOW   = 2000;
+    const SPAM_THRESHOLD = 5;
+
+    function isSpamming() {
+        const now = Date.now();
+        if (now < spamCooldown) return false;
+        clickTimes = clickTimes.filter(t => now - t < SPAM_WINDOW);
+        clickTimes.push(now);
+        if (clickTimes.length >= SPAM_THRESHOLD) {
+            clickTimes = [];
+            spamCooldown = now + 2500;
+            return true;
+        }
+        return false;
+    }
+
+    /* ===== ФУНКЦИИ ===== */
+    function setState(newState) {
+        state = newState;
+        ['sleeping', 'waking', 'idle', 'talking'].forEach(s => {
+            petWidget.classList.toggle(s, s === newState);
+        });
+        /* Обновляем состояние чата при смене стадии */
+        updateChatState();
+    }
+
+    function showLayer(name) {
+        if (!IMAGES[name]) return;
+        petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
+    }
+
+    function showSpeech(visible) {
+        petWidget.classList.toggle('awake', visible);
+    }
+
+    function setMood(mood) {
+        petWidget.classList.remove('mood-angry', 'mood-happy', 'mood-laughing', 'mood-teasing');
+        if (mood && mood !== 'neutral') petWidget.classList.add('mood-' + mood);
+    }
+
+    function startTalkAnim(mood) {
+        stopTalkAnim();
+        let i = 0;
+        let frames;
+        if (mood === 'happy')          frames = ['happy1', 'happy2'];
+        else if (mood === 'angry')     frames = ['angry'];
+        else if (mood === 'laughing')  frames = ['laugh'];
+        else if (mood === 'teasing')   frames = ['tease'];
+        else                            frames = ['talk1', 'talk2'];
+
+        if (frames.length === 1) { showLayer(frames[0]); return; }
+        talkAnim = setInterval(() => {
+            showLayer(frames[i % frames.length]);
+            i++;
+        }, 220);
+    }
+    function stopTalkAnim() {
+        if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
+    }
+
+    function startBreathing() {
+        stopBreathing();
+        breathFrame = 0;
+        showLayer('sleep1');
+        breathTimer = setInterval(() => {
+            if (state !== 'sleeping') return;
+            breathFrame = 1 - breathFrame;
+            showLayer(breathFrame === 0 ? 'sleep1' : 'sleep2');
+        }, 1800);
+    }
+    function stopBreathing() {
+        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
+    }
+
+    function cancelIdlePhrase() {
+        if (!idlePhraseActive) return;
+        idlePhraseActive = false;
+        clearInterval(idlePhraseAnim);
+        clearTimeout(idlePhraseHide);
+        showSpeech(false);
+        setMood(null);
+        if (state === 'idle') showLayer('idle');
+    }
+
+    function playIdlePhrase(phrase) {
+        if (state !== 'idle' || idlePhraseActive) return;
+        idlePhraseActive = true;
+
+        petSpeech.textContent = getPhraseText(phrase);
+        showSpeech(true);
+        setMood(phrase.mood);
+
+        let i = 0;
+        const frames = ['talk1', 'talk2'];
+        clearInterval(idlePhraseAnim);
+        idlePhraseAnim = setInterval(() => {
+            if (!idlePhraseActive) return;
+            showLayer(frames[i % 2]);
+            i++;
+        }, 220);
+
+        clearTimeout(idlePhraseHide);
+        idlePhraseHide = setTimeout(() => {
+            if (!idlePhraseActive) return;
+            idlePhraseActive = false;
+            clearInterval(idlePhraseAnim);
+            showSpeech(false);
+            setMood(null);
+            if (state === 'idle') showLayer('idle');
+        }, 3500);
+    }
+
+    function forcePlayPhrase(phrase, onFinish) {
+        cancelIdlePhrase();
+        setState('talking');
+        clearTimeout(idleTimer);
+        clearTimeout(sleepTimer);
+        clearInterval(blinkTimer);
+        stopBreathing();
+
+        petSpeech.textContent = getPhraseText(phrase);
+        showSpeech(true);
+        setMood(phrase.mood);
+        startTalkAnim(phrase.mood);
+
+        clearTimeout(talkTimer);
+        talkTimer = setTimeout(() => {
+            if (onFinish) onFinish();
+        }, 3500);
+    }
+
+    function playPhrase(phrase, onFinish) {
+        if (state === 'talking') return;
+        forcePlayPhrase(phrase, onFinish);
+    }
+
+    function playRandom(arr, onFinish) {
+        const phrase = arr[Math.floor(Math.random() * arr.length)];
+        playPhrase(phrase, onFinish);
+    }
+
+    function finishDialog() {
+        stopTalkAnim();
+        showSpeech(false);
+        setMood(null);
+        enterIdle();
+    }
+
+    function enterIdle() {
+        setState('idle');
+        showLayer('idle');
+        idlePhraseActive = false;
+
+        clearInterval(blinkTimer);
+        blinkTimer = setInterval(() => {
+            if (state !== 'idle' || idlePhraseActive) return;
+            showLayer('blink');
+            setTimeout(() => {
+                if (state === 'idle' && !idlePhraseActive) showLayer('idle');
+            }, 160);
+        }, 4000);
+
+        clearTimeout(idlePhrase1);
+        clearTimeout(idlePhrase2);
+        idlePhrase1 = setTimeout(() => {
+            if (state !== 'idle') return;
+            const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
+            playIdlePhrase(p);
+        }, 10000);
+        idlePhrase2 = setTimeout(() => {
+            if (state !== 'idle') return;
+            playIdlePhrase(IDLE_PHRASE_SECOND);
+        }, 20000);
+
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+            if (state !== 'idle') return;
+            cancelIdlePhrase();
+            clearTimeout(idlePhrase1);
+            clearTimeout(idlePhrase2);
+            showLayer('blink');
+            setTimeout(() => {
+                if (state !== 'idle') return;
+                clearInterval(blinkTimer);
+                goToSleep();
+            }, 400);
+        }, 30000);
+    }
+
+    function goToSleep() {
+        setState('sleeping');
+        showSpeech(false);
+        setMood(null);
+        themeChanges = 0;
+        startBreathing();
+    }
+
+    function wakeUp() {
+        stopBreathing();
+        setState('waking');
+        showLayer('wake');
+
+        clearTimeout(wakeTimer);
+        wakeTimer = setTimeout(() => {
+            if (state !== 'waking') return;
+            const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
+            forcePlayPhrase(phrase, finishDialog);
+        }, 900);
+    }
+
+    /* ===== КЛИК ===== */
+    petWidget.addEventListener('click', (e) => {
+        if (isSpamming()) {
+            const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
+            forcePlayPhrase(p, finishDialog);
+            return;
+        }
+
+        cancelIdlePhrase();
+
+        const rect = petWidget.getBoundingClientRect();
+        const y = (e.clientY - rect.top) / rect.height;
+
+        if (state === 'sleeping') {
+            changeFriendship(1, e.clientX, e.clientY);
+            wakeUp();
+            return;
+        }
+        if (state === 'talking' || state === 'waking') return;
+
+        let zone = 'body';
+        if (y < 0.35)       zone = 'hair';
+        else if (y > 0.7)   zone = 'skirt';
+
+        let delta = 1;
+        if (zone === 'hair')  delta = 3;
+        if (zone === 'skirt') delta = -2;
+        changeFriendship(delta, e.clientX, e.clientY);
+
+        playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
+    });
+
+    /* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ===== */
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
+            localStorage.setItem('petTheme', theme);
+
+            cancelIdlePhrase();
+
+            if (state === 'sleeping' || state === 'waking') return;
+            if (state === 'talking') return;
+            if (themeChanges >= THEME_REACTIONS.length) return;
+
+            const reaction = THEME_REACTIONS[themeChanges];
+            themeChanges++;
+            playPhrase(reaction, finishDialog);
+        });
+    });
+
+    /* Восстановление темы */
+    const saved = localStorage.getItem('petTheme');
+    if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
+
+    /* ===== СТАРТ ===== */
+    renderFriendship(false);
+    renderAchPanel();
+    setState('sleeping');
+    startBreathing();
+});
