@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const friendCounter = document.getElementById('friendCounter');
     const achBtn = document.getElementById('achBtn');
     const achPanel = document.getElementById('achPanel');
+    const chatBtn = document.getElementById('chatBtn');
+    const chatPanel = document.getElementById('chatPanel');
+    const chatStatus = document.getElementById('chatStatus');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
 
     /* ===== КАРТИНКИ ===== */
     const IMAGES = {
@@ -400,291 +406,268 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* ===== СОСТОЯНИЕ ===== */
-    let state           = 'sleeping';
-    let talkTimer       = null;
-    let blinkTimer      = null;
-    let idleTimer       = null;
-    let sleepTimer      = null;
-    let breathTimer     = null;
-    let breathFrame     = 0;
-    let talkAnim        = null;
-    let wakeTimer       = null;
+    /* ==========================================================
+       ЧАТ
+       ========================================================== */
 
-    let idlePhrase1     = null;
-    let idlePhrase2     = null;
-    let idlePhraseHide  = null;
-    let idlePhraseAnim  = null;
-    let idlePhraseActive = false;
+    const CHAT_HISTORY_KEY = 'petChatHistory';
+    const CHAT_MAX_MESSAGES = 100;
+    let chatHistory = [];
+    try {
+        chatHistory = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+        if (!Array.isArray(chatHistory)) chatHistory = [];
+    } catch (e) { chatHistory = []; }
 
-    let clickTimes      = [];
-    let spamCooldown    = 0;
-    const SPAM_WINDOW   = 2000;
-    const SPAM_THRESHOLD = 5;
-
-    function isSpamming() {
-        const now = Date.now();
-        if (now < spamCooldown) return false;
-        clickTimes = clickTimes.filter(t => now - t < SPAM_WINDOW);
-        clickTimes.push(now);
-        if (clickTimes.length >= SPAM_THRESHOLD) {
-            clickTimes = [];
-            spamCooldown = now + 2500;
-            return true;
+    function saveChatHistory() {
+        if (chatHistory.length > CHAT_MAX_MESSAGES) {
+            chatHistory = chatHistory.slice(-CHAT_MAX_MESSAGES);
         }
-        return false;
+        localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
     }
 
-    /* ===== ФУНКЦИИ ===== */
-    function setState(newState) {
-        state = newState;
-        ['sleeping', 'waking', 'idle', 'talking'].forEach(s => {
-            petWidget.classList.toggle(s, s === newState);
-        });
-    }
+    /* ===== ФРАЗЫ ДЛЯ ЧАТА ===== */
+    const CHAT_FALLBACK = [
+        "эээ... что-то я замечталась, не поняла ничего...",
+        "кажется, я ничего не понимаю в этой теме, давай о другом?",
+        "хм, а поподробнее?",
+        "что ты имеешь в виду?",
+        "я глупышка, не понимаю ни слова :(",
+        "думала, думала, что ответить, да так и не придумала...",
+        "что-то мне сегодня лень думать, давай о другом?",
+        "многа букаф, ни асилил.",
+        "я на такие темы не умею разговаривать("
+    ];
 
-    function showLayer(name) {
-        if (!IMAGES[name]) return;
-        petLayer.style.backgroundImage = `url(${IMAGES[name]})`;
-    }
-
-    function showSpeech(visible) {
-        petWidget.classList.toggle('awake', visible);
-    }
-
-    function setMood(mood) {
-        petWidget.classList.remove('mood-angry', 'mood-happy', 'mood-laughing', 'mood-teasing');
-        if (mood && mood !== 'neutral') petWidget.classList.add('mood-' + mood);
-    }
-
-    function startTalkAnim(mood) {
-        stopTalkAnim();
-        let i = 0;
-        let frames;
-        if (mood === 'happy')          frames = ['happy1', 'happy2'];
-        else if (mood === 'angry')     frames = ['angry'];
-        else if (mood === 'laughing')  frames = ['laugh'];
-        else if (mood === 'teasing')   frames = ['tease'];
-        else                            frames = ['talk1', 'talk2'];
-
-        if (frames.length === 1) { showLayer(frames[0]); return; }
-        talkAnim = setInterval(() => {
-            showLayer(frames[i % frames.length]);
-            i++;
-        }, 220);
-    }
-    function stopTalkAnim() {
-        if (talkAnim) { clearInterval(talkAnim); talkAnim = null; }
-    }
-
-    function startBreathing() {
-        stopBreathing();
-        breathFrame = 0;
-        showLayer('sleep1');
-        breathTimer = setInterval(() => {
-            if (state !== 'sleeping') return;
-            breathFrame = 1 - breathFrame;
-            showLayer(breathFrame === 0 ? 'sleep1' : 'sleep2');
-        }, 1800);
-    }
-    function stopBreathing() {
-        if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
-    }
-
-    function cancelIdlePhrase() {
-        if (!idlePhraseActive) return;
-        idlePhraseActive = false;
-        clearInterval(idlePhraseAnim);
-        clearTimeout(idlePhraseHide);
-        showSpeech(false);
-        setMood(null);
-        if (state === 'idle') showLayer('idle');
-    }
-
-    function playIdlePhrase(phrase) {
-        if (state !== 'idle' || idlePhraseActive) return;
-        idlePhraseActive = true;
-
-        petSpeech.textContent = getPhraseText(phrase);
-        showSpeech(true);
-        setMood(phrase.mood);
-
-        let i = 0;
-        const frames = ['talk1', 'talk2'];
-        clearInterval(idlePhraseAnim);
-        idlePhraseAnim = setInterval(() => {
-            if (!idlePhraseActive) return;
-            showLayer(frames[i % 2]);
-            i++;
-        }, 220);
-
-        clearTimeout(idlePhraseHide);
-        idlePhraseHide = setTimeout(() => {
-            if (!idlePhraseActive) return;
-            idlePhraseActive = false;
-            clearInterval(idlePhraseAnim);
-            showSpeech(false);
-            setMood(null);
-            if (state === 'idle') showLayer('idle');
-        }, 3500);
-    }
-
-    function forcePlayPhrase(phrase, onFinish) {
-        cancelIdlePhrase();
-        setState('talking');
-        clearTimeout(idleTimer);
-        clearTimeout(sleepTimer);
-        clearInterval(blinkTimer);
-        stopBreathing();
-
-        petSpeech.textContent = getPhraseText(phrase);
-        showSpeech(true);
-        setMood(phrase.mood);
-        startTalkAnim(phrase.mood);
-
-        clearTimeout(talkTimer);
-        talkTimer = setTimeout(() => {
-            if (onFinish) onFinish();
-        }, 3500);
-    }
-
-    function playPhrase(phrase, onFinish) {
-        if (state === 'talking') return;
-        forcePlayPhrase(phrase, onFinish);
-    }
-
-    function playRandom(arr, onFinish) {
-        const phrase = arr[Math.floor(Math.random() * arr.length)];
-        playPhrase(phrase, onFinish);
-    }
-
-    function finishDialog() {
-        stopTalkAnim();
-        showSpeech(false);
-        setMood(null);
-        enterIdle();
-    }
-
-    function enterIdle() {
-        setState('idle');
-        showLayer('idle');
-        idlePhraseActive = false;
-
-        clearInterval(blinkTimer);
-        blinkTimer = setInterval(() => {
-            if (state !== 'idle' || idlePhraseActive) return;
-            showLayer('blink');
-            setTimeout(() => {
-                if (state === 'idle' && !idlePhraseActive) showLayer('idle');
-            }, 160);
-        }, 4000);
-
-        clearTimeout(idlePhrase1);
-        clearTimeout(idlePhrase2);
-        idlePhrase1 = setTimeout(() => {
-            if (state !== 'idle') return;
-            const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
-            playIdlePhrase(p);
-        }, 10000);
-        idlePhrase2 = setTimeout(() => {
-            if (state !== 'idle') return;
-            playIdlePhrase(IDLE_PHRASE_SECOND);
-        }, 20000);
-
-        clearTimeout(idleTimer);
-        idleTimer = setTimeout(() => {
-            if (state !== 'idle') return;
-            cancelIdlePhrase();
-            clearTimeout(idlePhrase1);
-            clearTimeout(idlePhrase2);
-            showLayer('blink');
-            setTimeout(() => {
-                if (state !== 'idle') return;
-                clearInterval(blinkTimer);
-                goToSleep();
-            }, 400);
-        }, 30000);
-    }
-
-    function goToSleep() {
-        setState('sleeping');
-        showSpeech(false);
-        setMood(null);
-        themeChanges = 0;
-        startBreathing();
-    }
-
-    function wakeUp() {
-        stopBreathing();
-        setState('waking');
-        showLayer('wake');
-
-        clearTimeout(wakeTimer);
-        wakeTimer = setTimeout(() => {
-            if (state !== 'waking') return;
-            const phrase = DIALOGS.welcome[Math.floor(Math.random() * DIALOGS.welcome.length)];
-            forcePlayPhrase(phrase, finishDialog);
-        }, 900);
-    }
-
-    /* ===== КЛИК ===== */
-    petWidget.addEventListener('click', (e) => {
-        if (isSpamming()) {
-            const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
-            forcePlayPhrase(p, finishDialog);
-            return;
-        }
-
-        cancelIdlePhrase();
-
-        const rect = petWidget.getBoundingClientRect();
-        const y = (e.clientY - rect.top) / rect.height;
-
-        if (state === 'sleeping') {
-            changeFriendship(1, e.clientX, e.clientY);
-            wakeUp();
-            return;
-        }
-        if (state === 'talking' || state === 'waking') return;
-
-        let zone = 'body';
-        if (y < 0.35)       zone = 'hair';
-        else if (y > 0.7)   zone = 'skirt';
-
-        let delta = 1;
-        if (zone === 'hair')  delta = 3;
-        if (zone === 'skirt') delta = -2;
-        changeFriendship(delta, e.clientX, e.clientY);
-
-        playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
-    });
-
-    /* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ===== */
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const theme = btn.dataset.theme;
-            document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
-            localStorage.setItem('petTheme', theme);
-
-            cancelIdlePhrase();
-
-            if (state === 'sleeping' || state === 'waking') return;
-            if (state === 'talking') return;
-            if (themeChanges >= THEME_REACTIONS.length) return;
-
-            const reaction = THEME_REACTIONS[themeChanges];
-            themeChanges++;
-            playPhrase(reaction, finishDialog);
-        });
-    });
-
-    /* Восстановление темы */
-    const saved = localStorage.getItem('petTheme');
-    if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
-
-    /* ===== СТАРТ ===== */
-    renderFriendship(false);
-    renderAchPanel();
-    setState('sleeping');
-    startBreathing();
-});
+    const CHAT_TRIGGERS = [
+        /* ---- Политика ---- */
+        {
+            keywords: ['спасибо', 'благодарю', 'спс', 'сенкс', 'thanks', 'thx'],
+            replies: [
+                "ой, всегда пожалуйста~",
+                "рада помочь!!",
+                "хехе, обращайся~",
+                "не за что-не за что!",
+                "ой, да ладно тебе~"
+            ],
+            score: 1
+        },
+        /* ---- Комплименты ---- */
+        {
+            keywords: ['красивая', 'красивые', 'нежная', 'можно утонуть', 'красотка', 'дива', 'хорошка', 'милая', 'милашка', 'няшка', 'няшная', 'ты классная', 'ты прикольная', 'ты забавная', 'ты смешная', 'ты хорошая'],
+            replies: [
+                "о-ой, не смущай меня...",
+                "я... я не такая!! сам такой! хмпф!",
+                "хехе~ конечно я такая! но и ты не хуже)",
+                "т-ты тоже, знаешь ли...",
+                "на себя посмотри!! (смущенно отвернулась)"
+            ],
+            score: 5
+        },
+        /* ---- Грубость ---- */
+        {
+            keywords: ['идиот', 'идиота', 'дура', 'дурак', 'плохая', 'тупая', 'глупая', 'глупышка', 'хватит', 'отстань', 'падла', 'тварь', 'мразь', 'ублюдище'],
+            replies: [
+                "...я сделаю вид, что не слышала этого...",
+                "эй, без обзывательств!",
+                "я же обижусь...",
+                "я обиделась.",
+                "я больше не хочу с тобой разговаривать."
+            ],
+            score: -5
+        },
+        /* ---- Еда ---- */
+        {
+            keywords: ['еда', 'кушать', 'хавать', 'покушать', 'голодна', 'вкусно', 'чизбургер', 'чизбурбе', 'картошка', 'картошку', 'фри', 'картошечка', 'картошечку', 'тархун', 'трахун', 'тархунчик'],
+            replies: [
+                "ммм, чизбурбе....",
+                "хочу чизбурбе :(",
+                "покорми меня...",
+                "я хочу кушать...",
+                "я бы сейчас что-нибудь скушала...",
+                "а? картошечка??",
+                "хочууу~",
+                "ням-ням!",
+                "фтоо, мой любимый напиток??",
+                "хочуу тархунчик!!"
+            ],
+            score: 2
+        },
+        /* ---- Звёздное дитя ---- */
+        {
+            keywords: ['звездное дитя', 'звёздное дитя', 'ребенок идола', 'ребёнок идола', 'oshi no ko', 'арима', 'кана', 'мемчо', 'мемто', 'ай хошино', 'хошино', 'аква', 'руби', 'бикомачи', 'би комачи'],
+            replies: [
+                "о, речь про моё любимое аниме!!",
+                "ах, звездное дитя... когда же 4 сезон уже?~",
+                "ля, щас бы опенинги оттуда сыграть на пианинко",
+                "кана, моя любимая каночка...",
+                "anata no aidoru, sign wa B! chu!~ ой, запелась я что-то."
+            ]
+        },
+        /* ---- Steins;Gate ---- */
+        {
+            keywords: ['врата штейна', 'steins gate', 'штейн', 'курису', 'макисэ', 'окабэ', 'ринтаро', 'фэйрис', 'маюши', 'маюри'],
+            replies: [
+                "ой, часики маюши опять остановились..."
+            ]
+        },
+        /* ---- Басня ---- */
+        {
+            keywords: ['басня', 'басню', 'басне', 'фэйбл', 'фейбл', 'fable'],
+            replies: [
+                "да, я поставила этому аниме 9 баллов, и что с того?!",
+                "ну, это забавное аниме, смешнявое"
+            ]
+        },
+        /* ---- Аниме ---- */
+        {
+            keywords: ['аниме', 'анимехи', 'анимеха', 'анимешки', 'анимешка', 'аниму', 'что смотришь', 'какое смотришь'],
+            replies: [
+                "прямо сейчас я ликую, что закончилась игра лжецов, хаха!",
+                "думаю-думаю, какое бы аниме ещё заспидранить на 3х...",
+                "думаю, может, пересмотреть лов лайв?",
+                "пока не знаю что посмотреть, посоветуешь что-нибудь?"
+            ]
+        },
+        /* ---- Манга ---- */
+        {
+            keywords: ['манга', 'маньхуа', 'манхва', 'мангу', 'что читаешь', 'какое читаешь'],
+            replies: [
+                "я пока не читаю мангу, но аниме смотрю! онгоинги, в основном",
+                "ой, я что-то и забыла, что можно что-то читать...",
+                "манга - тоже литература!",
+                "ой, мне так лень читать, многа букаф...."
+            ]
+        },
+        /* ---- Пианино ---- */
+        {
+            keywords: ['пианино', 'синтезатор', 'пианинко', 'потрунькать'],
+            replies: [
+                "ля, после такого аж захотелось потрунькать",
+                "ооо, щас бы на пианинко сыграть!",
+                "ой, а если я сыграю тебе в дсе на пианино, ты послушаешь? 🥺"
+            ]
+        },
+        /* ---- О дружбе ---- */
+        {
+            keywords: ['дружба', 'друзья', 'очки', 'счёт', 'очков', 'насколько мы близки'],
+            replies: [
+                () => `у нас сейчас ${friendship} очков дружбы, между прочим!`,
+                () => `наша с тобой дружба числится в очках, их целых ${friendship}!`
+            ]
+        },
+        /* ---- 67 ---- */
+        {
+            keywords: ['67', 'сикс', 'севен', 'брейнрот'],
+            replies: [
+                "67",
+                "67 67 67 67 67 67 67 67 67",
+                "сикс севен бреееейнроооот",
+                "да этот мем уже устарел, не?"
+            ]
+        },
+        /* ---- Шика ---- */
+        {
+            keywords: ['шика', 'шиканоко', 'shika shikanoko', 'олениха', 'олень'],
+            replies: [
+                "шиканоко ноко ноко коштантан! 🦌"
+            ]
+        },
+        /* ---- Юля ---- */
+        {
+            keywords: ['юля', 'юле', 'юлю', 'юлей', 'юлька', 'юся', 'юлечка', 'манривата', 'мандарин', 'мандариновая'],
+            replies: [
+                "о, про мою любимку говоришь",
+                "не говори про неё так. я ревную.",
+                "хихихи юлька иди корову подои",
+                "Юся, ты уже покушала? 👀",
+                "все мои меме только для неё...",
+                "про юлю либо хорошо, либо никак"
+            ]
+        },
+        /* ---- Грандон ---- */
+        {
+            keywords: ['грандон', 'грандона', 'грандону', 'грандоном', 'вася', 'васей', 'васю', 'васе', 'атхос'],
+            replies: [
+                "вася? знаю такого",
+                "я грр! ты мне?",
+                "жить надо как вася - танцевать и музон погромче."
+            ]
+        },
+        /* ---- Форум ---- */
+        {
+            keywords: ['форум', 'саша', 'саше', 'сашей', 'сашу', 'форума', 'форуму', 'фовум'],
+            replies: [
+                "фооооовуууумм!!!!",
+                "форум? интересно, когда он ещё приедет к нам....",
+                "о, речь про любителя бабушек?"
+            ]
+        },
+        /* ---- Привоз ---- */
+        {
+            keywords: ['привоз', 'привозу', 'привоза', 'привозом', 'приводя', 'приводей', 'приводю', 'привадя', 'вадя', 'вадей', 'вадю', 'вадим', 'вадима'],
+            replies: [
+                "эх, когда мы с ним ещё пойдем в стринову?",
+                "привоз? да, пропал челик, даже не отвечает толком...",
+                "эх, я уже почти забыла кто это...",
+                "отвечу на это через месяц)",
+                "да уж, обновы у побегушек походу не будет...",
+                "я всё ещё жду, когда он пришлёт мне танец...",
+                "я всё ещё жду, когда мои спрайты для игры будут задействованы...",
+                "пиздун.",
+                "о, опездун.",
+                "что? он снова проспал?",
+                "а? он вновь забыл?"
+            ]
+        },
+        /* ---- Даня ---- */
+        {
+            keywords: ['даня', 'дане', 'даней', 'даню'],
+            replies: [
+                "даня? он, должно быть, снова опоздает или не придет вовсе",
+                "даня - киберкотлета марвела"
+            ]
+        },
+        /* ---- Ками ---- */
+        {
+            keywords: ['ками', 'камичка', 'камушка', 'камушко', 'диячка', 'диана'],
+            replies: [
+                "а? что?",
+                "я тууут~",
+                "слышу-слышу!",
+                "я здесь!!"
+            ]
+        },
+        /* ---- Смешное ---- */
+        {
+            keywords: ['лол', 'ржу', 'пхпх', 'ахах', 'кек'],
+            replies: [
+                "пхахахаха",
+                "ахахаха, ты меня рассмеши... рассмешнил... ра.. ну ты пон",
+                "ахаххаха, как ты это ваще придумал",
+                "лол, согласна"
+            ]
+        },
+        /* ---- Творчество ---- */
+        {
+            keywords: ['арт', 'арты', 'рисовать', 'рисунки', 'меме', 'анимации', 'анимация'],
+            replies: [
+                "скоро-скоро будет новьё, чееестно",
+                "да рисую я, рисую..."
+            ]
+        },
+        /* ---- Форма ---- */
+        {
+            keywords: ['форма', 'юбка', 'платье', 'матроска'],
+            replies: [
+                "это моя японская школьная форма, между прочим!"
+            ]
+        },
+        /* ---- Волосы ---- */
+        {
+            keywords: ['волосы', 'кудри', 'волосики'],
+            replies: [
+                "ой, тебе нравится?...🥺 не то, чтобы мне приятно это слышать!",
+                "волосы у меня кудрявятся, знаешь, как это сложно?"
+            ]
+        },
+        /*
