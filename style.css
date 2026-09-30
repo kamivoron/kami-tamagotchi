@@ -1099,3 +1099,144 @@ body.theme-light .chat-input::placeholder { color: rgba(0,0,0,0.4); }
 .ach-subheader:first-child {
     margin-top: 0;
 }
+
+/* ==========================================================
+   ВЫБОР ОТВЕТА В ЧАТЕ (как в новеллах)
+   ========================================================== */
+.chat-choices {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 30;
+    padding: 10px;
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+.chat-choices.visible { display: flex; }
+.chat-choice {
+    padding: 11px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--speech-border);
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    transition: all 0.15s ease;
+    letter-spacing: 0.3px;
+}
+.chat-choice:hover {
+    background: linear-gradient(135deg, rgba(255,90,138,0.5), rgba(255,154,90,0.4));
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(255,90,138,0.4);
+}
+.chat-choice:active { transform: translateY(0); }
+
+/* ==========================================================
+   КОМПАКТНАЯ ПАНЕЛЬ ДОСТИЖЕНИЙ С ГРУППАМИ
+   ========================================================== */
+.ach-group {
+    margin-bottom: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.ach-group-header {
+    padding: 9px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    user-select: none;
+    transition: background 0.15s;
+    letter-spacing: 0.3px;
+}
+.ach-group-header:hover { background: rgba(255,255,255,0.06); }
+.ach-group-count {
+    font-size: 11px;
+    opacity: 0.55;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ach-group-arrow {
+    font-size: 9px;
+    opacity: 0.6;
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+.ach-group.open .ach-group-arrow { transform: rotate(180deg); }
+.ach-group-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+    padding: 0 6px;
+}
+.ach-group.open .ach-group-body {
+    max-height: 2000px;
+    padding: 4px 6px 6px;
+}
+.ach-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    background: rgba(255,255,255,0.03);
+    transition: background 0.15s;
+    font-size: 12px;
+}
+.ach-item.locked {
+    opacity: 0.42;
+    filter: grayscale(0.6);
+}
+.ach-item.unlocked {
+    background: linear-gradient(135deg, rgba(255,90,138,0.15), rgba(255,154,90,0.08));
+}
+.ach-icon {
+    font-size: 15px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.ach-title {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+.ach-status {
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+}
+.ach-item.unlocked .ach-status {
+    background: rgba(255,90,138,0.25);
+    color: #fff;
+}
