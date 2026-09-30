@@ -42,7 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'why,why?',
             events: [
                 { time: 6,  action: 'showFlashback' },
-                { time: 13, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 13, theme: 'dark' }
+                { time: 13, action: 'showVideo', videoId: 'tqHkZMLq7Qw', startAt: 14, theme: 'dark', waitEnd: true }
+            ],
+            singAfterVideo: [
+                'я сошла с ума, я сошла с ума...',
+                'мне нужна онаааа',
+                'яяя сооошлааа с умааа'
             ]
         },
         {
@@ -74,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const youtubeOverlay      = document.getElementById('youtubeOverlay');
     const youtubeIframe       = document.getElementById('youtubeIframe');
     const localVideo          = document.getElementById('localVideo');
+    const fullscreenBtn       = document.getElementById('fullscreenBtn');
 
     let currentTrack   = -1;
     let isPlaying      = false;
@@ -81,6 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isExpanded     = false;
     let firedEvents    = new Set();
     let onPlayTriggeredForTrack = -1;
+
+    /* Для трека 2: отслеживание конца видео */
+    let videoWaitEndActive = false;
+    let youtubeEndedHandler = null;
+    let youtubeFallbackTimer = null;
 
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) sec = 0;
@@ -125,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         firedEvents = new Set();
         onPlayTriggeredForTrack = -1;
+        stopTrack2Singing();
         resetTrackVisuals();
 
         if (autoplay) playTrack();
@@ -144,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const track = TRACKS[currentTrack];
 
-        /* Первое воспроизведение за всё время */
         if (track && track.onFirstPlay) {
             const key = 'petTrackFirstPlay_' + track.file;
             if (!localStorage.getItem(key)) {
@@ -160,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        /* Каждое воспроизведение (один раз за сеанс трека) */
         if (track && track.onPlay && onPlayTriggeredForTrack !== currentTrack) {
             onPlayTriggeredForTrack = currentTrack;
             setTimeout(() => {
@@ -209,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ev.action === 'showFlashback') {
             showFlashback();
         } else if (ev.action === 'showVideo') {
-            showYouTubeVideo(ev.videoId, ev.startAt || 0);
+            showYouTubeVideo(ev.videoId, ev.startAt || 0, ev);
             if (ev.theme) {
                 const t = ev.theme;
                 document.body.className = t === 'dark' ? '' : 'theme-' + t;
@@ -220,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* ===== Флешбек: 13-й кадр ===== */
+    /* ===== Флешбек ===== */
     function showFlashback() {
         cancelIdlePhrase();
         clearInterval(blinkTimer);
@@ -234,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ===== YouTube-оверлей ===== */
-    function showYouTubeVideo(videoId, startAt) {
+    function showYouTubeVideo(videoId, startAt, opts) {
         if (!youtubeIframe || !youtubeOverlay) return;
 
         localVideo.pause();
@@ -245,20 +255,72 @@ document.addEventListener('DOMContentLoaded', () => {
             'autoplay=1',
             'mute=1',
             'controls=0',
-            'loop=1',
-            'playlist=' + videoId,
             'modestbranding=1',
-            'rel=0'
+            'rel=0',
+            'enablejsapi=1',
+            'origin=' + encodeURIComponent(location.origin)
         ];
         if (startAt > 0) params.push('start=' + startAt);
+
+        /* Если нужно дождаться окончания — не зацикливаем */
+        if (opts && opts.waitEnd) {
+            videoWaitEndActive = true;
+        } else {
+            params.push('loop=1');
+            params.push('playlist=' + videoId);
+            videoWaitEndActive = false;
+        }
 
         youtubeIframe.src = 'https://www.youtube.com/embed/' + videoId + '?' + params.join('&');
         youtubeIframe.classList.add('active');
 
-        /* Небольшая задержка перед показом, чтобы всё успело подгрузиться */
+        /* Активируем прослушивание API */
+        setTimeout(() => {
+            try {
+                youtubeIframe.contentWindow.postMessage(
+                    JSON.stringify({ event: 'listening', id: 1 }),
+                    '*'
+                );
+            } catch (_) {}
+        }, 2000);
+
+        /* Fallback: если видео не закончилось за 3 минуты — принудительно скрываем */
+        if (opts && opts.waitEnd) {
+            clearTimeout(youtubeFallbackTimer);
+            youtubeFallbackTimer = setTimeout(() => {
+                if (videoWaitEndActive) {
+                    handleYouTubeVideoEnded();
+                }
+            }, 180000);
+        }
+
         setTimeout(() => {
             youtubeOverlay.classList.add('show');
         }, 120);
+    }
+
+    /* Обработка сообщений от YouTube iframe */
+    window.addEventListener('message', (e) => {
+        if (typeof e.data !== 'string') return;
+        let data;
+        try { data = JSON.parse(e.data); } catch (_) { return; }
+        if (data.event === 'onStateChange' && data.info === 0) {
+            if (videoWaitEndActive) {
+                handleYouTubeVideoEnded();
+            }
+        }
+    });
+
+    function handleYouTubeVideoEnded() {
+        if (!videoWaitEndActive) return;
+        videoWaitEndActive = false;
+        clearTimeout(youtubeFallbackTimer);
+        hideVideoOverlay();
+
+        /* Если это трек 2 — запускаем подпевание */
+        if (currentTrack === 1) {
+            setTimeout(() => startTrack2Singing(), 800);
+        }
     }
 
     /* ===== Локальное видео ===== */
@@ -303,7 +365,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1600);
     }
 
-    /* ===== Специальный сценарий трека 3: речь после видео ===== */
+    /* ===== Полный экран ===== */
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const el = (localVideo && localVideo.classList.contains('active')) ? localVideo : youtubeIframe;
+            if (!el) return;
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+        });
+    }
+
+    /* ===== Трек 3: окончание первого видео ===== */
     function kamiiFirstUAndIEnded() {
         hideVideoOverlay();
         setTimeout(() => {
@@ -322,9 +396,120 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 700);
     }
 
-    /* События audio */
-    audioEl.addEventListener('play', () => { isPlaying = true; updatePlayBtn(); });
-    audioEl.addEventListener('pause', () => { isPlaying = false; updatePlayBtn(); });
+    /* ===== Трек 2: подпевание ===== */
+    let singTimers = [];
+    let singBusy = false;
+
+    function startTrack2Singing() {
+        if (currentTrack !== 1) return;
+        const track = TRACKS[1];
+        if (!track || !track.singAfterVideo) return;
+        singBusy = true;
+
+        let i = 0;
+        function sing() {
+            if (currentTrack !== 1 || !singBusy) return;
+            if (i >= track.singAfterVideo.length) {
+                singBusy = false;
+                return;
+            }
+            showSingLine(track.singAfterVideo[i], 2800);
+            i++;
+            singTimers.push(setTimeout(sing, 4500));
+        }
+        singTimers.push(setTimeout(sing, 500));
+    }
+
+    function stopTrack2Singing() {
+        singBusy = false;
+        singTimers.forEach(t => clearTimeout(t));
+        singTimers = [];
+    }
+
+    function showSingLine(text, duration) {
+        if (currentTrack !== 1) return;
+
+        cancelIdlePhrase();
+        clearTimeout(idleTimer);
+        clearTimeout(idlePhrase1);
+        clearTimeout(idlePhrase2);
+        clearInterval(blinkTimer);
+
+        petSpeech.textContent = text;
+        showSpeech(true);
+        setMood('happy');
+
+        /* Показываемся кадром с пением */
+        showLayer('happy1');
+
+        clearTimeout(talkTimer);
+        talkTimer = setTimeout(() => {
+            showSpeech(false);
+            setMood(null);
+            if (state !== 'sleeping') {
+                showLayer('idle');
+            }
+        }, duration);
+    }
+
+    /* ===== Ноты во время музыки ===== */
+    let noteSpawnTimer = null;
+
+    function startMusicNotes() {
+        stopMusicNotes();
+        spawnNote();
+        spawnNote();
+        noteSpawnTimer = setInterval(spawnNote, 550);
+    }
+
+    function stopMusicNotes() {
+        if (noteSpawnTimer) {
+            clearInterval(noteSpawnTimer);
+            noteSpawnTimer = null;
+        }
+    }
+
+    function spawnNote() {
+        if (!petWidget) return;
+        const rect = petWidget.getBoundingClientRect();
+        const note = document.createElement('div');
+        note.className = 'note-particle';
+        const symbols = ['♪', '♫', '♬', '♩', '🎵', '🎶'];
+        note.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+
+        const x = rect.left + Math.random() * rect.width;
+        const y = rect.top + rect.height * 0.55 + Math.random() * 40;
+
+        note.style.left = x + 'px';
+        note.style.top = y + 'px';
+        note.style.fontSize = (16 + Math.random() * 16) + 'px';
+        note.style.animationDuration = (2 + Math.random() * 1.2) + 's';
+
+        document.body.appendChild(note);
+        setTimeout(() => note.remove(), 3400);
+    }
+
+    /* ===== События audio ===== */
+    audioEl.addEventListener('play', () => {
+        isPlaying = true;
+        updatePlayBtn();
+        startMusicNotes();
+        /* Пока музыка играет — не засыпаем */
+        if (state === 'idle') {
+            clearTimeout(idleTimer);
+            clearTimeout(idlePhrase1);
+            clearTimeout(idlePhrase2);
+        }
+    });
+
+    audioEl.addEventListener('pause', () => {
+        isPlaying = false;
+        updatePlayBtn();
+        stopMusicNotes();
+        stopTrack2Singing();
+        /* Музыка остановлена — возобновляем обычную логику */
+        if (state === 'idle') enterIdle();
+    });
 
     audioEl.addEventListener('timeupdate', () => {
         if (!audioEl.duration || !isFinite(audioEl.duration)) return;
@@ -342,6 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRepeat) {
             firedEvents = new Set();
             onPlayTriggeredForTrack = -1;
+            stopTrack2Singing();
             audioEl.currentTime = 0;
             playTrack();
         } else {
@@ -421,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================================
        ТАЙМЕР
        ========================================================== */
-
     const timerCurrent = document.getElementById('timerCurrent');
     const timerTotal = document.getElementById('timerTotal');
 
@@ -1274,7 +1459,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chatBtn.addEventListener('click', () => {
         const isOpen = chatPanel.classList.toggle('open');
-        document.body.classList.toggle('chat-open', isOpen);
         if (isOpen) {
             updateChatState();
             renderChatHistory();
@@ -1296,6 +1480,104 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('input', () => {
         resetIdleCountdown();
     });
+
+    /* ===== ПЕРЕТАСКИВАНИЕ ЧАТА ===== */
+    const chatHeader = document.getElementById('chatHeader');
+
+    let chatPos = null;
+    try {
+        const saved = localStorage.getItem('petChatPos');
+        if (saved) chatPos = JSON.parse(saved);
+    } catch (_) { chatPos = null; }
+
+    function applyChatPosition() {
+        if (!chatPos) return;
+        const maxX = window.innerWidth - 80;
+        const maxY = window.innerHeight - 80;
+        chatPos.x = Math.max(-chatPanel.offsetWidth + 80, Math.min(maxX, chatPos.x));
+        chatPos.y = Math.max(0, Math.min(maxY, chatPos.y));
+
+        chatPanel.style.left = chatPos.x + 'px';
+        chatPanel.style.top = chatPos.y + 'px';
+        chatPanel.style.right = 'auto';
+        chatPanel.style.bottom = 'auto';
+        chatPanel.style.transform = 'none';
+    }
+
+    applyChatPosition();
+
+    let dragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let chatStartX = 0;
+    let chatStartY = 0;
+
+    if (chatHeader) {
+        chatHeader.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const rect = chatPanel.getBoundingClientRect();
+            dragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            chatStartX = rect.left;
+            chatStartY = rect.top;
+            document.body.style.cursor = 'grabbing';
+        });
+
+        chatHeader.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            if (!t) return;
+            const rect = chatPanel.getBoundingClientRect();
+            dragging = true;
+            dragStartX = t.clientX;
+            dragStartY = t.clientY;
+            chatStartX = rect.left;
+            chatStartY = rect.top;
+        }, { passive: true });
+    }
+
+    function moveChat(clientX, clientY) {
+        if (!dragging) return;
+        const dx = clientX - dragStartX;
+        const dy = clientY - dragStartY;
+        let newX = chatStartX + dx;
+        let newY = chatStartY + dy;
+
+        const rect = chatPanel.getBoundingClientRect();
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        newX = Math.max(-rect.width + 80, Math.min(w - 80, newX));
+        newY = Math.max(0, Math.min(h - 80, newY));
+
+        chatPanel.style.left = newX + 'px';
+        chatPanel.style.top = newY + 'px';
+        chatPanel.style.right = 'auto';
+        chatPanel.style.bottom = 'auto';
+        chatPanel.style.transform = 'none';
+    }
+
+    function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.cursor = '';
+        const rect = chatPanel.getBoundingClientRect();
+        chatPos = { x: rect.left, y: rect.top };
+        localStorage.setItem('petChatPos', JSON.stringify(chatPos));
+    }
+
+    document.addEventListener('mousemove', (e) => moveChat(e.clientX, e.clientY));
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        const t = e.touches[0];
+        if (!t) return;
+        moveChat(t.clientX, t.clientY);
+    }, { passive: true });
+    document.addEventListener('touchend', endDrag);
+
+    /* ==========================================================
+       ОСНОВНАЯ ЛОГИКА ТАМАГОЧИ
+       ========================================================== */
 
     function isSpamming() {
         const now = Date.now();
@@ -1377,6 +1659,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playIdlePhrase(phrase) {
+        /* Пока музыка играет — не показываем idle-фразы */
+        if (isPlaying) return;
         if (state !== 'idle' || idlePhraseActive) return;
         idlePhraseActive = true;
 
@@ -1445,25 +1729,28 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(idlePhrase2);
         clearTimeout(idleTimer);
 
+        /* Если музыка играет — таймеры не запускаем */
+        if (isPlaying) return;
+
         idlePhrase1 = setTimeout(() => {
-            if (state !== 'idle') return;
+            if (state !== 'idle' || isPlaying) return;
             const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
             playIdlePhrase(p);
         }, 10000);
 
         idlePhrase2 = setTimeout(() => {
-            if (state !== 'idle') return;
+            if (state !== 'idle' || isPlaying) return;
             playIdlePhrase(IDLE_PHRASE_SECOND);
         }, 20000);
 
         idleTimer = setTimeout(() => {
-            if (state !== 'idle') return;
+            if (state !== 'idle' || isPlaying) return;
             cancelIdlePhrase();
             clearTimeout(idlePhrase1);
             clearTimeout(idlePhrase2);
             showLayer('blink');
             setTimeout(() => {
-                if (state !== 'idle') return;
+                if (state !== 'idle' || isPlaying) return;
                 clearInterval(blinkTimer);
                 goToSleep();
             }, 400);
@@ -1472,6 +1759,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetIdleCountdown() {
         if (state !== 'idle') return;
+        if (isPlaying) return;
         scheduleIdleTimers();
     }
 
@@ -1482,10 +1770,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clearInterval(blinkTimer);
         blinkTimer = setInterval(() => {
-            if (state !== 'idle' || idlePhraseActive) return;
+            if (state !== 'idle' || idlePhraseActive || isPlaying) return;
             showLayer('blink');
             setTimeout(() => {
-                if (state === 'idle' && !idlePhraseActive) showLayer('idle');
+                if (state === 'idle' && !idlePhraseActive && !isPlaying) showLayer('idle');
             }, 160);
         }, 4000);
 
@@ -1493,6 +1781,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function goToSleep() {
+        /* Если музыка играет — не засыпаем */
+        if (isPlaying) return;
         setState('sleeping');
         showSpeech(false);
         setMood(null);
