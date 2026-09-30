@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'why,why?',
             events: [
                 { time: 6,   action: 'showFlashback' },
-                { time: 11,  action: 'showLocalVideo', src: 'video/13.mp4', startAt: 10, theme: 'dark' },
+                { time: 11,  action: 'showLocalVideo', src: 'video/13.mp4', startAt: 11, theme: 'dark' },
                 { time: 62,  action: 'hideVideo' },
                 { time: 62,  action: 'randomSingOn' },
                 { time: 88,  action: 'specificSingOn' },
