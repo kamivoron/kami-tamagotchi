@@ -9,6 +9,7 @@
 <body>
     <div class="top-left-bar">
         <button class="ach-btn" id="achBtn">🏆 для любителей ачивок</button>
+        <button class="ach-btn" id="chatBtn">💬 чат</button>
         <div class="friendship-counter" id="friendCounter">❤ 0</div>
     </div>
 
@@ -29,6 +30,15 @@
         <div class="pet-icon pet-question" id="petQuestion">?</div>
         <div class="pet-icon pet-angry-mark" id="petAngryMark">💢</div>
         <div class="pet-speech" id="petSpeech"></div>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-status" id="chatStatus"></div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+            <input type="text" class="chat-input" id="chatInput" maxlength="120" placeholder="напиши что-нибудь..." autocomplete="off">
+            <button class="chat-send" id="chatSend" aria-label="Отправить">➤</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
