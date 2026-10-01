@@ -141,9 +141,7 @@ body {
     overflow: hidden;
     transition: box-shadow 0.25s ease;
 }
-.music-player:hover {
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-}
+.music-player:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
 
 .music-bar {
     display: flex;
@@ -170,10 +168,7 @@ body {
     padding: 0;
     line-height: 1;
 }
-.music-btn:hover {
-    background: rgba(255,255,255,0.15);
-    transform: scale(1.06);
-}
+.music-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.06); }
 .music-btn:active { transform: scale(0.94); }
 .music-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
@@ -219,7 +214,6 @@ body {
     text-overflow: ellipsis;
     letter-spacing: 0.2px;
 }
-
 .music-progress-wrap {
     height: 6px;
     width: 100%;
@@ -239,7 +233,6 @@ body {
     pointer-events: none;
     box-shadow: 0 0 8px rgba(255,90,138,0.6);
 }
-
 .music-time {
     font-size: 11px;
     font-weight: 600;
@@ -250,18 +243,8 @@ body {
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
-
-.music-volume-wrap {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-    padding: 0 4px;
-}
-.music-vol-icon {
-    font-size: 13px;
-    opacity: 0.75;
-}
+.music-volume-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 0 4px; }
+.music-vol-icon { font-size: 13px; opacity: 0.75; }
 .music-volume {
     -webkit-appearance: none;
     appearance: none;
@@ -275,8 +258,7 @@ body {
 .music-volume::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: #ff5a8a;
     cursor: pointer;
@@ -285,8 +267,7 @@ body {
 }
 .music-volume::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .music-volume::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: #ff5a8a;
     cursor: pointer;
@@ -307,10 +288,7 @@ body {
     border-top: 1px solid rgba(255,255,255,0.08);
 }
 .music-list::-webkit-scrollbar { width: 5px; }
-.music-list::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 3px;
-}
+.music-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
 .music-track {
     padding: 8px 10px;
@@ -330,20 +308,12 @@ body {
     color: #fff;
     font-weight: 700;
 }
-.music-track-num {
-    width: 18px;
-    font-size: 11px;
-    opacity: 0.5;
-    flex-shrink: 0;
-    text-align: right;
-}
-.music-track.active .music-track-num {
-    opacity: 1;
-    color: #ff9a9a;
-}
+.music-track-num { width: 18px; font-size: 11px; opacity: 0.5; flex-shrink: 0; text-align: right; }
+.music-track.active .music-track-num { opacity: 1; color: #ff9a9a; }
 
-/* ============ ПАНЕЛЬ ДОСТИЖЕНИЙ ============ */
-.ach-panel {
+/* ============ ПАНЕЛИ ============ */
+.ach-panel,
+.meme-panel {
     position: fixed;
     top: 70px;
     left: 20px;
@@ -353,7 +323,7 @@ body {
     background: var(--speech-bg);
     border: 1px solid var(--speech-border);
     border-radius: 16px;
-    padding: 16px;
+    padding: 14px;
     z-index: 102;
     opacity: 0;
     pointer-events: none;
@@ -363,18 +333,22 @@ body {
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.35);
 }
-.ach-panel.open {
+.ach-panel.open,
+.meme-panel.open {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
 }
-.ach-panel::-webkit-scrollbar { width: 6px; }
-.ach-panel::-webkit-scrollbar-thumb {
+.ach-panel::-webkit-scrollbar,
+.meme-panel::-webkit-scrollbar { width: 6px; }
+.ach-panel::-webkit-scrollbar-thumb,
+.meme-panel::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.2);
     border-radius: 3px;
 }
 
-.ach-header {
+.ach-header,
+.meme-panel-header {
     font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
@@ -385,57 +359,152 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
+/* ============ ГРУППЫ АЧИВОК ============ */
+.ach-group {
+    margin-bottom: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.ach-group-header {
+    padding: 9px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    user-select: none;
+    transition: background 0.15s;
+}
+.ach-group-header:hover { background: rgba(255,255,255,0.06); }
+.ach-group-count {
+    font-size: 11px;
+    opacity: 0.55;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ach-group-arrow {
+    font-size: 9px;
+    opacity: 0.6;
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+.ach-group.open .ach-group-arrow { transform: rotate(180deg); }
+.ach-group-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+    padding: 0 6px;
+}
+.ach-group.open .ach-group-body {
+    max-height: 3000px;
+    padding: 4px 6px 6px;
+}
 .ach-item {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    margin-bottom: 6px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid transparent;
-    transition: all 0.25s ease;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    margin-bottom: 3px;
+    background: rgba(255,255,255,0.03);
+    transition: background 0.15s;
 }
 .ach-item.locked {
-    opacity: 0.4;
-    filter: grayscale(0.7);
+    opacity: 0.45;
+    filter: grayscale(0.6);
 }
 .ach-item.unlocked {
-    background: linear-gradient(135deg, rgba(255,90,138,0.18), rgba(255,154,90,0.1));
-    border-color: rgba(255,90,138,0.35);
-    box-shadow: 0 0 14px rgba(255,90,138,0.15);
+    background: linear-gradient(135deg, rgba(255,90,138,0.15), rgba(255,154,90,0.08));
 }
 .ach-icon {
-    font-size: 24px;
-    width: 34px;
+    font-size: 15px;
+    width: 20px;
     text-align: center;
     flex-shrink: 0;
-    line-height: 1;
+    line-height: 1.3;
 }
 .ach-info { flex: 1; min-width: 0; }
 .ach-title {
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 3px;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--text);
+    margin-bottom: 2px;
 }
 .ach-desc {
-    font-size: 11px;
-    opacity: 0.7;
+    font-size: 10.5px;
+    opacity: 0.65;
     line-height: 1.3;
 }
-.ach-progress {
+.ach-status {
     font-size: 11px;
-    font-weight: 700;
     color: var(--accent);
-    padding: 3px 8px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.08);
     flex-shrink: 0;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
 }
-.ach-item.unlocked .ach-progress {
+.ach-item.unlocked .ach-status {
     background: rgba(255,90,138,0.25);
     color: #fff;
+}
+
+/* ============ МЕМЫ ============ */
+.meme-item {
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    background: rgba(255,255,255,0.035);
+    color: var(--text);
+    border: 1px solid transparent;
+}
+.meme-item:hover {
+    background: linear-gradient(135deg, rgba(255,90,138,0.22), rgba(255,154,90,0.12));
+    border-color: rgba(255,90,138,0.35);
+    transform: translateX(3px);
+}
+.meme-item-play {
+    font-size: 13px;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    color: #ff9a9a;
+}
+.meme-item-name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+.meme-empty {
+    padding: 20px 10px;
+    text-align: center;
+    opacity: 0.5;
+    font-size: 12px;
+    font-style: italic;
+}
+.meme-more {
+    padding: 12px 6px 4px;
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.5;
+    font-style: italic;
+    border-top: 1px dashed rgba(255,255,255,0.08);
+    margin-top: 8px;
 }
 
 /* ============ БЕЙДЖ ============ */
@@ -457,11 +526,11 @@ body {
     animation: ach-badge-pop 0.4s cubic-bezier(.2,1.5,.5,1);
 }
 @keyframes ach-badge-pop {
-    0%   { transform: scale(0); }
+    0% { transform: scale(0); }
     100% { transform: scale(1); }
 }
 
-/* ============ УВЕДОМЛЕНИЕ ОБ АЧИВКЕ ============ */
+/* ============ ТОСТ ============ */
 .ach-toast {
     position: fixed;
     bottom: 30px;
@@ -478,7 +547,7 @@ body {
         0 0 30px rgba(255,90,138,0.35),
         inset 0 0 20px rgba(255,90,138,0.08);
     transform: translateX(calc(100% + 60px));
-    transition: transform 0.55s cubic-bezier(.2,.9,.3,1), opacity 0.4s ease, box-shadow 0.2s ease;
+    transition: transform 0.55s cubic-bezier(.2,.9,.3,1), opacity 0.4s ease;
     z-index: 1000;
     opacity: 0;
     backdrop-filter: blur(10px);
@@ -487,21 +556,14 @@ body {
     cursor: pointer;
     pointer-events: none;
 }
-.ach-toast.show {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: auto;
-}
+.ach-toast.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
 .ach-toast.show:hover {
     box-shadow:
         0 10px 40px rgba(0,0,0,0.55),
         0 0 45px rgba(255,90,138,0.6),
         inset 0 0 30px rgba(255,90,138,0.15);
 }
-.ach-toast.show:hover .ach-toast-sub {
-    opacity: 1;
-    color: #ffd0e4;
-}
+.ach-toast.show:hover .ach-toast-sub { opacity: 1; color: #ffd0e4; }
 .ach-toast-icon {
     font-size: 32px;
     width: 50px;
@@ -538,7 +600,7 @@ body {
     transition: color 0.2s ease, opacity 0.2s ease;
 }
 
-/* ============ ПЕРЕКЛЮЧАТЕЛЬ ТЕМ ============ */
+/* ============ ТЕМЫ ============ */
 .theme-switcher {
     position: fixed;
     top: 20px;
@@ -560,10 +622,7 @@ body {
     transition: transform 0.15s, border-color 0.15s;
     flex-shrink: 0;
 }
-.theme-btn:hover {
-    transform: scale(1.15);
-    border-color: var(--accent);
-}
+.theme-btn:hover { transform: scale(1.15); border-color: var(--accent); }
 
 /* ============ ВИДЖЕТ ============ */
 .pet-widget {
@@ -574,7 +633,6 @@ body {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
-
 .pet-layer {
     position: absolute;
     inset: 0;
@@ -585,33 +643,32 @@ body {
     transition: opacity 0.15s ease;
 }
 
-/* ============ ОВЕРЛЕЙ ДЛЯ ВИДЕО ============ */
+/* ============ ВИДЕО-ОВЕРЛЕЙ ============ */
 .youtube-overlay {
-    position: absolute;
-    top: -95px;
+    position: fixed;
+    top: 120px;
     left: 50%;
-    transform: translateX(-50%) scale(0.75);
-    width: 220px;
-    height: 124px;
+    width: 400px;
+    height: 225px;
     border-radius: 14px;
     overflow: hidden;
     opacity: 0;
-    transition:
-        opacity 1.6s cubic-bezier(.4, 0, .2, 1),
-        transform 1.1s cubic-bezier(.2, .9, .3, 1),
-        box-shadow 0.6s ease;
+    transition: opacity 0.6s ease, box-shadow 0.4s ease;
     pointer-events: none;
-    z-index: 10;
+    z-index: 500;
     box-shadow:
-        0 8px 30px rgba(0,0,0,0.5),
-        0 0 50px rgba(184, 143, 232, 0.55),
-        0 0 90px rgba(184, 143, 232, 0.25);
+        0 12px 40px rgba(0,0,0,0.6),
+        0 0 50px rgba(184, 143, 232, 0.5);
     border: 1px solid rgba(200, 160, 255, 0.45);
-    background: rgba(10, 5, 20, 0.5);
+    background: #000;
+    resize: both;
+    min-width: 200px;
+    min-height: 130px;
+    max-width: 90vw;
+    max-height: 80vh;
 }
 .youtube-overlay.show {
-    opacity: 0.72;
-    transform: translateX(-50%) scale(1);
+    opacity: 0.96;
     pointer-events: auto;
 }
 .youtube-overlay iframe,
@@ -620,25 +677,49 @@ body {
     height: 100%;
     display: none;
     border: 0;
-    object-fit: cover;
     background: #000;
+    object-fit: contain;
 }
 .youtube-overlay iframe.active,
 .youtube-overlay video.active { display: block; }
 
+/* Плашка для перетаскивания */
+.overlay-drag-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 26px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    color: #fff;
+    font-size: 12px;
+    letter-spacing: 2px;
+    opacity: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.7), transparent);
+    transition: opacity 0.2s;
+    z-index: 20;
+    font-weight: 900;
+    user-select: none;
+}
+.youtube-overlay:hover .overlay-drag-handle { opacity: 1; }
+.overlay-drag-handle:active { cursor: grabbing; }
+
 /* Кнопка полного экрана */
 .fullscreen-btn {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
     background: rgba(0,0,0,0.6);
     color: #fff;
     border: 1px solid rgba(255,255,255,0.2);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1;
     z-index: 15;
     opacity: 0;
@@ -649,23 +730,11 @@ body {
     font-family: inherit;
     padding: 0;
 }
-.youtube-overlay.show:hover .fullscreen-btn {
-    opacity: 1;
-}
-.fullscreen-btn:hover {
-    background: rgba(255,90,138,0.85);
-    transform: scale(1.1);
-}
+.youtube-overlay.show:hover .fullscreen-btn { opacity: 1; }
+.fullscreen-btn:hover { background: rgba(255,90,138,0.85); transform: scale(1.1); }
 
 /* ============ ИКОНКИ ============ */
-.pet-icon {
-    position: absolute;
-    pointer-events: none;
-    font-weight: 900;
-    line-height: 1;
-    z-index: 5;
-}
-
+.pet-icon { position: absolute; pointer-events: none; font-weight: 900; line-height: 1; z-index: 5; }
 .pet-question {
     top: -10px;
     left: 50%;
@@ -686,7 +755,6 @@ body {
     from { transform: translateX(-50%) scale(1) translateY(0); }
     to   { transform: translateX(-50%) scale(1.15) translateY(-6px); }
 }
-
 .pet-angry-mark {
     top: 60px;
     left: 78%;
@@ -697,10 +765,7 @@ body {
     opacity: 0;
     transition: none;
 }
-.pet-widget.mood-angry .pet-angry-mark {
-    top: 20px;
-    left: 48%;
-}
+.pet-widget.mood-angry .pet-angry-mark { top: 20px; left: 48%; }
 .pet-widget.waking .pet-angry-mark,
 .pet-widget.mood-angry .pet-angry-mark {
     opacity: 1;
@@ -712,7 +777,6 @@ body {
     0%, 100% { transform: scale(1) rotate(-22deg); }
     50%      { transform: scale(1.1) rotate(-8deg); }
 }
-
 .pet-widget.offended:not(.sleeping):not(.waking) .pet-angry-mark {
     opacity: 1;
     transform: scale(1) rotate(-15deg);
@@ -761,9 +825,7 @@ body {
 }
 body.theme-light .pet-speech { color: #222; }
 
-/* ==========================================================
-   ЭФФЕКТЫ КЛИКА
-   ========================================================== */
+/* ============ ЭФФЕКТЫ КЛИКА ============ */
 .click-fx {
     position: fixed;
     pointer-events: none;
@@ -794,7 +856,6 @@ body.theme-light .pet-speech { color: #222; }
     20%  { opacity: 1; transform: translate(-50%, -80%) scale(1.15); }
     100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
 }
-
 .click-ring {
     position: fixed;
     pointer-events: none;
@@ -811,7 +872,6 @@ body.theme-light .pet-speech { color: #222; }
     0%   { opacity: 0.9; width: 10px; height: 10px; border-width: 3px; }
     100% { opacity: 0; width: 90px; height: 90px; border-width: 1px; }
 }
-
 .click-dot {
     position: fixed;
     pointer-events: none;
@@ -833,18 +893,13 @@ body.theme-light .pet-speech { color: #222; }
     100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); }
 }
 
-/* ==========================================================
-   НОТЫ (играют когда музыка играет)
-   ========================================================== */
+/* ============ НОТЫ ============ */
 .note-particle {
     position: fixed;
     pointer-events: none;
     z-index: 996;
     color: #ffb0d0;
-    text-shadow:
-        0 0 10px rgba(255,90,138,0.9),
-        0 0 20px rgba(255,90,138,0.5),
-        0 0 4px #fff;
+    text-shadow: 0 0 10px rgba(255,90,138,0.9), 0 0 20px rgba(255,90,138,0.5), 0 0 4px #fff;
     transform: translate(-50%, -50%);
     animation: note-float 2.4s ease-out forwards;
     opacity: 0;
@@ -856,9 +911,7 @@ body.theme-light .pet-speech { color: #222; }
     100% { opacity: 0; transform: translate(-50%, -250%) scale(1.05) rotate(20deg); }
 }
 
-/* ==========================================================
-   ФЕЙЕРВЕРКИ
-   ========================================================== */
+/* ============ ФЕЙЕРВЕРКИ ============ */
 .firework-particle {
     position: fixed;
     pointer-events: none;
@@ -877,16 +930,15 @@ body.theme-light .pet-speech { color: #222; }
     100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); }
 }
 
-/* ==========================================================
-   ЧАТ (перетаскиваемый)
-   ========================================================== */
+/* ============ ЧАТ ============ */
 .chat-panel {
     position: fixed;
     left: 50%;
     bottom: 20px;
-    width: 420px;
+    width: 440px;
     max-width: calc(100vw - 40px);
-    height: 340px;
+    height: 480px;
+    max-height: calc(100vh - 40px);
     padding: 12px;
     padding-top: 34px;
     background: var(--speech-bg);
@@ -904,17 +956,11 @@ body.theme-light .pet-speech { color: #222; }
     -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.45);
 }
-.chat-panel.open {
-    opacity: 1;
-    pointer-events: auto;
-}
+.chat-panel.open { opacity: 1; pointer-events: auto; }
 
-/* Хэдер для перетаскивания */
 .chat-header {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 28px;
     display: flex;
     align-items: center;
@@ -927,19 +973,9 @@ body.theme-light .pet-speech { color: #222; }
     user-select: none;
     transition: background 0.15s;
 }
-.chat-header:hover {
-    background: rgba(255,255,255,0.07);
-}
-.chat-header:active {
-    cursor: grabbing;
-}
-.chat-drag-dots {
-    color: var(--accent);
-    font-size: 14px;
-    letter-spacing: 2px;
-    opacity: 0.55;
-    font-weight: 900;
-}
+.chat-header:hover { background: rgba(255,255,255,0.07); }
+.chat-header:active { cursor: grabbing; }
+.chat-drag-dots { color: var(--accent); font-size: 14px; letter-spacing: 2px; opacity: 0.55; font-weight: 900; }
 
 .chat-status {
     font-size: 11px;
@@ -955,6 +991,7 @@ body.theme-light .pet-speech { color: #222; }
 
 .chat-messages {
     flex: 1;
+    min-height: 80px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -963,10 +1000,7 @@ body.theme-light .pet-speech { color: #222; }
     scroll-behavior: smooth;
 }
 .chat-messages::-webkit-scrollbar { width: 5px; }
-.chat-messages::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 3px;
-}
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
 .chat-msg {
     max-width: 78%;
@@ -982,7 +1016,6 @@ body.theme-light .pet-speech { color: #222; }
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 .chat-msg.user {
     align-self: flex-end;
     background: linear-gradient(135deg, rgba(255,90,138,0.4), rgba(255,154,90,0.3));
@@ -1024,8 +1057,7 @@ body.theme-light .chat-msg.pet {
     animation: chat-msg-appear 0.3s ease;
 }
 .chat-typing span {
-    width: 6px;
-    height: 6px;
+    width: 6px; height: 6px;
     border-radius: 50%;
     background: var(--accent);
     animation: chat-dot 1.2s ease-in-out infinite;
@@ -1038,10 +1070,49 @@ body.theme-light .chat-msg.pet {
 }
 body.theme-light .chat-typing { background: rgba(0,0,0,0.06); }
 
+/* ВЫБОР ОТВЕТА (в компоновке, не перекрывает) */
+.chat-choices {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--speech-border);
+    border-radius: 14px;
+    box-shadow: inset 0 0 20px rgba(255,90,138,0.06);
+    flex-shrink: 0;
+}
+.chat-choices.visible { display: flex; }
+.chat-choice {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--speech-border);
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    transition: all 0.15s ease;
+    letter-spacing: 0.3px;
+}
+.chat-choice:hover {
+    background: linear-gradient(135deg, rgba(255,90,138,0.5), rgba(255,154,90,0.4));
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255,90,138,0.4);
+}
+.chat-choice:active { transform: translateY(0); }
+
+/* Когда есть выбор — скрываем поле ввода */
+.chat-panel.has-choices .chat-input-row { display: none; }
+
 .chat-input-row {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-shrink: 0;
 }
 .chat-input {
     flex: 1;
@@ -1085,244 +1156,3 @@ body.theme-light .chat-input::placeholder { color: rgba(0,0,0,0.4); }
 .chat-send:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(255,90,138,0.4); }
 .chat-send:active { transform: scale(0.95); }
 .chat-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-
-/* Заголовок группы внутри панели ачивок */
-.ach-subheader {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    opacity: 0.4;
-    margin: 14px 0 6px 4px;
-    color: var(--accent);
-}
-.ach-subheader:first-child {
-    margin-top: 0;
-}
-
-/* ==========================================================
-   ВЫБОР ОТВЕТА В ЧАТЕ (как в новеллах)
-   ========================================================== */
-.chat-choices {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    display: none;
-    flex-direction: column;
-    gap: 6px;
-    z-index: 30;
-    padding: 10px;
-    background: var(--speech-bg);
-    border: 1px solid var(--speech-border);
-    border-radius: 14px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-}
-.chat-choices.visible { display: flex; }
-.chat-choice {
-    padding: 11px 18px;
-    border-radius: 10px;
-    border: 1px solid var(--speech-border);
-    background: rgba(255,255,255,0.06);
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    text-align: center;
-    transition: all 0.15s ease;
-    letter-spacing: 0.3px;
-}
-.chat-choice:hover {
-    background: linear-gradient(135deg, rgba(255,90,138,0.5), rgba(255,154,90,0.4));
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(255,90,138,0.4);
-}
-.chat-choice:active { transform: translateY(0); }
-
-/* ==========================================================
-   КОМПАКТНАЯ ПАНЕЛЬ ДОСТИЖЕНИЙ С ГРУППАМИ
-   ========================================================== */
-.ach-group {
-    margin-bottom: 6px;
-    border-radius: 10px;
-    overflow: hidden;
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.04);
-}
-.ach-group-header {
-    padding: 9px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    user-select: none;
-    transition: background 0.15s;
-    letter-spacing: 0.3px;
-}
-.ach-group-header:hover { background: rgba(255,255,255,0.06); }
-.ach-group-count {
-    font-size: 11px;
-    opacity: 0.55;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.ach-group-arrow {
-    font-size: 9px;
-    opacity: 0.6;
-    transition: transform 0.25s ease;
-    display: inline-block;
-}
-.ach-group.open .ach-group-arrow { transform: rotate(180deg); }
-.ach-group-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease, padding 0.3s ease;
-    padding: 0 6px;
-}
-.ach-group.open .ach-group-body {
-    max-height: 2000px;
-    padding: 4px 6px 6px;
-}
-.ach-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    margin-bottom: 2px;
-    background: rgba(255,255,255,0.03);
-    transition: background 0.15s;
-    font-size: 12px;
-}
-.ach-item.locked {
-    opacity: 0.42;
-    filter: grayscale(0.6);
-}
-.ach-item.unlocked {
-    background: linear-gradient(135deg, rgba(255,90,138,0.15), rgba(255,154,90,0.08));
-}
-.ach-icon {
-    font-size: 15px;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
-    line-height: 1;
-}
-.ach-title {
-    flex: 1;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-}
-.ach-status {
-    font-size: 11px;
-    color: var(--accent);
-    flex-shrink: 0;
-    font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.05);
-}
-.ach-item.unlocked .ach-status {
-    background: rgba(255,90,138,0.25);
-    color: #fff;
-}
-/* ==========================================================
-   ПАНЕЛЬ МЕМОВ
-   ========================================================== */
-.meme-panel {
-    position: fixed;
-    top: 70px;
-    left: 20px;
-    width: 340px;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    background: var(--speech-bg);
-    border: 1px solid var(--speech-border);
-    border-radius: 16px;
-    padding: 14px;
-    z-index: 102;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-12px);
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-}
-.meme-panel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-}
-.meme-panel::-webkit-scrollbar { width: 6px; }
-.meme-panel::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 3px;
-}
-.meme-panel-header {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0.6;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-.meme-item {
-    padding: 7px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 3px;
-    background: rgba(255,255,255,0.035);
-    color: var(--text);
-    border: 1px solid transparent;
-}
-.meme-item:hover {
-    background: linear-gradient(135deg, rgba(255,90,138,0.22), rgba(255,154,90,0.12));
-    border-color: rgba(255,90,138,0.35);
-    transform: translateX(3px);
-}
-.meme-item.locked {
-    opacity: 0.35;
-    filter: grayscale(0.7);
-    cursor: not-allowed;
-}
-.meme-item.locked:hover {
-    background: rgba(255,255,255,0.035);
-    transform: none;
-    border-color: transparent;
-}
-.meme-item-play {
-    font-size: 13px;
-    width: 16px;
-    text-align: center;
-    flex-shrink: 0;
-}
-.meme-item-name {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 600;
-}
