@@ -1928,6 +1928,28 @@ function renderVitrinaPanel() {
     const APOLOGY_KEYWORDS = ['извини', 'прости', 'сорри', 'соррян', 'соррянчик', 'прошу прощения', 'виноват', 'виновата'];
 
     const CHAT_TRIGGERS = [
+            /* ---- компот ---- */
+    { keywords: ['компот', 'компота', 'компоту', 'компот юли', 'компотик'],
+      replies: [
+          "компот юли - самое вкусное, что я пробовала в этой жизни!",
+          "купи мне компотика юли... я так хочу его попробовать!",
+          "1 октября - единственный день, когда его можно купить!",
+          "а ты покормишь меня им?",
+          "нямочка, вкуснямочка~"
+      ], mood: 'happy' },
+
+    /* ---- бекрумс ---- */
+    { keywords: ['бекрумс', 'бекрумсе', 'бекрумса'],
+      replies: [
+          "да уж, меня пугает то, что происходит при включении четвертого трека...",
+          "только не это!",
+          "только не снова туда! я не хочу!",
+          "экзит 8 мне больше нравится",
+          "я так и не посмотрела тот фильм, брух...",
+          "о нет, не напоминай..",
+          "да я своего рода тоже могу попасть туда...!"
+      ], mood: 'backrooms' },
+        
         { keywords: ['класс', 'пон', 'понятно', 'супер', 'ясно', 'ладно'], replies: ["пончик, пончик","ваще класс","ладно-ладно","понятненько"], mood: 'happy' },
         { keywords: ['шучу', 'шутка', 'пошутил', 'пошутила'], replies: ["забавно)","смешняво)","я похихикала)"], mood: 'laughing' },
         { keywords: ['бейба', 'бейби', 'малышка', 'малыш'], replies: ["кто, яяяя?","ну да, я малюточка)"], mood: 'teasing' },
@@ -2118,6 +2140,23 @@ function renderVitrinaPanel() {
     function showChatReaction(mood) {
         if (state !== 'idle') return;
         if (!mood || mood === 'neutral') return;
+
+        /* Специальный mood: бекрумс — показываем 14.png */
+        if (mood === 'backrooms') {
+            cancelIdlePhrase();
+            clearInterval(blinkTimer);
+            clearInterval(chatReactionAnim);
+            clearTimeout(chatReactionTimer);
+            showLayer('backrooms14');
+            chatReactionTimer = setTimeout(() => {
+                if (state === 'idle') {
+                    if (backroomsActive) showLayer('backrooms14');
+                    else { setMood(null); enterIdle(); }
+                }
+            }, 2400);
+            return;
+        }
+
         cancelIdlePhrase();
         clearInterval(blinkTimer);
         clearInterval(chatReactionAnim);
