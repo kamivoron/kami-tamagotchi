@@ -2055,3 +2055,10 @@ body.theme-backrooms.chat-open .pet-widget {
     font-style: italic;
     margin-bottom: 3px;
 }
+body.theme-yararara {
+    --bg: #e01720;
+    --accent: #ffb0b0;
+    --speech-bg: rgba(80, 5, 10, 0.95);
+    --speech-border: #ff8080;
+    background: #e01720 !important;
+}
