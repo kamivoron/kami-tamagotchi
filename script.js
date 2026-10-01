@@ -27,6 +27,101 @@ document.addEventListener('DOMContentLoaded', () => {
     let isVideoPlaying   = false;
 
     /* ==========================================================
+       СТАТЫ ТАМАГОЧИ
+       ========================================================== */
+    const STATS_KEY = 'petStatsV1';
+    const LAST_INTERACTION_KEY = 'petLastInteraction';
+
+    let stats = { mood: 70, fullness: 70, cleanliness: 70, lastUpdate: Date.now() };
+    try {
+        const s = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
+        if (s && typeof s === 'object') {
+            stats = { mood: 70, fullness: 70, cleanliness: 70, lastUpdate: Date.now(), ...s };
+        }
+    } catch(_) {}
+
+    let lastInteraction = parseInt(localStorage.getItem(LAST_INTERACTION_KEY) || String(Date.now()), 10);
+    if (isNaN(lastInteraction)) lastInteraction = Date.now();
+
+    function saveStats() {
+        stats.lastUpdate = Date.now();
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    }
+
+    function touchInteraction() {
+        lastInteraction = Date.now();
+        localStorage.setItem(LAST_INTERACTION_KEY, String(lastInteraction));
+    }
+
+    function applyDecay() {
+        const now = Date.now();
+        const elapsed = Math.max(0, (now - stats.lastUpdate) / 1000);
+        const awayHours = Math.max(0, (now - lastInteraction) / 3600000);
+
+        /* Голод: -1 каждые 10 минут (600 сек) */
+        if (elapsed >= 600) {
+            const decay = Math.floor(elapsed / 600);
+            stats.fullness = Math.max(0, stats.fullness - decay);
+        }
+
+        /* Чистота: -1 каждый час (3600 сек) */
+        if (elapsed >= 3600) {
+            const decay = Math.floor(elapsed / 3600);
+            stats.cleanliness = Math.max(0, stats.cleanliness - decay);
+        }
+
+        /* Настроение: -1 каждые 5 минут, если (fullness == 0 || cleanliness == 0) */
+        if ((stats.fullness === 0 || stats.cleanliness === 0) && elapsed >= 300) {
+            const decay = Math.floor(elapsed / 300);
+            stats.mood = Math.max(0, stats.mood - decay);
+        }
+
+        /* Настроение: -1 каждые 5 минут, если пользователь не заходил 3+ часа */
+        if (awayHours >= 3) {
+            const decay = Math.floor(awayHours * 12);
+            stats.mood = Math.max(0, stats.mood - decay);
+        }
+
+        stats.lastUpdate = now;
+        saveStats();
+    }
+
+    applyDecay();
+
+    function clampStat(v) {
+        return Math.max(0, Math.min(100, Math.round(v)));
+    }
+
+    function addStat(name, amount) {
+        stats[name] = clampStat(stats[name] + amount);
+        stats.lastUpdate = Date.now();
+        saveStats();
+        renderStats();
+    }
+
+    function renderStats() {
+        statMoodFill.style.width = stats.mood + '%';
+        statHungerFill.style.width = stats.fullness + '%';
+        statCleanFill.style.width = stats.cleanliness + '%';
+        statMoodVal.textContent = stats.mood;
+        statHungerVal.textContent = stats.fullness;
+        statCleanVal.textContent = stats.cleanliness;
+    }
+
+    const statMoodFill = document.getElementById('statMoodFill');
+    const statHungerFill = document.getElementById('statHungerFill');
+    const statCleanFill = document.getElementById('statCleanFill');
+    const statMoodVal = document.getElementById('statMoodVal');
+    const statHungerVal = document.getElementById('statHungerVal');
+    const statCleanVal = document.getElementById('statCleanVal');
+
+    /* Периодический пересчёт раз в секунду */
+    setInterval(() => {
+        applyDecay();
+        renderStats();
+    }, 60000); /* раз в минуту достаточно */
+
+    /* ==========================================================
        ПЛЕЕР
        ========================================================== */
     const TRACKS = [
@@ -63,6 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 { time: 33,  action: 'showLocalVideo', src: 'video/18.mp4', onEnd: 'kamiiFirstUAndIEnd' },
                 { time: 133, action: 'showLocalVideo', src: 'video/18.mp4' }
             ]
+        },
+        {
+            file: 'music/4.mp3',
+            title: 'looping the rooms',
+            events: [
+                { time: 3,  action: 'backroomsBegin' },
+                { time: 12, action: 'singLine', text: 'кажется, я попала в бекрумс...', duration: 3500 }
+            ],
+            onEnd: 'backroomsEnd'
         }
     ];
 
@@ -85,6 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlayDragHandle   = document.getElementById('overlayDragHandle');
     const memePanel           = document.getElementById('memePanel');
     const memeBtn             = document.getElementById('memeBtn');
+    const carePanel           = document.getElementById('carePanel');
+    const careBtn             = document.getElementById('careBtn');
+    const shopPanel           = document.getElementById('shopPanel');
 
     let currentTrack   = -1;
     let isPlaying      = false;
@@ -93,20 +200,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let firedEvents    = new Set();
     let onPlayTriggeredForTrack = -1;
 
+    /* ===== ФИКС: не пропускать клики по видео-оверлею в пет-виджет ===== */
+    ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'dblclick'].forEach(evt => {
+        youtubeOverlay.addEventListener(evt, (e) => e.stopPropagation());
+    });
+
     /* ==========================================================
-       ПОЗИЦИЯ И РАЗМЕР ВИДЕО-ОВЕРЛЕЯ
+       ПОЗИЦИЯ И РАЗМЕР ОВЕРЛЕЯ
        ========================================================== */
     let overlayPos = null;
     let overlaySize = null;
-
-    try {
-        const sp = localStorage.getItem('petOverlayPos');
-        if (sp) overlayPos = JSON.parse(sp);
-    } catch(_) {}
-    try {
-        const ss = localStorage.getItem('petOverlaySize');
-        if (ss) overlaySize = JSON.parse(ss);
-    } catch(_) {}
+    try { const sp = localStorage.getItem('petOverlayPos'); if (sp) overlayPos = JSON.parse(sp); } catch(_) {}
+    try { const ss = localStorage.getItem('petOverlaySize'); if (ss) overlaySize = JSON.parse(ss); } catch(_) {}
 
     function applyOverlaySize() {
         if (overlaySize) {
@@ -114,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             youtubeOverlay.style.height = overlaySize.h + 'px';
         }
     }
-
     function applyOverlayPosition() {
         if (overlayPos) {
             youtubeOverlay.style.left = overlayPos.x + 'px';
@@ -122,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
             youtubeOverlay.style.transform = 'none';
         }
     }
-
     function ensureOverlayLayout() {
         applyOverlaySize();
         if (!overlayPos) {
@@ -138,11 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
         applyOverlayPosition();
     }
 
-    /* Применяем размер при загрузке */
     applyOverlaySize();
     if (overlayPos) applyOverlayPosition();
 
-    /* Отслеживаем изменение размера (пользователь тянет за угол) */
     if (window.ResizeObserver) {
         const ro = new ResizeObserver(() => {
             const w = youtubeOverlay.offsetWidth;
@@ -155,14 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ro.observe(youtubeOverlay);
     }
 
-    /* Перетаскивание за верхнюю плашку */
     let overlayDragging = false;
     let odStartX = 0, odStartY = 0, odInitX = 0, odInitY = 0;
 
     if (overlayDragHandle) {
         overlayDragHandle.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             const rect = youtubeOverlay.getBoundingClientRect();
             overlayDragging = true;
             odStartX = e.clientX; odStartY = e.clientY;
@@ -170,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.cursor = 'grabbing';
         });
         overlayDragHandle.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
             const t = e.touches[0];
             if (!t) return;
             const rect = youtubeOverlay.getBoundingClientRect();
@@ -193,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
         youtubeOverlay.style.top = newY + 'px';
         youtubeOverlay.style.transform = 'none';
     }
-
     function endOverlayDrag() {
         if (!overlayDragging) return;
         overlayDragging = false;
@@ -202,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlayPos = { x: rect.left, y: rect.top };
         localStorage.setItem('petOverlayPos', JSON.stringify(overlayPos));
     }
-
     document.addEventListener('mousemove', (e) => moveOverlay(e.clientX, e.clientY));
     document.addEventListener('mouseup', endOverlayDrag);
     document.addEventListener('touchmove', (e) => {
@@ -259,6 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
         stopRandomSing();
         specificSingActive = false;
         hideVideoOverlay();
+        resetBackrooms();
+
         if (state === 'idle') { setMood(null); enterIdle(); }
 
         if (autoplay) playTrack();
@@ -273,10 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             onPlayTriggeredForTrack = currentTrack;
             setTimeout(() => {
                 if (typeof forcePlayPhrase === 'function') {
-                    forcePlayPhrase({
-                        text: track.onPlay.text,
-                        mood: track.onPlay.mood || 'neutral'
-                    }, finishDialog);
+                    forcePlayPhrase({ text: track.onPlay.text, mood: track.onPlay.mood || 'neutral' }, finishDialog);
                 }
             }, 900);
         }
@@ -318,11 +415,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             showLocalVideo(ev.src, ev.onEnd, ev.startAt || 0, false);
         }
-        else if (ev.action === 'singLine') showSingLine(ev.text, 2800);
+        else if (ev.action === 'singLine') showSingLine(ev.text, ev.duration || 2800);
         else if (ev.action === 'randomSingOn') startRandomSing();
         else if (ev.action === 'randomSingOff') stopRandomSing();
         else if (ev.action === 'specificSingOn') specificSingActive = true;
         else if (ev.action === 'specificSingOff') specificSingActive = false;
+        else if (ev.action === 'backroomsBegin') backroomsBegin();
     }
 
     function showFlashback() {
@@ -337,6 +435,76 @@ document.addEventListener('DOMContentLoaded', () => {
         setMood('happy');
     }
 
+    /* ===== BACKROOMS ===== */
+    let backroomsActive = false;
+
+    function backroomsBegin() {
+        if (backroomsActive) return;
+        backroomsActive = true;
+        /* Сменить тему на backrooms */
+        document.body.className = 'theme-backrooms';
+        localStorage.setItem('petTheme', 'backrooms');
+        /* Ками → 14.png */
+        cancelIdlePhrase();
+        clearInterval(blinkTimer);
+        clearTimeout(idleTimer);
+        clearTimeout(sleepTimer);
+        clearTimeout(idlePhrase1);
+        clearTimeout(idlePhrase2);
+        stopBreathing();
+        showLayer('backrooms14');
+        setMood('neutral');
+    }
+
+    function resetBackrooms() {
+        if (!backroomsActive) return;
+        backroomsActive = false;
+        /* Возврат темы */
+        const savedTheme = localStorage.getItem('petThemeBeforeBackrooms') || 'dark';
+        document.body.className = savedTheme === 'dark' ? '' : 'theme-' + savedTheme;
+        localStorage.setItem('petTheme', savedTheme);
+    }
+
+    function backroomsEnd() {
+        /* Сохраняем предыдущую тему и выдаём достижение + разблокируем backrooms */
+        localStorage.setItem('petBackroomsUnlocked', '1');
+        unlockBackroomsTheme();
+        backroomsActive = false;
+
+        /* Ачивка */
+        giveCustomAchievement('backrooms',
+            '🌫',
+            'попал в бекрумс',
+            'прослушал looping the rooms до конца',
+            'кажется, я теперь тут застряла... но ты со мной, и мне не страшно~',
+            'laughing');
+
+        setTimeout(() => {
+            /* Возврат в обычное состояние */
+            const savedTheme = localStorage.getItem('petTheme') || 'dark';
+            if (savedTheme === 'backrooms') {
+                document.body.className = 'theme-backrooms';
+            } else {
+                document.body.className = savedTheme === 'dark' ? '' : 'theme-' + savedTheme;
+            }
+            if (state === 'idle') {
+                setMood(null);
+                enterIdle();
+            }
+        }, 5000);
+    }
+
+    function unlockBackroomsTheme() {
+        if (document.querySelector('.theme-btn[data-theme="backrooms"]')) return;
+        const btn = document.createElement('button');
+        btn.className = 'theme-btn';
+        btn.dataset.theme = 'backrooms';
+        btn.title = 'бекрумс';
+        btn.style.background = 'linear-gradient(135deg, #d4b856, #8a7a30)';
+        document.querySelector('.theme-switcher').appendChild(btn);
+        btn.addEventListener('click', () => handleThemeClick(btn));
+    }
+
     function showLocalVideo(src, endAction, startAt, unmute) {
         if (!localVideo || !youtubeOverlay) return;
         youtubeIframe.src = '';
@@ -347,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (endAction === 'kamiiFirstUAndIEnd') localVideo.onended = kamiiFirstUAndIEnded;
 
         localVideo.classList.add('active');
-        localVideo.muted = !unmute; /* если unmute — стартуем без mute, но autoplay может блокироваться */
+        localVideo.muted = !unmute;
 
         const playVideo = () => {
             ensureOverlayLayout();
@@ -355,18 +523,14 @@ document.addEventListener('DOMContentLoaded', () => {
             isVideoPlaying = true;
             const p = localVideo.play();
             if (p && p.catch) {
-                /* Если автоплей с unmute заблокирован — попробуем muted */
                 if (unmute) {
                     localVideo.muted = true;
                     localVideo.play().then(() => {
-                        /* После старта пробуем включить звук */
                         try { localVideo.muted = false; } catch(_) {}
                     }).catch(() => {});
                 }
             } else if (unmute && p && p.then) {
-                p.then(() => {
-                    try { localVideo.muted = false; } catch(_) {}
-                }).catch(() => {});
+                p.then(() => { try { localVideo.muted = false; } catch(_) {} }).catch(() => {});
             }
         };
 
@@ -377,10 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 playVideo();
             };
             localVideo.src = src;
-            /* fallback */
-            setTimeout(() => {
-                if (!youtubeOverlay.classList.contains('show')) playVideo();
-            }, 500);
+            setTimeout(() => { if (!youtubeOverlay.classList.contains('show')) playVideo(); }, 500);
         } else {
             localVideo.src = src;
             playVideo();
@@ -413,13 +574,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const p = localVideo.play();
         if (p && p.catch) {
-            p.catch(() => {}).then(() => {
-                try { localVideo.muted = false; } catch(_) {}
-            });
+            p.catch(() => {}).then(() => { try { localVideo.muted = false; } catch(_) {} });
         } else if (p && p.then) {
-            p.then(() => {
-                try { localVideo.muted = false; } catch(_) {}
-            }).catch(() => {});
+            p.then(() => { try { localVideo.muted = false; } catch(_) {} }).catch(() => {});
         }
     }
 
@@ -476,7 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
         randomSingActive = true;
         scheduleNextRandomSing();
     }
-
     function scheduleNextRandomSing() {
         if (!randomSingActive) return;
         randomSingTimer = setTimeout(() => {
@@ -487,14 +643,13 @@ document.addEventListener('DOMContentLoaded', () => {
             scheduleNextRandomSing();
         }, 4500 + Math.random() * 2500);
     }
-
     function stopRandomSing() {
         randomSingActive = false;
         if (randomSingTimer) { clearTimeout(randomSingTimer); randomSingTimer = null; }
     }
 
     function showSingLine(text, duration) {
-        if (currentTrack !== 1) return;
+        if (currentTrack !== 1 && currentTrack !== 3) return;
         cancelIdlePhrase();
         clearTimeout(idleTimer);
         clearTimeout(idlePhrase1);
@@ -502,13 +657,17 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(blinkTimer);
         petSpeech.textContent = text;
         showSpeech(true);
-        setMood('happy');
-        showLayer('happy1');
+        if (currentTrack !== 3) setMood('happy');
+        else showLayer('backrooms14');
         clearTimeout(talkTimer);
         talkTimer = setTimeout(() => {
             showSpeech(false);
-            setMood(null);
-            if (state === 'idle') showLayer('idle');
+            if (currentTrack === 3) {
+                showLayer('backrooms14');
+            } else {
+                setMood(null);
+                if (state === 'idle') showLayer('idle');
+            }
         }, duration);
     }
 
@@ -569,6 +728,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     audioEl.addEventListener('ended', () => {
+        const track = TRACKS[currentTrack];
+        if (track && track.onEnd === 'backroomsEnd') {
+            backroomsEnd();
+        }
+
         if (isRepeat) {
             firedEvents = new Set();
             onPlayTriggeredForTrack = -1;
@@ -683,13 +847,8 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAllAchievements();
     }, 1000);
 
-    setInterval(() => {
-        localStorage.setItem('petTotalSeconds', totalSeconds);
-    }, 5000);
-
-    window.addEventListener('beforeunload', () => {
-        localStorage.setItem('petTotalSeconds', totalSeconds);
-    });
+    setInterval(() => { localStorage.setItem('petTotalSeconds', totalSeconds); }, 5000);
+    window.addEventListener('beforeunload', () => { localStorage.setItem('petTotalSeconds', totalSeconds); });
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) localStorage.setItem('petTotalSeconds', totalSeconds);
     });
@@ -712,7 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
         angry:     'images/10.png',
         laugh:     'images/11.png',
         tease:     'images/12.png',
-        flashback: 'images/13.png'
+        flashback: 'images/13.png',
+        backrooms14: 'images/14.png'
     };
     Object.values(IMAGES).forEach(src => { const i = new Image(); i.src = src; });
 
@@ -870,9 +1030,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Array.isArray(savedMemes)) foundMemes = new Set(savedMemes);
     } catch (_) {}
 
-    function saveFoundMemes() {
-        localStorage.setItem('petFoundMemes', JSON.stringify([...foundMemes]));
-    }
+    let memeFavorites = [];
+    try {
+        const savedFav = JSON.parse(localStorage.getItem('petMemeFavorites') || '[]');
+        if (Array.isArray(savedFav)) memeFavorites = savedFav;
+    } catch (_) { memeFavorites = []; }
+
+    function saveFoundMemes() { localStorage.setItem('petFoundMemes', JSON.stringify([...foundMemes])); }
+    function saveMemeFavorites() { localStorage.setItem('petMemeFavorites', JSON.stringify(memeFavorites)); }
 
     function findMemeMatch(text) {
         const normalized = text.trim().toLowerCase();
@@ -884,7 +1049,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    /* Показать кнопку мемов, если что-то найдено */
     function updateMemeBtnVisibility() {
         if (foundMemes.size > 0) memeBtn.style.display = '';
         else memeBtn.style.display = 'none';
@@ -906,44 +1070,63 @@ document.addEventListener('DOMContentLoaded', () => {
           text: "ты стала моим лучшим другом~", mood: "laughing" },
 
         { type: 'time', target: 5 * 60,     icon: "⏱", title: "5 минут",   desc: "проведи с ками 5 минут",
-          text: "пять минут вместе — уже что-то!",            mood: "happy" },
+          text: "пять минут вместе — уже что-то!", mood: "happy" },
         { type: 'time', target: 10 * 60,    icon: "⏱", title: "10 минут",  desc: "проведи с ками 10 минут",
-          text: "десять минут! время летит~",                 mood: "happy" },
+          text: "десять минут! время летит~", mood: "happy" },
         { type: 'time', target: 30 * 60,    icon: "⏳", title: "полчаса",   desc: "проведи с ками 30 минут",
-          text: "полчаса вместе, вот это да!",                mood: "happy" },
+          text: "полчаса вместе, вот это да!", mood: "happy" },
         { type: 'time', target: 60 * 60,    icon: "⏰", title: "час",       desc: "проведи с ками 1 час",
-          text: "целый час! я тронута~",                       mood: "happy" },
+          text: "целый час! я тронута~", mood: "happy" },
         { type: 'time', target: 2 * 3600,   icon: "🕐", title: "2 часа",    desc: "проведи с ками 2 часа",
-          text: "2 часа вместе, я впечатлена!",                mood: "laughing" },
+          text: "2 часа вместе, я впечатлена!", mood: "laughing" },
         { type: 'time', target: 5 * 3600,   icon: "🕔", title: "5 часов",   desc: "проведи с ками 5 часов",
-          text: "5 часов... ты серьёзно?!",                    mood: "laughing" },
+          text: "5 часов... ты серьёзно?!", mood: "laughing" },
         { type: 'time', target: 10 * 3600,  icon: "🌙", title: "10 часов",  desc: "проведи с ками 10 часов",
-          text: "10 часов вместе... ты мой теневой теперь!",   mood: "laughing" },
+          text: "10 часов вместе... ты мой теневой теперь!", mood: "laughing" },
 
         { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",  desc: "отправь ками 1 сообщение",
-          text: "ты написал мне первое сообщение! ура!",       mood: "happy" },
+          text: "ты написал мне первое сообщение! ура!", mood: "happy" },
         { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",   desc: "отправь ками 5 сообщений",
-          text: "пять сообщений! мы болтаем!",                  mood: "happy" },
+          text: "пять сообщений! мы болтаем!", mood: "happy" },
         { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",  desc: "отправь ками 10 сообщений",
-          text: "десять сообщений, так держать!",               mood: "happy" },
+          text: "десять сообщений, так держать!", mood: "happy" },
         { type: 'messages', target: 30,  icon: "💬", title: "30 сообщений",  desc: "отправь ками 30 сообщений",
-          text: "тридцать! ты разговорчивый~",                  mood: "happy" },
+          text: "тридцать! ты разговорчивый~", mood: "happy" },
         { type: 'messages', target: 50,  icon: "💬", title: "50 сообщений",  desc: "отправь ками 50 сообщений",
-          text: "пятьдесят! мы точно подружились",              mood: "laughing" },
+          text: "пятьдесят! мы точно подружились", mood: "laughing" },
         { type: 'messages', target: 67,  icon: "🔢", title: "67 сообщений",  desc: "отправь ками 67 сообщений",
-          text: "67 сообщений... это судьба",                   mood: "laughing" },
+          text: "67 сообщений... это судьба", mood: "laughing" },
         { type: 'messages', target: 100, icon: "💯", title: "100 сообщений", desc: "отправь ками 100 сообщений",
-          text: "сто сообщений! ты меня завалил болтовнёй~",    mood: "laughing" },
+          text: "сто сообщений! ты меня завалил болтовнёй~", mood: "laughing" },
 
         { type: 'memes', target: 1,  icon: "🎬", title: "любопытный",        desc: "найти 1 пасхалку",
-          text: "ты нашёл первую пасхалку! таких ещё много~",   mood: "happy" },
+          text: "ты нашёл первую пасхалку! таких ещё много~", mood: "happy" },
         { type: 'memes', target: 10, icon: "📼", title: "пару раз смотрел",  desc: "найти 10 пасхалок",
-          text: "десять мемов! ты знаток~",                     mood: "laughing" },
+          text: "десять мемов! ты знаток~", mood: "laughing" },
         { type: 'memes', target: 25, icon: "🎞", title: "немного шаришь",    desc: "найти 25 пасхалок",
-          text: "двадцать пять! ты почти всё нашёл!",           mood: "laughing" },
+          text: "двадцать пять! ты почти всё нашёл!", mood: "laughing" },
         { type: 'memes', target: 45, icon: "🏆", title: "главный фанат",     desc: "найти все 45 пасхалок",
-          text: "ты нашёл ВСЁ! ты настоящая легенда!!",         mood: "laughing" }
+          text: "ты нашёл ВСЁ! ты настоящая легенда!!", mood: "laughing" }
     ];
+
+    let customAchievements = [];
+    try {
+        const ca = JSON.parse(localStorage.getItem('petCustomAch') || '[]');
+        if (Array.isArray(ca)) customAchievements = ca;
+    } catch(_) {}
+
+    function giveCustomAchievement(id, icon, title, desc, text, mood) {
+        if (customAchievements.includes(id)) return;
+        customAchievements.push(id);
+        localStorage.setItem('petCustomAch', JSON.stringify(customAchievements));
+
+        onAchievementUnlocked();
+
+        setTimeout(() => {
+            if (state === 'sleeping') return;
+            forcePlayPhrase({ text, mood: mood || 'laughing' }, finishDialog);
+        }, 900);
+    }
 
     const shownAchievements = new Set(JSON.parse(localStorage.getItem('petAchShownV3') || '[]'));
     function achKey(a) { return a.type + '_' + a.target; }
@@ -1180,7 +1363,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* Панель достижений */
     const ACH_GROUPS_OPEN = {};
 
     function renderAchPanel() {
@@ -1193,8 +1375,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const total = ACHIEVEMENTS.length;
         const totalUnlocked = ACHIEVEMENTS.filter(a => shownAchievements.has(achKey(a))).length;
+        const customUnlocked = customAchievements.length;
+        const grandTotal = total + (customUnlocked > 0 ? 1 : 0);
 
-        let html = `<div class="ach-header">🏆 твои ачивки · ${totalUnlocked}/${total}</div>`;
+        let html = `<div class="ach-header">🏆 ачивки · ${totalUnlocked + customUnlocked}/${grandTotal}</div>`;
 
         groups.forEach(g => {
             const list = ACHIEVEMENTS.filter(a => a.type === g.type);
@@ -1223,6 +1407,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         });
 
+        /* Кастомные достижения */
+        if (customAchievements.length > 0) {
+            const open = ACH_GROUPS_OPEN['custom'] ? 'open' : '';
+            html += `
+                <div class="ach-group ${open}" data-group="custom">
+                    <div class="ach-group-header">
+                        <span>✨ особые</span>
+                        <span class="ach-group-count">${customAchievements.length} <span class="ach-group-arrow">▼</span></span>
+                    </div>
+                    <div class="ach-group-body">
+                        ${customAchievements.map(id => {
+                            if (id === 'backrooms') {
+                                return `<div class="ach-item unlocked">
+                                    <div class="ach-icon">🌫</div>
+                                    <div class="ach-info">
+                                        <div class="ach-title">попал в бекрумс</div>
+                                        <div class="ach-desc">прослушал looping the rooms до конца</div>
+                                    </div>
+                                    <div class="ach-status">✓</div>
+                                </div>`;
+                            }
+                            return '';
+                        }).join('')}
+                    </div>
+                </div>`;
+        }
+
         achPanel.innerHTML = html;
 
         achPanel.querySelectorAll('.ach-group-header').forEach(h => {
@@ -1238,27 +1449,58 @@ document.addEventListener('DOMContentLoaded', () => {
     achBtn.addEventListener('click', () => {
         achPanel.classList.toggle('open');
         memePanel.classList.remove('open');
+        carePanel.classList.remove('open');
+        shopPanel.classList.remove('open');
         if (achPanel.classList.contains('open')) {
             unreadAchievements = 0;
             updateAchBadge();
         }
     });
 
-    /* Панель мемов */
+    /* ==========================================================
+       ПАНЕЛЬ МЕМЕ С ИЗБРАННЫМ
+       ========================================================== */
     function renderMemePanel() {
         const total = MEME_EASTER_EGGS.length;
         const unlockedList = MEME_EASTER_EGGS.filter(m => foundMemes.has(m.video));
+        const favUnlocked = memeFavorites.filter(v => foundMemes.has(v));
+        const nonFavUnlocked = unlockedList.filter(m => !favUnlocked.includes(m.video));
 
-        let html = `<div class="meme-panel-header">🎬 мемы · ${unlockedList.length}/${total}</div>`;
+        let html = `<div class="meme-panel-header">🌟 меме · ${unlockedList.length}/${total}</div>`;
 
         if (unlockedList.length === 0) {
-            html += `<div class="meme-empty">пока не найдено ни одного мема</div>`;
+            html += `<div class="meme-empty">пока не найдено ни одного меме</div>`;
         } else {
-            unlockedList.forEach(m => {
-                html += `<div class="meme-item" data-video="${m.video}">
-                    <div class="meme-item-play">▶</div>
-                    <div class="meme-item-name">${m.name}</div>
-                </div>`;
+            if (favUnlocked.length > 0) {
+                html += `<div class="shop-section-title">★ избранные</div>`;
+                favUnlocked.forEach((vid, idx) => {
+                    const meme = MEME_EASTER_EGGS.find(m => m.video === vid);
+                    if (!meme) return;
+                    html += `
+                        <div class="meme-item-row">
+                            <button class="meme-move" data-action="up" data-video="${vid}" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                            <button class="meme-move" data-action="down" data-video="${vid}" ${idx === favUnlocked.length - 1 ? 'disabled' : ''}>▼</button>
+                            <div class="meme-item" data-video="${vid}">
+                                <div class="meme-item-play">▶</div>
+                                <div class="meme-item-name">${meme.name}</div>
+                            </div>
+                            <button class="meme-star active" data-video="${vid}">★</button>
+                        </div>`;
+                });
+                if (nonFavUnlocked.length > 0) {
+                    html += `<div class="shop-section-title">все остальные</div>`;
+                }
+            }
+
+            nonFavUnlocked.forEach(meme => {
+                html += `
+                    <div class="meme-item-row">
+                        <div class="meme-item" data-video="${meme.video}">
+                            <div class="meme-item-play">▶</div>
+                            <div class="meme-item-name">${meme.name}</div>
+                        </div>
+                        <button class="meme-star" data-video="${meme.video}">☆</button>
+                    </div>`;
             });
         }
 
@@ -1268,6 +1510,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         memePanel.innerHTML = html;
 
+        /* Клик по меме — проиграть */
         memePanel.querySelectorAll('.meme-item').forEach(el => {
             el.addEventListener('click', () => {
                 const video = el.dataset.video;
@@ -1275,11 +1518,268 @@ document.addEventListener('DOMContentLoaded', () => {
                 playMemeVideo(video);
             });
         });
+
+        /* Клик по звезде — toggle favorite */
+        memePanel.querySelectorAll('.meme-star').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const vid = el.dataset.video;
+                if (!vid) return;
+                if (memeFavorites.includes(vid)) {
+                    memeFavorites = memeFavorites.filter(v => v !== vid);
+                } else {
+                    memeFavorites.push(vid);
+                }
+                saveMemeFavorites();
+                renderMemePanel();
+            });
+        });
+
+        /* Стрелки для перемещения favorites */
+        memePanel.querySelectorAll('.meme-move').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const vid = el.dataset.video;
+                const action = el.dataset.action;
+                const idx = memeFavorites.indexOf(vid);
+                if (idx < 0) return;
+                if (action === 'up' && idx > 0) {
+                    [memeFavorites[idx - 1], memeFavorites[idx]] = [memeFavorites[idx], memeFavorites[idx - 1]];
+                } else if (action === 'down' && idx < memeFavorites.length - 1) {
+                    [memeFavorites[idx + 1], memeFavorites[idx]] = [memeFavorites[idx], memeFavorites[idx + 1]];
+                }
+                saveMemeFavorites();
+                renderMemePanel();
+            });
+        });
     }
 
     memeBtn.addEventListener('click', () => {
         memePanel.classList.toggle('open');
         achPanel.classList.remove('open');
+        carePanel.classList.remove('open');
+        shopPanel.classList.remove('open');
+    });
+
+    /* ==========================================================
+       ЗАБОТА / МАГАЗИН
+       ========================================================== */
+    const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
+    const LIMITED_OFFER_NAME_KEY = 'petLimitedOfferName';
+
+    /* Компот от юли — стартует 24 часа при первом запуске */
+    if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
+        localStorage.setItem(LIMITED_OFFER_KEY, String(Date.now() + 24 * 3600 * 1000));
+        localStorage.setItem(LIMITED_OFFER_NAME_KEY, 'компот от юли');
+    }
+
+    function getLimitedOfferRemaining() {
+        const end = parseInt(localStorage.getItem(LIMITED_OFFER_KEY) || '0', 10);
+        return Math.max(0, end - Date.now());
+    }
+
+    const SHOP_ITEMS = [
+        { id: 'jums',   icon: '🍬', title: 'джумс',           desc: '+8 сытости',  price: 3,  hunger: 8 },
+        { id: 'water',  icon: '💧', title: 'вода',             desc: '+15 сытости', price: 6,  hunger: 15 },
+        { id: 'fries',  icon: '🍟', title: 'картошка фри',     desc: '+30 сытости', price: 15, hunger: 30 },
+        { id: 'burger', icon: '🍔', title: 'чизбургер',        desc: '+50 сытости', price: 30, hunger: 50 }
+    ];
+
+    function renderCarePanel() {
+        carePanel.innerHTML = `
+            <div class="care-header">🧸 забота о ками</div>
+            <div class="care-desc">ухаживай за ками — она будет тебе благодарна и дарить очки дружбы</div>
+            <button class="care-action" data-action="brush">
+                <div class="care-action-icon">💇</div>
+                <div class="care-action-info">
+                    <div class="care-action-title">расчесать волосы</div>
+                    <div class="care-action-desc">+чистота до 50, +2 очка дружбы</div>
+                </div>
+            </button>
+            <button class="care-action" data-action="feed">
+                <div class="care-action-icon">🍽</div>
+                <div class="care-action-info">
+                    <div class="care-action-title">покормить</div>
+                    <div class="care-action-desc">открыть магазин еды</div>
+                </div>
+            </button>
+            <button class="care-action" data-action="wash">
+                <div class="care-action-icon">🧼</div>
+                <div class="care-action-info">
+                    <div class="care-action-title">помыть</div>
+                    <div class="care-action-desc">+чистота до 50, +2 очка дружбы</div>
+                </div>
+            </button>
+        `;
+
+        carePanel.querySelectorAll('.care-action').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const a = btn.dataset.action;
+                if (a === 'brush') doCareAction('brush');
+                else if (a === 'wash') doCareAction('wash');
+                else if (a === 'feed') {
+                    shopPanel.classList.toggle('open');
+                    renderShopPanel();
+                }
+            });
+        });
+    }
+
+    function renderShopPanel() {
+        const remaining = getLimitedOfferRemaining();
+        const hours = Math.floor(remaining / 3600000);
+        const mins = Math.floor((remaining % 3600000) / 60000);
+
+        let html = `<div class="shop-header">🍽 магазин еды</div>`;
+        html += `<div class="care-desc">у тебя ❤ ${friendship} очков дружбы</div>`;
+
+        /* Ограниченное предложение */
+        if (remaining > 0) {
+            html += `<div class="shop-section-title">⚡ ограниченное предложение</div>`;
+            const available = friendship >= 20;
+            html += `
+                <div class="shop-item limited ${available ? '' : 'disabled'}" data-id="kompot">
+                    <div class="shop-item-icon">🥤</div>
+                    <div class="shop-item-info">
+                        <div class="shop-item-title">компот от юли</div>
+                        <div class="shop-item-desc">+40 сытости</div>
+                        <div class="shop-limited-timer">осталось: ${hours}ч ${mins}мин</div>
+                    </div>
+                    <div class="shop-item-price">20</div>
+                </div>`;
+        }
+
+        /* Обычные товары */
+        html += `<div class="shop-section-title">обычное меню</div>`;
+        SHOP_ITEMS.forEach(item => {
+            const available = friendship >= item.price;
+            html += `
+                <div class="shop-item ${available ? '' : 'disabled'}" data-id="${item.id}">
+                    <div class="shop-item-icon">${item.icon}</div>
+                    <div class="shop-item-info">
+                        <div class="shop-item-title">${item.title}</div>
+                        <div class="shop-item-desc">${item.desc}</div>
+                    </div>
+                    <div class="shop-item-price">${item.price}</div>
+                </div>`;
+        });
+
+        html += `<button class="care-action" data-action="shop-close" style="margin-top:10px"><div class="care-action-icon">←</div><div class="care-action-info"><div class="care-action-title">назад</div></div></button>`;
+
+        shopPanel.innerHTML = html;
+
+        shopPanel.querySelectorAll('.shop-item').forEach(el => {
+            el.addEventListener('click', () => {
+                if (el.classList.contains('disabled')) return;
+                const id = el.dataset.id;
+                buyFood(id);
+            });
+        });
+
+        const backBtn = shopPanel.querySelector('[data-action="shop-close"]');
+        if (backBtn) backBtn.addEventListener('click', () => {
+            shopPanel.classList.remove('open');
+        });
+    }
+
+    function doCareAction(action) {
+        /* Проверка сна */
+        if (state === 'sleeping') {
+            addSystemMessage('сначала разбуди меня!');
+            return;
+        }
+
+        if (action === 'brush') {
+            if (stats.cleanliness >= 100) {
+                /* Предмет возвращается */
+                showActionFeedback('мне и так хорошо, спасибо~', 'happy', 0);
+                return;
+            }
+            const add = Math.min(50, 100 - stats.cleanliness);
+            addStat('cleanliness', add);
+            addStat('mood', 5);
+            changeFriendship(2);
+            touchInteraction();
+            showActionFeedback('спасибо, что причесал меня~', 'happy', 3);
+        } else if (action === 'wash') {
+            if (stats.cleanliness >= 100) {
+                showActionFeedback('я недавно мылась, спасибо~', 'happy', 0);
+                return;
+            }
+            const add = Math.min(50, 100 - stats.cleanliness);
+            addStat('cleanliness', add);
+            addStat('mood', 8);
+            changeFriendship(2);
+            touchInteraction();
+            showActionFeedback('ммм, спасибо, я такая свежая теперь!', 'happy', 3);
+        }
+    }
+
+    function buyFood(id) {
+        if (state === 'sleeping') {
+            addSystemMessage('сначала разбуди меня!');
+            return;
+        }
+
+        let item;
+        let price;
+        if (id === 'kompot') {
+            if (getLimitedOfferRemaining() <= 0) return;
+            item = { hunger: 40, title: 'компот от юли' };
+            price = 20;
+        } else {
+            item = SHOP_ITEMS.find(i => i.id === id);
+            if (!item) return;
+            price = item.price;
+        }
+
+        if (friendship < price) {
+            showActionFeedback('у тебя не хватает очков дружбы :(', 'neutral', 0);
+            return;
+        }
+
+        if (stats.fullness >= 100) {
+            showActionFeedback('ой, я наелась, спасибо~', 'happy', 0);
+            return;
+        }
+
+        const add = Math.min(item.hunger, 100 - stats.fullness);
+        addStat('fullness', add);
+        addStat('mood', 5);
+        changeFriendship(-price);
+        touchInteraction();
+
+        if (id === 'kompot') {
+            /* Компот одноразовый — обнуляем таймер */
+            localStorage.setItem(LIMITED_OFFER_KEY, '0');
+        }
+
+        const phrases = {
+            jums: 'ням, джумс! спасибо~',
+            water: 'ммм, водичка, спасибо!',
+            fries: 'фрииии, обожаю!! спасибо!',
+            burger: 'чизбурбе!! спасибо огромное!!',
+            kompot: 'компот от юли?? спасибо ей!!'
+        };
+        showActionFeedback(phrases[id] || 'спасибо!', 'happy', 3);
+        renderShopPanel();
+    }
+
+    function showActionFeedback(text, mood, delay) {
+        setTimeout(() => {
+            if (state === 'sleeping') return;
+            forcePlayPhrase({ text, mood }, finishDialog);
+        }, (delay || 0) * 250);
+    }
+
+    careBtn.addEventListener('click', () => {
+        carePanel.classList.toggle('open');
+        achPanel.classList.remove('open');
+        memePanel.classList.remove('open');
+        if (!carePanel.classList.contains('open')) {
+            shopPanel.classList.remove('open');
+        }
+        renderCarePanel();
     });
 
     /* ==========================================================
@@ -1335,8 +1835,7 @@ document.addEventListener('DOMContentLoaded', () => {
           replies: ["забавно)","смешняво)","я похихикала)"], mood: 'laughing' },
         { keywords: ['бейба', 'бейби', 'малышка', 'малыш'],
           replies: ["кто, яяяя?","ну да, я малюточка)"], mood: 'teasing' },
-        { keywords: ['цундере'],
-          replies: ["да не цундере я!","я не цундере, сам такой!"], mood: 'angry' },
+        { keywords: ['цундере'], replies: ["да не цундере я!","я не цундере, сам такой!"], mood: 'angry' },
         { keywords: ['пофиг', 'пох', 'плевать', 'пофик', 'всё равно'],
           replies: ["тебе правда плевать? :("], mood: 'neutral' },
         { keywords: ['спасибо', 'благодарю', 'спс', 'сенкс', 'thanks', 'thx'],
@@ -1351,8 +1850,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { keywords: ['люблю тебя', 'тебя люблю', 'сердечко', 'любимая', 'любимка'],
           replies: ["о-ой.. я... т-ты это серьезно?","и я тебя люблю, знаешь ли...","не говори такое вслух, дурак!!","*отвернулась в смущении* и вовсе ты мне не нравишься! д-дурак...","я тоже тебя люблю, солнце!!~","и ты моя любимка... только не говори никому!"],
           score: 10, mood: 'teasing' },
-        { keywords: ['извинись'],
-          replies: ["нет-нет, сам извиняйся!","так не прокатит, извиняйся сам!"], mood: 'angry' },
+        { keywords: ['извинись'], replies: ["нет-нет, сам извиняйся!","так не прокатит, извиняйся сам!"], mood: 'angry' },
         { keywords: ['октябрь', 'октября', 'октябре'],
           replies: ["о, в этом месяце день рождения у моей любимки!","31 октября, запиши себе в блокнотик, чтобы поздравить юлю!"], mood: 'happy' },
         { keywords: ['апрель', 'апреля', 'апреле'],
@@ -1361,8 +1859,7 @@ document.addEventListener('DOMContentLoaded', () => {
           replies: ["в этом месяце день рождения у форума!","о, 14 ноября день рождения форума!"], mood: 'happy' },
         { keywords: ['июль', 'июля', 'июле'],
           replies: ["да, в июле мой день рождения!","6 числа моё др. ты приглашён, кстати!","6 июля мой день рождения, пометь это в календарике!"], mood: 'happy' },
-        { keywords: ['ты'],
-          replies: ["я!","я?"], mood: 'happy' },
+        { keywords: ['ты'], replies: ["я!","я?"], mood: 'happy' },
         { keywords: ['сколько тебе лет'],
           replies: ["мне уже больше 20.","а зачем тебе такая информация?","для чего узнать хочешь?","я уже большая!!"], mood: 'teasing' },
         { keywords: ['неправда'], replies: ["правда!"], mood: 'happy' },
@@ -1384,8 +1881,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { keywords: ['клац'], replies: ["клац-клац!","клацай больше!","клацаем вместе!"], mood: 'happy' },
         { keywords: ['пони', 'млп'], replies: ["мой кинн - флаттершай 🥺","мне очень нравится пинки пай :3","кексики...."], mood: 'happy' },
         { keywords: ['ня', 'мяу', 'мя', 'мур'], replies: ["ня~","мя~","мяу~","мур~"], mood: 'happy' },
-        { keywords: ['удар', 'бью'],
-          replies: ["ай!! больно...","ты сделал мне больно...","ай!! за что?...","чем я это заслужила...?"], mood: 'angry' },
+        { keywords: ['удар', 'бью'], replies: ["ай!! больно...","ты сделал мне больно...","ай!! за что?...","чем я это заслужила...?"], mood: 'angry' },
         { keywords: ['новки'], replies: ["итд?!","это тот, что с красными волосами?"], mood: 'neutral' },
         { keywords: ['утопия'], replies: ["вижу как ты мертвецки устал...."], mood: 'neutral' },
         { keywords: ['день рождения', 'др'],
@@ -1664,10 +2160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             addChatMessage('pet', 'хочешь пересмотреть его со мной?');
-            setTimeout(() => {
-                /* Небольшая задержка — чтобы браузер прокрутил сообщение вниз перед показом choices */
-                showChatChoices(meme);
-            }, 150);
+            setTimeout(() => showChatChoices(meme), 150);
         }, delay);
     }
 
@@ -1695,9 +2188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addChatMessage('user', 'нет');
             chatBlocked = false;
             updateChatState();
-            setTimeout(() => {
-                addChatMessage('pet', 'ох, ну ладно...');
-            }, 600);
+            setTimeout(() => addChatMessage('pet', 'ох, ну ладно...'), 600);
         });
 
         chatChoices.appendChild(yesBtn);
@@ -1749,6 +2240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         messagesSent++;
         localStorage.setItem('petMessagesSent', messagesSent);
+        touchInteraction();
 
         if (meme) {
             handleMemeEaster(meme);
@@ -1786,9 +2278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     chatInput.addEventListener('input', () => resetIdleCountdown());
 
-    /* Перетаскивание чата */
     const chatHeader = document.getElementById('chatHeader');
-
     let chatPos = null;
     try {
         const savedPos = localStorage.getItem('petChatPos');
@@ -2073,6 +2563,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     petWidget.addEventListener('click', (e) => {
+        /* Игнорируем клики, которые пришли из видео-оверлея */
+        if (e.target.closest && e.target.closest('#youtubeOverlay')) return;
+
         if (isSpamming()) {
             const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
             forcePlayPhrase(p, finishDialog);
@@ -2084,6 +2577,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state === 'sleeping') {
             changeFriendship(1, e.clientX, e.clientY);
+            touchInteraction();
+            addStat('mood', 2);
             wakeUp();
             return;
         }
@@ -2097,31 +2592,66 @@ document.addEventListener('DOMContentLoaded', () => {
         if (zone === 'hair')  delta = 3;
         if (zone === 'skirt') delta = -2;
         changeFriendship(delta, e.clientX, e.clientY);
+        touchInteraction();
+        if (zone === 'hair') addStat('mood', 3);
+        else addStat('mood', 1);
+
         playRandom(DIALOGS[zone] || DIALOGS.body, finishDialog);
     });
 
+    /* Универсальный обработчик кликов по темам (включая backrooms) */
+    function handleThemeClick(btn) {
+        const theme = btn.dataset.theme;
+        const oldTheme = localStorage.getItem('petTheme') || 'dark';
+
+        document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
+        localStorage.setItem('petTheme', theme);
+
+        cancelIdlePhrase();
+
+        if (state === 'sleeping' || state === 'waking') return;
+        if (state === 'talking') return;
+
+        /* Специальная реакция на backrooms */
+        if (theme === 'backrooms') {
+            forcePlayPhrase({ text: 'брр, у меня странные ощущения от этого фона...', mood: 'neutral' }, finishDialog);
+            return;
+        }
+
+        if (themeChanges >= THEME_REACTIONS.length) return;
+        const reaction = THEME_REACTIONS[themeChanges];
+        themeChanges++;
+        playPhrase(reaction, finishDialog);
+    }
+
     document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const theme = btn.dataset.theme;
-            document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
-            localStorage.setItem('petTheme', theme);
-            cancelIdlePhrase();
-            if (state === 'sleeping' || state === 'waking') return;
-            if (state === 'talking') return;
-            if (themeChanges >= THEME_REACTIONS.length) return;
-            const reaction = THEME_REACTIONS[themeChanges];
-            themeChanges++;
-            playPhrase(reaction, finishDialog);
-        });
+        btn.addEventListener('click', () => handleThemeClick(btn));
     });
 
     const saved = localStorage.getItem('petTheme');
-    if (saved && saved !== 'dark') document.body.className = 'theme-' + saved;
+    if (saved && saved !== 'dark') {
+        if (saved === 'backrooms') {
+            /* Уже разблокирован — восстановим */
+            if (localStorage.getItem('petBackroomsUnlocked') === '1') {
+                document.body.className = 'theme-backrooms';
+                unlockBackroomsTheme();
+            }
+        } else {
+            document.body.className = 'theme-' + saved;
+        }
+    }
+    /* Разблокировать backrooms при загрузке, если уже открыт */
+    if (localStorage.getItem('petBackroomsUnlocked') === '1') {
+        unlockBackroomsTheme();
+    }
+
     if (isOffended) petWidget.classList.add('offended');
 
     renderFriendship(false);
     renderAchPanel();
     renderMemePanel();
+    renderCarePanel();
+    renderStats();
     updateMemeBtnVisibility();
     setState('sleeping');
     startBreathing();
