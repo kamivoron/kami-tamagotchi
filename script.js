@@ -1576,8 +1576,15 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================================
        ВИТРИНА
        ========================================================== */
-    let vitrinaRecords = [];
-    try { const s = JSON.parse(localStorage.getItem('petVitrina') || '[]'); if (Array.isArray(s)) vitrinaRecords = s; } catch(_) {}
+let vitrinaRecords = [];
+try { const s = JSON.parse(localStorage.getItem('petVitrina') || '[]'); if (Array.isArray(s)) vitrinaRecords = s; } catch(_) {}
+
+/* Патч: добавляем описание к компоту юли, если его нет */
+const kompotRec = vitrinaRecords.find(r => r.id === 'kompot_01_10_26');
+if (kompotRec && !kompotRec.desc) {
+    kompotRec.desc = 'его всегда мало, ведь он такая вкуснятина!';
+    localStorage.setItem('petVitrina', JSON.stringify(vitrinaRecords));
+}
 
     function saveVitrina() { localStorage.setItem('petVitrina', JSON.stringify(vitrinaRecords)); }
 
@@ -1587,32 +1594,36 @@ document.addEventListener('DOMContentLoaded', () => {
         saveVitrina();
     }
 
-    /* При первом запуске фиксируем запись про компот */
-    if (!vitrinaRecords.find(r => r.id === 'kompot_01_10_26')) {
-        vitrinaRecords.push({
-            id: 'kompot_01_10_26',
-            name: 'компот от юли',
-            date: '01.10.26',
-            bought: false,
-            icon: '🥤'
-        });
-        saveVitrina();
-    }
+if (!vitrinaRecords.find(r => r.id === 'kompot_01_10_26')) {
+    vitrinaRecords.push({
+        id: 'kompot_01_10_26',
+        name: 'компот от юли',
+        desc: 'его всегда мало, ведь он такая вкуснятина!',
+        date: '01.10.26',
+        bought: false,
+        icon: '🥤'
+    });
+    saveVitrina();
+}
 
-    function renderVitrinaPanel() {
-        let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
-        vitrinaRecords.forEach(rec => {
-            html += `<div class="vitrina-item ${rec.bought ? 'owned' : 'missed'}">
-                <div class="vitrina-icon">${rec.icon || (rec.bought ? '🎁' : '🔒')}</div>
-                <div class="vitrina-info">
-                    <div class="vitrina-title">${rec.bought ? rec.name : '???'}</div>
-                    <div class="vitrina-date">${rec.bought ? 'куплено ' + rec.date : 'продавалось ' + rec.date}</div>
-                </div>
-                <div class="vitrina-status">${rec.bought ? '★' : '🔒'}</div>
-            </div>`;
-        });
-        vitrinaPanel.innerHTML = html;
-    }
+function renderVitrinaPanel() {
+    let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
+    vitrinaRecords.forEach(rec => {
+        const descHtml = (rec.bought && rec.desc)
+            ? `<div class="vitrina-desc">${rec.desc}</div>`
+            : '';
+        html += `<div class="vitrina-item ${rec.bought ? 'owned' : 'missed'}">
+            <div class="vitrina-icon">${rec.icon || (rec.bought ? '🎁' : '🔒')}</div>
+            <div class="vitrina-info">
+                <div class="vitrina-title">${rec.bought ? rec.name : '???'}</div>
+                ${descHtml}
+                <div class="vitrina-date">${rec.bought ? 'куплено ' + rec.date : 'продавалось ' + rec.date}</div>
+            </div>
+            <div class="vitrina-status">${rec.bought ? '★' : '🔒'}</div>
+        </div>`;
+    });
+    vitrinaPanel.innerHTML = html;
+}
 
     /* ==========================================================
        МАГАЗИН И УХОД
