@@ -246,14 +246,23 @@ document.addEventListener('DOMContentLoaded', () => {
         overlayPos = { x: rect.left, y: rect.top };
         localStorage.setItem('petOverlayPos', JSON.stringify(overlayPos));
     }
-    document.addEventListener('mousemove', (e) => moveOverlay(e.clientX, e.clientY));
-    document.addEventListener('mouseup', endOverlayDrag);
+    document.addEventListener('mousemove', (e) => {
+        /* Защита от «залипания»: если кнопка мыши уже отпущена — сбрасываем */
+        if (overlayDragging && e.buttons === 0) {
+            endOverlayDrag();
+            return;
+        }
+        moveOverlay(e.clientX, e.clientY);
+    }, true);
+    document.addEventListener('mouseup', endOverlayDrag, true);
     document.addEventListener('touchmove', (e) => {
         if (!overlayDragging) return;
         const t = e.touches[0]; if (!t) return;
         moveOverlay(t.clientX, t.clientY);
-    }, { passive: true });
-    document.addEventListener('touchend', endOverlayDrag);
+    }, { passive: true, capture: true });
+    document.addEventListener('touchend', endOverlayDrag, true);
+    document.addEventListener('touchcancel', endOverlayDrag, true);
+    window.addEventListener('blur', endOverlayDrag);
 
     /* ==========================================================
        ФУНКЦИИ ПЛЕЕРА
