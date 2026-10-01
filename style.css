@@ -1156,3 +1156,373 @@ body.theme-light .chat-input::placeholder { color: rgba(0,0,0,0.4); }
 .chat-send:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(255,90,138,0.4); }
 .chat-send:active { transform: scale(0.95); }
 .chat-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ==========================================================
+   BACKROOMS (тема)
+   ========================================================== */
+body.theme-backrooms {
+    --bg: #1a1a0a;
+    --accent: #d4b856;
+    --speech-bg: rgba(20, 15, 5, 0.92);
+    --speech-border: #d4b856;
+    background-color: #1a1a0a !important;
+    background-image: url('images/backrooms.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+}
+
+/* ==========================================================
+   СТАТЫ (тамагочи)
+   ========================================================== */
+.stats-panel {
+    position: fixed;
+    top: 160px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 12px;
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 12px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    user-select: none;
+    min-width: 180px;
+}
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+.stat-icon {
+    width: 16px;
+    text-align: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.stat-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 80px;
+}
+.stat-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease, background 0.3s;
+    width: 0%;
+}
+.mood-fill  { background: linear-gradient(90deg, #ff5a8a, #ffb0d0); box-shadow: 0 0 6px rgba(255,90,138,0.5); }
+.hunger-fill{ background: linear-gradient(90deg, #ffa04a, #ffd54a); box-shadow: 0 0 6px rgba(255,160,74,0.5); }
+.clean-fill { background: linear-gradient(90deg, #5eb3e4, #b0e8ff); box-shadow: 0 0 6px rgba(94,179,228,0.5); }
+
+.stat-value {
+    width: 24px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 11px;
+    opacity: 0.75;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+/* ==========================================================
+   ПАНЕЛИ ЗАБОТЫ И МАГАЗИНА
+   ========================================================== */
+.care-panel,
+.shop-panel {
+    position: fixed;
+    top: 70px;
+    left: 20px;
+    width: 340px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 16px;
+    padding: 14px;
+    z-index: 103;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+.care-panel.open,
+.shop-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.care-panel::-webkit-scrollbar,
+.shop-panel::-webkit-scrollbar { width: 6px; }
+.care-panel::-webkit-scrollbar-thumb,
+.shop-panel::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+.care-header,
+.shop-header {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.care-desc {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.care-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-family: inherit;
+    text-align: left;
+    width: 100%;
+}
+.care-action:hover {
+    background: linear-gradient(135deg, rgba(255,90,138,0.18), rgba(255,154,90,0.1));
+    border-color: rgba(255,90,138,0.35);
+    transform: translateX(3px);
+}
+.care-action-icon {
+    font-size: 24px;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.care-action-info { flex: 1; min-width: 0; }
+.care-action-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+.care-action-desc {
+    font-size: 10.5px;
+    opacity: 0.65;
+    line-height: 1.3;
+}
+
+/* Магазин */
+.shop-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.5;
+    margin: 14px 0 6px;
+    color: var(--accent);
+}
+.shop-section-title:first-of-type { margin-top: 0; }
+
+.shop-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+.shop-item:hover {
+    background: linear-gradient(135deg, rgba(255,90,138,0.18), rgba(255,154,90,0.1));
+    border-color: rgba(255,90,138,0.35);
+}
+.shop-item.disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+}
+.shop-item.disabled:hover {
+    background: rgba(255,255,255,0.035);
+    border-color: rgba(255,255,255,0.05);
+}
+.shop-item-icon {
+    font-size: 22px;
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.shop-item-info { flex: 1; min-width: 0; }
+.shop-item-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+.shop-item-desc {
+    font-size: 10px;
+    opacity: 0.65;
+    line-height: 1.3;
+}
+.shop-item-price {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.shop-item.limited {
+    background: linear-gradient(135deg, rgba(255,215,74,0.12), rgba(255,90,138,0.08));
+    border-color: rgba(255,215,74,0.35);
+    animation: shop-limited-pulse 2.5s ease-in-out infinite;
+}
+@keyframes shop-limited-pulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(255,215,74,0); }
+    50%      { box-shadow: 0 0 14px rgba(255,215,74,0.35); }
+}
+.shop-limited-timer {
+    font-size: 10px;
+    color: #ffd54a;
+    font-weight: 700;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   ИЗБРАННЫЕ МЕМЫ (звёздочки и стрелки)
+   ========================================================== */
+.meme-item-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+.meme-item-row .meme-item {
+    flex: 1;
+    margin-bottom: 0;
+}
+.meme-star {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+}
+.meme-star:hover {
+    background: rgba(255,215,74,0.15);
+    color: #ffd54a;
+    transform: scale(1.08);
+}
+.meme-star.active {
+    color: #ffd54a;
+    background: rgba(255,215,74,0.18);
+    border-color: rgba(255,215,74,0.4);
+    text-shadow: 0 0 8px rgba(255,215,74,0.6);
+}
+.meme-move {
+    width: 22px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    padding: 0;
+    opacity: 0.7;
+}
+.meme-move:hover:not(:disabled) {
+    background: rgba(255,90,138,0.15);
+    opacity: 1;
+}
+.meme-move:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+/* Общие стили панелей (если ещё нет) */
+.ach-panel,
+.meme-panel {
+    position: fixed;
+    top: 70px;
+    left: 20px;
+    width: 340px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background: var(--speech-bg);
+    border: 1px solid var(--speech-border);
+    border-radius: 16px;
+    padding: 14px;
+    z-index: 102;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+.ach-panel.open,
+.meme-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.ach-panel::-webkit-scrollbar,
+.meme-panel::-webkit-scrollbar { width: 6px; }
+.ach-panel::-webkit-scrollbar-thumb,
+.meme-panel::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+.ach-header,
+.meme-panel-header {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
