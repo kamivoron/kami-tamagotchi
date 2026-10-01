@@ -9,7 +9,7 @@
 <body>
     <div class="top-left-bar">
         <button class="ach-btn" id="achBtn">🏆 для любителей ачивок</button>
-        <button class="ach-btn" id="memeBtn">🎬 мемы</button>
+        <button class="ach-btn" id="memeBtn" style="display:none">🎬 мемы</button>
         <button class="ach-btn" id="chatBtn">💬 чат</button>
         <div class="friendship-counter" id="friendCounter">❤ 0</div>
     </div>
@@ -63,8 +63,9 @@
 
     <div class="pet-widget sleeping" id="petWidget">
         <div class="youtube-overlay" id="youtubeOverlay">
+            <div class="overlay-drag-handle" id="overlayDragHandle">⋮⋮</div>
             <iframe id="youtubeIframe" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-            <video id="localVideo" playsinline muted preload="metadata"></video>
+            <video id="localVideo" playsinline muted preload="metadata" controls></video>
             <button class="fullscreen-btn" id="fullscreenBtn" title="на весь экран">⛶</button>
         </div>
         <div class="pet-layer" id="petLayer"></div>
@@ -79,11 +80,11 @@
         </div>
         <div class="chat-status" id="chatStatus"></div>
         <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-choices" id="chatChoices"></div>
         <div class="chat-input-row">
             <input type="text" class="chat-input" id="chatInput" maxlength="120" placeholder="напиши что-нибудь..." autocomplete="off">
             <button class="chat-send" id="chatSend" aria-label="отправить">➤</button>
         </div>
-        <div class="chat-choices" id="chatChoices"></div>
     </div>
 
     <audio id="audioEl" preload="metadata"></audio>
