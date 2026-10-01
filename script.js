@@ -24,10 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const SPAM_WINDOW    = 2000;
     const SPAM_THRESHOLD = 5;
 
+    let isVideoPlaying   = false;
+
     /* ==========================================================
        ПЛЕЕР
        ========================================================== */
-
     const TRACKS = [
         {
             file: 'music/1.mp3',
@@ -81,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const youtubeIframe       = document.getElementById('youtubeIframe');
     const localVideo          = document.getElementById('localVideo');
     const fullscreenBtn       = document.getElementById('fullscreenBtn');
+    const overlayDragHandle   = document.getElementById('overlayDragHandle');
     const memePanel           = document.getElementById('memePanel');
     const memeBtn             = document.getElementById('memeBtn');
 
@@ -91,6 +93,129 @@ document.addEventListener('DOMContentLoaded', () => {
     let firedEvents    = new Set();
     let onPlayTriggeredForTrack = -1;
 
+    /* ==========================================================
+       ПОЗИЦИЯ И РАЗМЕР ВИДЕО-ОВЕРЛЕЯ
+       ========================================================== */
+    let overlayPos = null;
+    let overlaySize = null;
+
+    try {
+        const sp = localStorage.getItem('petOverlayPos');
+        if (sp) overlayPos = JSON.parse(sp);
+    } catch(_) {}
+    try {
+        const ss = localStorage.getItem('petOverlaySize');
+        if (ss) overlaySize = JSON.parse(ss);
+    } catch(_) {}
+
+    function applyOverlaySize() {
+        if (overlaySize) {
+            youtubeOverlay.style.width = overlaySize.w + 'px';
+            youtubeOverlay.style.height = overlaySize.h + 'px';
+        }
+    }
+
+    function applyOverlayPosition() {
+        if (overlayPos) {
+            youtubeOverlay.style.left = overlayPos.x + 'px';
+            youtubeOverlay.style.top = overlayPos.y + 'px';
+            youtubeOverlay.style.transform = 'none';
+        }
+    }
+
+    function ensureOverlayLayout() {
+        applyOverlaySize();
+        if (!overlayPos) {
+            const rect = petWidget.getBoundingClientRect();
+            const w = overlaySize ? overlaySize.w : 400;
+            const h = overlaySize ? overlaySize.h : 225;
+            overlayPos = {
+                x: Math.max(10, rect.left + rect.width / 2 - w / 2),
+                y: Math.max(10, rect.top - h - 30)
+            };
+            localStorage.setItem('petOverlayPos', JSON.stringify(overlayPos));
+        }
+        applyOverlayPosition();
+    }
+
+    /* Применяем размер при загрузке */
+    applyOverlaySize();
+    if (overlayPos) applyOverlayPosition();
+
+    /* Отслеживаем изменение размера (пользователь тянет за угол) */
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            const w = youtubeOverlay.offsetWidth;
+            const h = youtubeOverlay.offsetHeight;
+            if (w > 50 && h > 30) {
+                overlaySize = { w, h };
+                localStorage.setItem('petOverlaySize', JSON.stringify(overlaySize));
+            }
+        });
+        ro.observe(youtubeOverlay);
+    }
+
+    /* Перетаскивание за верхнюю плашку */
+    let overlayDragging = false;
+    let odStartX = 0, odStartY = 0, odInitX = 0, odInitY = 0;
+
+    if (overlayDragHandle) {
+        overlayDragHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const rect = youtubeOverlay.getBoundingClientRect();
+            overlayDragging = true;
+            odStartX = e.clientX; odStartY = e.clientY;
+            odInitX = rect.left; odInitY = rect.top;
+            document.body.style.cursor = 'grabbing';
+        });
+        overlayDragHandle.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            if (!t) return;
+            const rect = youtubeOverlay.getBoundingClientRect();
+            overlayDragging = true;
+            odStartX = t.clientX; odStartY = t.clientY;
+            odInitX = rect.left; odInitY = rect.top;
+        }, { passive: true });
+    }
+
+    function moveOverlay(clientX, clientY) {
+        if (!overlayDragging) return;
+        const dx = clientX - odStartX;
+        const dy = clientY - odStartY;
+        const w = youtubeOverlay.offsetWidth;
+        const h = youtubeOverlay.offsetHeight;
+        let newX = odInitX + dx;
+        let newY = odInitY + dy;
+        newX = Math.max(-w + 80, Math.min(window.innerWidth - 80, newX));
+        newY = Math.max(0, Math.min(window.innerHeight - 40, newY));
+        youtubeOverlay.style.left = newX + 'px';
+        youtubeOverlay.style.top = newY + 'px';
+        youtubeOverlay.style.transform = 'none';
+    }
+
+    function endOverlayDrag() {
+        if (!overlayDragging) return;
+        overlayDragging = false;
+        document.body.style.cursor = '';
+        const rect = youtubeOverlay.getBoundingClientRect();
+        overlayPos = { x: rect.left, y: rect.top };
+        localStorage.setItem('petOverlayPos', JSON.stringify(overlayPos));
+    }
+
+    document.addEventListener('mousemove', (e) => moveOverlay(e.clientX, e.clientY));
+    document.addEventListener('mouseup', endOverlayDrag);
+    document.addEventListener('touchmove', (e) => {
+        if (!overlayDragging) return;
+        const t = e.touches[0];
+        if (!t) return;
+        moveOverlay(t.clientX, t.clientY);
+    }, { passive: true });
+    document.addEventListener('touchend', endOverlayDrag);
+
+    /* ==========================================================
+       ФУНКЦИИ ПЛЕЕРА
+       ========================================================== */
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) sec = 0;
         const m = Math.floor(sec / 60);
@@ -133,14 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
         onPlayTriggeredForTrack = -1;
         stopRandomSing();
         specificSingActive = false;
-        resetTrackVisuals();
-
-        if (autoplay) playTrack();
-    }
-
-    function resetTrackVisuals() {
         hideVideoOverlay();
         if (state === 'idle') { setMood(null); enterIdle(); }
+
+        if (autoplay) playTrack();
     }
 
     function playTrack() {
@@ -189,19 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function runTrackEvent(ev) {
         if (ev.action === 'showFlashback') showFlashback();
-        else if (ev.action === 'showVideo') {
-            showYouTubeVideo(ev.videoId, ev.startAt || 0);
-            if (ev.theme) {
-                document.body.className = ev.theme === 'dark' ? '' : 'theme-' + ev.theme;
-                localStorage.setItem('petTheme', ev.theme);
-            }
-        } else if (ev.action === 'hideVideo') hideVideoOverlay();
+        else if (ev.action === 'hideVideo') hideVideoOverlay();
         else if (ev.action === 'showLocalVideo') {
             if (ev.theme) {
                 document.body.className = ev.theme === 'dark' ? '' : 'theme-' + ev.theme;
                 localStorage.setItem('petTheme', ev.theme);
             }
-            showLocalVideo(ev.src, ev.onEnd, ev.startAt || 0);
+            showLocalVideo(ev.src, ev.onEnd, ev.startAt || 0, false);
         }
         else if (ev.action === 'singLine') showSingLine(ev.text, 2800);
         else if (ev.action === 'randomSingOn') startRandomSing();
@@ -222,61 +337,96 @@ document.addEventListener('DOMContentLoaded', () => {
         setMood('happy');
     }
 
-    function showYouTubeVideo(videoId, startAt) {
-        if (!youtubeIframe || !youtubeOverlay) return;
-        localVideo.pause();
-        localVideo.removeAttribute('src');
-        localVideo.classList.remove('active');
-
-        const params = ['autoplay=1', 'mute=1', 'controls=0', 'modestbranding=1', 'rel=0', 'loop=1', 'playlist=' + videoId];
-        if (startAt > 0) params.push('start=' + startAt);
-
-        youtubeIframe.src = 'https://www.youtube.com/embed/' + videoId + '?' + params.join('&');
-        youtubeIframe.classList.add('active');
-        setTimeout(() => { youtubeOverlay.classList.add('show'); }, 120);
-    }
-
-    function showLocalVideo(src, endAction, startAt) {
+    function showLocalVideo(src, endAction, startAt, unmute) {
         if (!localVideo || !youtubeOverlay) return;
         youtubeIframe.src = '';
         youtubeIframe.classList.remove('active');
         localVideo.onended = null;
+        localVideo.onloadedmetadata = null;
+
         if (endAction === 'kamiiFirstUAndIEnd') localVideo.onended = kamiiFirstUAndIEnded;
 
-        localVideo.muted = true;
         localVideo.classList.add('active');
+        localVideo.muted = !unmute; /* если unmute — стартуем без mute, но autoplay может блокироваться */
 
-        const seekAndPlay = () => {
-            if (startAt && startAt > 0) {
-                try { localVideo.currentTime = startAt; } catch (_) {}
-            }
+        const playVideo = () => {
+            ensureOverlayLayout();
             youtubeOverlay.classList.add('show');
+            isVideoPlaying = true;
             const p = localVideo.play();
-            if (p && p.catch) p.catch(() => {});
-        };
-
-        localVideo.onloadedmetadata = () => {
-            localVideo.onloadedmetadata = null;
-            seekAndPlay();
-        };
-
-        localVideo.src = src;
-
-        /* Fallback, если метаданные не пришли */
-        setTimeout(() => {
-            if (!youtubeOverlay.classList.contains('show')) {
-                seekAndPlay();
+            if (p && p.catch) {
+                /* Если автоплей с unmute заблокирован — попробуем muted */
+                if (unmute) {
+                    localVideo.muted = true;
+                    localVideo.play().then(() => {
+                        /* После старта пробуем включить звук */
+                        try { localVideo.muted = false; } catch(_) {}
+                    }).catch(() => {});
+                }
+            } else if (unmute && p && p.then) {
+                p.then(() => {
+                    try { localVideo.muted = false; } catch(_) {}
+                }).catch(() => {});
             }
-        }, 400);
+        };
+
+        if (startAt && startAt > 0) {
+            localVideo.onloadedmetadata = () => {
+                localVideo.onloadedmetadata = null;
+                try { localVideo.currentTime = startAt; } catch(_) {}
+                playVideo();
+            };
+            localVideo.src = src;
+            /* fallback */
+            setTimeout(() => {
+                if (!youtubeOverlay.classList.contains('show')) playVideo();
+            }, 500);
+        } else {
+            localVideo.src = src;
+            playVideo();
+        }
     }
 
     function playMemeVideo(src) {
-        showLocalVideo(src, null, 0);
+        if (!localVideo || !youtubeOverlay) return;
+        youtubeIframe.src = '';
+        youtubeIframe.classList.remove('active');
+        localVideo.onended = null;
+        localVideo.onloadedmetadata = null;
+
+        localVideo.onended = () => {
+            hideVideoOverlay();
+            setTimeout(() => {
+                if (state === 'sleeping') return;
+                forcePlayPhrase({ text: 'мне так нравится это меме!', mood: 'happy' }, finishDialog);
+            }, 400);
+        };
+
+        localVideo.classList.add('active');
+        localVideo.muted = true;
+        localVideo.src = src;
+        localVideo.currentTime = 0;
+
+        ensureOverlayLayout();
+        youtubeOverlay.classList.add('show');
+        isVideoPlaying = true;
+
+        const p = localVideo.play();
+        if (p && p.catch) {
+            p.catch(() => {}).then(() => {
+                try { localVideo.muted = false; } catch(_) {}
+            });
+        } else if (p && p.then) {
+            p.then(() => {
+                try { localVideo.muted = false; } catch(_) {}
+            }).catch(() => {});
+        }
     }
 
     function hideVideoOverlay() {
         if (!youtubeOverlay) return;
         youtubeOverlay.classList.remove('show');
+        isVideoPlaying = false;
         setTimeout(() => {
             if (youtubeIframe) { youtubeIframe.src = ''; youtubeIframe.classList.remove('active'); }
             if (localVideo) {
@@ -734,49 +884,55 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    /* Показать кнопку мемов, если что-то найдено */
+    function updateMemeBtnVisibility() {
+        if (foundMemes.size > 0) memeBtn.style.display = '';
+        else memeBtn.style.display = 'none';
+    }
+
     /* ==========================================================
        ДОСТИЖЕНИЯ
        ========================================================== */
     const ACHIEVEMENTS = [
-        { type: 'friendship', target: 10,  icon: "🌱", title: "незнакомец", desc: "первая встреча",
+        { type: 'friendship', target: 10,  icon: "🌱", title: "незнакомец", desc: "первая встреча, мимолетный взгляд",
           text: "ты меня не затискаешь до смерти, надеюсь?", mood: "neutral" },
-        { type: 'friendship', target: 25,  icon: "🦋", title: "знакомый", desc: "что-то общее",
+        { type: 'friendship', target: 25,  icon: "🦋", title: "знакомый", desc: "кажется, у вас всё же есть что-то общее",
           text: "ладно, ты мне нравишься", mood: "happy" },
-        { type: 'friendship', target: 50,  icon: "🐝", title: "друг", desc: "обсудили айдолов двадцатый раз",
+        { type: 'friendship', target: 50,  icon: "🐝", title: "друг", desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов в двадцатый раз?",
           text: "я тебя запомнила, знай!", mood: "happy" },
         { type: 'friendship', target: 67,  icon: "🤖", title: "67", desc: "67676767676767",
           text: "67... сикс севен... брейнрот detected", mood: "laughing" },
-        { type: 'friendship', target: 100, icon: "👤", title: "теневой", desc: "стали близки",
+        { type: 'friendship', target: 100, icon: "👤", title: "теневой", desc: "когда вы успели стать так близки?",
           text: "ты стала моим лучшим другом~", mood: "laughing" },
 
-        { type: 'time', target: 5 * 60,     icon: "⏱", title: "5 минут",   desc: "5 минут вместе",
+        { type: 'time', target: 5 * 60,     icon: "⏱", title: "5 минут",   desc: "проведи с ками 5 минут",
           text: "пять минут вместе — уже что-то!",            mood: "happy" },
-        { type: 'time', target: 10 * 60,    icon: "⏱", title: "10 минут",  desc: "10 минут вместе",
+        { type: 'time', target: 10 * 60,    icon: "⏱", title: "10 минут",  desc: "проведи с ками 10 минут",
           text: "десять минут! время летит~",                 mood: "happy" },
-        { type: 'time', target: 30 * 60,    icon: "⏳", title: "полчаса",   desc: "30 минут вместе",
+        { type: 'time', target: 30 * 60,    icon: "⏳", title: "полчаса",   desc: "проведи с ками 30 минут",
           text: "полчаса вместе, вот это да!",                mood: "happy" },
-        { type: 'time', target: 60 * 60,    icon: "⏰", title: "час",       desc: "1 час вместе",
+        { type: 'time', target: 60 * 60,    icon: "⏰", title: "час",       desc: "проведи с ками 1 час",
           text: "целый час! я тронута~",                       mood: "happy" },
-        { type: 'time', target: 2 * 3600,   icon: "🕐", title: "2 часа",    desc: "2 часа вместе",
+        { type: 'time', target: 2 * 3600,   icon: "🕐", title: "2 часа",    desc: "проведи с ками 2 часа",
           text: "2 часа вместе, я впечатлена!",                mood: "laughing" },
-        { type: 'time', target: 5 * 3600,   icon: "🕔", title: "5 часов",   desc: "5 часов вместе",
+        { type: 'time', target: 5 * 3600,   icon: "🕔", title: "5 часов",   desc: "проведи с ками 5 часов",
           text: "5 часов... ты серьёзно?!",                    mood: "laughing" },
-        { type: 'time', target: 10 * 3600,  icon: "🌙", title: "10 часов",  desc: "10 часов вместе",
+        { type: 'time', target: 10 * 3600,  icon: "🌙", title: "10 часов",  desc: "проведи с ками 10 часов",
           text: "10 часов вместе... ты мой теневой теперь!",   mood: "laughing" },
 
-        { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",  desc: "1 сообщение",
+        { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",  desc: "отправь ками 1 сообщение",
           text: "ты написал мне первое сообщение! ура!",       mood: "happy" },
-        { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",   desc: "5 сообщений",
+        { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",   desc: "отправь ками 5 сообщений",
           text: "пять сообщений! мы болтаем!",                  mood: "happy" },
-        { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",  desc: "10 сообщений",
+        { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",  desc: "отправь ками 10 сообщений",
           text: "десять сообщений, так держать!",               mood: "happy" },
-        { type: 'messages', target: 30,  icon: "💬", title: "30 сообщений",  desc: "30 сообщений",
+        { type: 'messages', target: 30,  icon: "💬", title: "30 сообщений",  desc: "отправь ками 30 сообщений",
           text: "тридцать! ты разговорчивый~",                  mood: "happy" },
-        { type: 'messages', target: 50,  icon: "💬", title: "50 сообщений",  desc: "50 сообщений",
+        { type: 'messages', target: 50,  icon: "💬", title: "50 сообщений",  desc: "отправь ками 50 сообщений",
           text: "пятьдесят! мы точно подружились",              mood: "laughing" },
-        { type: 'messages', target: 67,  icon: "🔢", title: "67 сообщений",  desc: "67 сообщений",
+        { type: 'messages', target: 67,  icon: "🔢", title: "67 сообщений",  desc: "отправь ками 67 сообщений",
           text: "67 сообщений... это судьба",                   mood: "laughing" },
-        { type: 'messages', target: 100, icon: "💯", title: "100 сообщений", desc: "100 сообщений",
+        { type: 'messages', target: 100, icon: "💯", title: "100 сообщений", desc: "отправь ками 100 сообщений",
           text: "сто сообщений! ты меня завалил болтовнёй~",    mood: "laughing" },
 
         { type: 'memes', target: 1,  icon: "🎬", title: "любопытный",        desc: "найти 1 пасхалку",
@@ -1054,9 +1210,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="ach-group-body">
                         ${list.map(a => {
                             const u = shownAchievements.has(achKey(a));
-                            return `<div class="ach-item ${u ? 'unlocked' : 'locked'}" title="${u ? a.desc : 'пока не открыто'}">
+                            return `<div class="ach-item ${u ? 'unlocked' : 'locked'}">
                                 <div class="ach-icon">${u ? a.icon : '🔒'}</div>
-                                <div class="ach-title">${u ? a.title : '???'}</div>
+                                <div class="ach-info">
+                                    <div class="ach-title">${u ? a.title : '???'}</div>
+                                    <div class="ach-desc">${u ? a.desc : 'пока не открыто'}</div>
+                                </div>
                                 <div class="ach-status">${u ? '✓' : '???'}</div>
                             </div>`;
                         }).join('')}
@@ -1085,21 +1244,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* ==========================================================
-       ПАНЕЛЬ МЕМОВ (пересмотр)
-       ========================================================== */
+    /* Панель мемов */
     function renderMemePanel() {
-        const unlockedCount = foundMemes.size;
-        let html = `<div class="meme-panel-header">🎬 мемы · ${unlockedCount}/${MEME_EASTER_EGGS.length}</div>`;
+        const total = MEME_EASTER_EGGS.length;
+        const unlockedList = MEME_EASTER_EGGS.filter(m => foundMemes.has(m.video));
 
-        MEME_EASTER_EGGS.forEach(meme => {
-            const unlocked = foundMemes.has(meme.video);
-            html += `
-                <div class="meme-item ${unlocked ? '' : 'locked'}" data-video="${unlocked ? meme.video : ''}">
-                    <div class="meme-item-play">${unlocked ? '▶' : '🔒'}</div>
-                    <div class="meme-item-name">${unlocked ? meme.name : '???'}</div>
+        let html = `<div class="meme-panel-header">🎬 мемы · ${unlockedList.length}/${total}</div>`;
+
+        if (unlockedList.length === 0) {
+            html += `<div class="meme-empty">пока не найдено ни одного мема</div>`;
+        } else {
+            unlockedList.forEach(m => {
+                html += `<div class="meme-item" data-video="${m.video}">
+                    <div class="meme-item-play">▶</div>
+                    <div class="meme-item-name">${m.name}</div>
                 </div>`;
-        });
+            });
+        }
+
+        if (unlockedList.length < total) {
+            html += `<div class="meme-more">осталось найти: ${total - unlockedList.length}</div>`;
+        }
 
         memePanel.innerHTML = html;
 
@@ -1200,14 +1365,10 @@ document.addEventListener('DOMContentLoaded', () => {
           replies: ["я!","я?"], mood: 'happy' },
         { keywords: ['сколько тебе лет'],
           replies: ["мне уже больше 20.","а зачем тебе такая информация?","для чего узнать хочешь?","я уже большая!!"], mood: 'teasing' },
-        { keywords: ['неправда'],
-          replies: ["правда!"], mood: 'happy' },
-        { keywords: ['ложь', 'лгать'],
-          replies: ["не лги мне..."], mood: 'neutral' },
-        { keywords: ['правда'],
-          replies: ["я верю","ага, уже поверила)","да-да, я поверив"], mood: 'happy' },
-        { keywords: ['космос'],
-          replies: ["да, космос такой необъятный...","почему космос не пишет про нас?"], mood: 'neutral' },
+        { keywords: ['неправда'], replies: ["правда!"], mood: 'happy' },
+        { keywords: ['ложь', 'лгать'], replies: ["не лги мне..."], mood: 'neutral' },
+        { keywords: ['правда'], replies: ["я верю","ага, уже поверила)","да-да, я поверив"], mood: 'happy' },
+        { keywords: ['космос'], replies: ["да, космос такой необъятный...","почему космос не пишет про нас?"], mood: 'neutral' },
         { keywords: ['чизбургер', 'чизбурбе'],
           replies: ["хочется чизбурбе...","хотю...","хацю чизбургер...."], score: 2, mood: 'happy' },
         { keywords: ['лов лайв', 'нико', 'ядзава', 'ловлайв', 'живая любовь'],
@@ -1216,38 +1377,25 @@ document.addEventListener('DOMContentLoaded', () => {
           replies: ["моя любимая сейю - риэ такахаши! знай это!","омг я обожаю мегумин ❤️","EKSUPUROSION! 💥💥","я - высший архимаг! шучу)","когда уже новый сезоон, аааааа"], mood: 'happy' },
         { keywords: ['блять', 'ахуеть', 'пиздец', 'сук', 'пипец', 'блядство', 'охуеть', 'хуй', 'член', 'пизда', 'пенис', 'вагина', 'нахуй', 'бляха', 'ёкарный', 'ёк', 'ек'],
           replies: ["ой-ой, ты чего выражаешься?","что за выражения, блин?","выбирай выражения!"], mood: 'neutral' },
-        { keywords: ['плавать', 'плавание'],
-          replies: ["ой, я люблю плавать"], mood: 'happy' },
+        { keywords: ['плавать', 'плавание'], replies: ["ой, я люблю плавать"], mood: 'happy' },
         { keywords: ['кем хотела бы стать', 'кем хотела бы быть'],
           replies: ["я бы хотела быть сейю аниме) или художником-фрилансером","я бы хотела быть котиком, спящим целыми днями~"], mood: 'happy' },
-        { keywords: ['бруно'],
-          replies: ["не упоминай бруно!"], mood: 'angry' },
-        { keywords: ['клац'],
-          replies: ["клац-клац!","клацай больше!","клацаем вместе!"], mood: 'happy' },
-        { keywords: ['пони', 'млп'],
-          replies: ["мой кинн - флаттершай 🥺","мне очень нравится пинки пай :3","кексики...."], mood: 'happy' },
-        { keywords: ['ня', 'мяу', 'мя', 'мур'],
-          replies: ["ня~","мя~","мяу~","мур~"], mood: 'happy' },
+        { keywords: ['бруно'], replies: ["не упоминай бруно!"], mood: 'angry' },
+        { keywords: ['клац'], replies: ["клац-клац!","клацай больше!","клацаем вместе!"], mood: 'happy' },
+        { keywords: ['пони', 'млп'], replies: ["мой кинн - флаттершай 🥺","мне очень нравится пинки пай :3","кексики...."], mood: 'happy' },
+        { keywords: ['ня', 'мяу', 'мя', 'мур'], replies: ["ня~","мя~","мяу~","мур~"], mood: 'happy' },
         { keywords: ['удар', 'бью'],
           replies: ["ай!! больно...","ты сделал мне больно...","ай!! за что?...","чем я это заслужила...?"], mood: 'angry' },
-        { keywords: ['новки'],
-          replies: ["итд?!","это тот, что с красными волосами?"], mood: 'neutral' },
-        { keywords: ['утопия'],
-          replies: ["вижу как ты мертвецки устал...."], mood: 'neutral' },
+        { keywords: ['новки'], replies: ["итд?!","это тот, что с красными волосами?"], mood: 'neutral' },
+        { keywords: ['утопия'], replies: ["вижу как ты мертвецки устал...."], mood: 'neutral' },
         { keywords: ['день рождения', 'др'],
           replies: ["я родилась 6 июля.","6 июля, запиши в календарике!","мой день рождения? 6 июля, не проспи!","теперь ты приглашён, 6 июля!"], mood: 'happy' },
-        { keywords: ['амням'],
-          replies: ["это и есть амням"], mood: 'happy' },
-        { keywords: ['где живёшь'],
-          replies: ["в твоём сердечке, конечно! ❤️"], mood: 'happy' },
-        { keywords: ['соня'],
-          replies: ["я соня? или ты про сестру васи?"], mood: 'neutral' },
-        { keywords: ['сестра васи', 'сестру васи'],
-          replies: ["сестру васи зовут соня! у нее день рождения 29 января"], mood: 'neutral' },
-        { keywords: ['лапки', 'руки'],
-          replies: ["у меня лапки 🥺"], mood: 'happy' },
-        { keywords: ['сэм', 'сем'],
-          replies: ["6?","7!","да не сэм, а сем"], mood: 'neutral' },
+        { keywords: ['амням'], replies: ["это и есть амням"], mood: 'happy' },
+        { keywords: ['где живёшь'], replies: ["в твоём сердечке, конечно! ❤️"], mood: 'happy' },
+        { keywords: ['соня'], replies: ["я соня? или ты про сестру васи?"], mood: 'neutral' },
+        { keywords: ['сестра васи', 'сестру васи'], replies: ["сестру васи зовут соня! у нее день рождения 29 января"], mood: 'neutral' },
+        { keywords: ['лапки', 'руки'], replies: ["у меня лапки 🥺"], mood: 'happy' },
+        { keywords: ['сэм', 'сем'], replies: ["6?","7!","да не сэм, а сем"], mood: 'neutral' },
         { keywords: ['сех', 'секс', 'сэкс'],
           replies: ["ч-что ты такое говоришь?!","я думаю, нам пока рано об этом говорить..","я не хочу об этом..."], mood: 'teasing' },
         { keywords: ['теневой', 'теневая'],
@@ -1276,8 +1424,7 @@ document.addEventListener('DOMContentLoaded', () => {
           replies: ["может, однажды ещё соберемся в эту веселую игрульку, однажды...","когда-нибудь точно у всех совпадут расписания и мы пойдём играть в это..."], mood: 'neutral' },
         { keywords: ['хес', 'хесус', 'авгн', 'jesusavgn', 'hesus'],
           replies: ["110","ихихяхя","это уже ихи или это хяхя?","нина, голова болит","вот и дымайте, вот те на те"], mood: 'laughing' },
-        { keywords: ['хрен в томате'],
-          replies: ["вот те на те)"], mood: 'laughing' },
+        { keywords: ['хрен в томате'], replies: ["вот те на те)"], mood: 'laughing' },
         { keywords: ['мазеллов', 'илья', 'мзлфф', 'мзифф', 'мазелов', 'mzlff', 'mazellovvv', 'коряков'],
           replies: ["кому мы оставим мир, если даже всех нас некому спасти?...","мало ребёнком быть, сложней остаться им взрослым...","и в твоих руках моё сердце, оставь себе ❤️","спасибо всем, дальше — хуже, путь долгий, но будет что вспомнить...","вас побеждает ворона, нас побеждаете вы!","и души переплетаясь, тянут всё за собой в этот мерзкий медленный танец...","давай меняться: тебе это, тебе это — по рукам","а чё грустить? можно кататься без очереди все дни!","альфред, держи себя в руках... 🐻","нас сюжет куда-то несёт, о нам достаточно в жизни счастливый конец — и всё..."], mood: 'neutral' },
         { keywords: ['звездное дитя', 'звёздное дитя', 'ребенок идола', 'ребёнок идола', 'oshi no ko', 'арима', 'кана', 'мемчо', 'мемто', 'ай хошино', 'хошино', 'руби', 'бикомачи', 'би комачи'],
@@ -1299,8 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ], mood: 'happy' },
         { keywords: ['67', 'сикс', 'севен', 'брейнрот'],
           replies: ["67","67 67 67 67 67 67 67 67 67","сикс севен бреееейнроооот","да этот мем уже устарел, не?"], mood: 'laughing' },
-        { keywords: ['шика', 'шиканоко', 'олениха', 'олень'],
-          replies: ["шиканоко ноко ноко коштантан! 🦌"], mood: 'happy' },
+        { keywords: ['шика', 'шиканоко', 'олениха', 'олень'], replies: ["шиканоко ноко ноко коштантан! 🦌"], mood: 'happy' },
         { keywords: ['юля', 'юле', 'юлю', 'юлей', 'юлька', 'юся', 'юлечка', 'манривата', 'мандарин', 'мандариновая'],
           replies: ["о, про мою любимку говоришь","не говори про неё так. я ревную.","хихихи юлька иди корову подои","юся, ты уже покушала? 👀","все мои меме только для неё...","про юлю либо хорошо, либо никак"], mood: 'happy' },
         { keywords: ['грандон', 'грандона', 'грандону', 'грандоном', 'вася', 'васей', 'васю', 'васе', 'атхос'],
@@ -1317,12 +1463,10 @@ document.addEventListener('DOMContentLoaded', () => {
           replies: ["пхахахаха","ахахаха, ты меня рассмеши... рассмешнил... ра.. ну ты пон","ахаххаха, как ты это ваще придумал","лол, согласна"], mood: 'laughing' },
         { keywords: ['арт', 'арты', 'рисовать', 'рисунки', 'меме', 'анимации', 'анимация', 'нарисуй', 'рисование', 'рисуй'],
           replies: ["скоро-скоро будет новьё, чееестно","да рисую я, рисую..."], mood: 'neutral' },
-        { keywords: ['форма', 'юбка', 'платье', 'матроска'],
-          replies: ["это моя японская школьная форма, между прочим!"], mood: 'happy' },
+        { keywords: ['форма', 'юбка', 'платье', 'матроска'], replies: ["это моя японская школьная форма, между прочим!"], mood: 'happy' },
         { keywords: ['волосы', 'кудри', 'волосики'],
           replies: ["ой, тебе нравится?...🥺 не то, чтобы мне приятно это слышать!","волосы у меня кудрявятся, знаешь, как это сложно?"], mood: 'teasing' },
-        { keywords: ['глаза', 'гетерохромия'],
-          replies: ["глаза? да, я родилась такой..."], mood: 'neutral' },
+        { keywords: ['глаза', 'гетерохромия'], replies: ["глаза? да, я родилась такой..."], mood: 'neutral' },
         { keywords: ['кто ты', 'как тебя зовут'],
           replies: ["я ками, просто ками","а что, не видно? я ками, самая настоящая","я - ками! а остальное секрет, хихи~"], mood: 'neutral' },
         { keywords: ['со мной', 'вместе', 'го', 'давай'],
@@ -1433,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatBlocked) {
             chatInput.disabled = true;
             chatSend.disabled = true;
-            chatInput.placeholder = 'выбери ответ выше...';
+            chatInput.placeholder = 'выбери ответ...';
             chatStatus.classList.remove('visible');
             return;
         }
@@ -1492,13 +1636,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleMemeEaster(meme) {
         chatBlocked = true;
+        chatPanel.classList.add('has-choices');
         updateChatState();
 
-        const wasNew = !foundMemes.has(meme.video);
         foundMemes.add(meme.video);
         saveFoundMemes();
         checkAllAchievements();
         renderMemePanel();
+        updateMemeBtnVisibility();
 
         const firstEver = !localStorage.getItem('petMemeExplained');
         if (firstEver) localStorage.setItem('petMemeExplained', '1');
@@ -1519,13 +1664,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             addChatMessage('pet', 'хочешь пересмотреть его со мной?');
-            showChatChoices(meme);
+            setTimeout(() => {
+                /* Небольшая задержка — чтобы браузер прокрутил сообщение вниз перед показом choices */
+                showChatChoices(meme);
+            }, 150);
         }, delay);
     }
 
     function showChatChoices(meme) {
         chatChoices.innerHTML = '';
         chatChoices.classList.add('visible');
+        chatPanel.classList.add('has-choices');
 
         const yesBtn = document.createElement('button');
         yesBtn.className = 'chat-choice';
@@ -1558,6 +1707,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideChatChoices() {
         chatChoices.classList.remove('visible');
         chatChoices.innerHTML = '';
+        chatPanel.classList.remove('has-choices');
     }
 
     function sendChatMessage() {
@@ -1719,6 +1869,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================================
        ОСНОВНАЯ ЛОГИКА
        ========================================================== */
+    function isBusy() {
+        return isPlaying || isVideoPlaying;
+    }
 
     function isSpamming() {
         const now = Date.now();
@@ -1787,7 +1940,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playIdlePhrase(phrase) {
-        if (isPlaying) return;
+        if (isBusy()) return;
         if (state !== 'idle' || idlePhraseActive) return;
         idlePhraseActive = true;
         petSpeech.textContent = getPhraseText(phrase);
@@ -1847,25 +2000,25 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(idlePhrase1);
         clearTimeout(idlePhrase2);
         clearTimeout(idleTimer);
-        if (isPlaying) return;
+        if (isBusy()) return;
 
         idlePhrase1 = setTimeout(() => {
-            if (state !== 'idle' || isPlaying) return;
+            if (state !== 'idle' || isBusy()) return;
             const p = IDLE_PHRASES_FIRST[Math.floor(Math.random() * IDLE_PHRASES_FIRST.length)];
             playIdlePhrase(p);
         }, 10000);
         idlePhrase2 = setTimeout(() => {
-            if (state !== 'idle' || isPlaying) return;
+            if (state !== 'idle' || isBusy()) return;
             playIdlePhrase(IDLE_PHRASE_SECOND);
         }, 20000);
         idleTimer = setTimeout(() => {
-            if (state !== 'idle' || isPlaying) return;
+            if (state !== 'idle' || isBusy()) return;
             cancelIdlePhrase();
             clearTimeout(idlePhrase1);
             clearTimeout(idlePhrase2);
             showLayer('blink');
             setTimeout(() => {
-                if (state !== 'idle' || isPlaying) return;
+                if (state !== 'idle' || isBusy()) return;
                 clearInterval(blinkTimer);
                 goToSleep();
             }, 400);
@@ -1874,7 +2027,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetIdleCountdown() {
         if (state !== 'idle') return;
-        if (isPlaying) return;
+        if (isBusy()) return;
         scheduleIdleTimers();
     }
 
@@ -1889,17 +2042,17 @@ document.addEventListener('DOMContentLoaded', () => {
         showLayer('idle');
         clearInterval(blinkTimer);
         blinkTimer = setInterval(() => {
-            if (state !== 'idle' || idlePhraseActive || isPlaying || isOffended) return;
+            if (state !== 'idle' || idlePhraseActive || isBusy() || isOffended) return;
             showLayer('blink');
             setTimeout(() => {
-                if (state === 'idle' && !idlePhraseActive && !isPlaying && !isOffended) showLayer('idle');
+                if (state === 'idle' && !idlePhraseActive && !isBusy() && !isOffended) showLayer('idle');
             }, 160);
         }, 4000);
         scheduleIdleTimers();
     }
 
     function goToSleep() {
-        if (isPlaying) return;
+        if (isBusy()) return;
         setState('sleeping');
         showSpeech(false);
         setMood(null);
@@ -1969,6 +2122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFriendship(false);
     renderAchPanel();
     renderMemePanel();
+    updateMemeBtnVisibility();
     setState('sleeping');
     startBreathing();
 });
