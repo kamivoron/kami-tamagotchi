@@ -114,7 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
               { time: 3,  action: 'backroomsBegin' },
               { time: 12, action: 'singLine', text: 'кажется, я попала в бекрумс...', duration: 3500 }
           ],
-          onEnd: 'backroomsEnd' }
+          onEnd: 'backroomsEnd' },
+        { file: 'music/5.mp3', title: 'ヤラララ / YARARARA',
+          onPlay: { text: 'о, мне нравится эта песенка!', mood: 'happy' },
+          events: [
+              { time: 5, action: 'yarararaBegin' }
+          ],
+          onEnd: 'yarararaEnd' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -152,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let firedEvents = new Set();
     let onPlayTriggeredForTrack = -1;
     let backroomsActive = false;
+    let yarararaActive = false;
 
     /* Фикс кликов по видео */
     ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'dblclick'].forEach(evt => {
@@ -296,6 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (t.title !== 'looping the rooms' && backroomsActive) {
             resetBackrooms();
         }
+        if (t.title !== 'ヤラララ / YARARARA' && yarararaActive) {
+            resetYararara();
+        }
 
         if (state === 'idle') { setMood(null); enterIdle(); }
         if (autoplay) playTrack();
@@ -357,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (ev.action === 'specificSingOn') specificSingActive = true;
         else if (ev.action === 'specificSingOff') specificSingActive = false;
         else if (ev.action === 'backroomsBegin') backroomsBegin();
+        else if (ev.action === 'yarararaBegin') yarararaBegin();
     }
 
     function showFlashback() {
@@ -421,6 +432,63 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.dataset.theme = 'backrooms';
         btn.title = 'бекрумс';
         btn.style.background = 'linear-gradient(135deg, #d4b856, #8a7a30)';
+        document.querySelector('.theme-switcher').appendChild(btn);
+        btn.addEventListener('click', () => handleThemeClick(btn));
+    }
+        /* ===== YARARARA ===== */
+    function yarararaBegin() {
+        if (yarararaActive) return;
+        yarararaActive = true;
+        document.body.className = 'theme-yararara';
+        localStorage.setItem('petTheme', 'yararara');
+        cancelIdlePhrase();
+        clearInterval(blinkTimer);
+        clearTimeout(idleTimer); clearTimeout(sleepTimer);
+        clearTimeout(idlePhrase1); clearTimeout(idlePhrase2);
+        stopBreathing();
+        showLayer('yararara15');
+        setMood('neutral');
+    }
+
+    function resetYararara() {
+        if (!yarararaActive) return;
+        yarararaActive = false;
+        const savedTheme = localStorage.getItem('petTheme');
+        if (savedTheme === 'yararara') {
+            document.body.className = 'theme-yararara';
+        } else if (savedTheme === 'backrooms') {
+            document.body.className = 'theme-backrooms';
+        } else {
+            document.body.className = savedTheme === 'dark' ? '' : 'theme-' + savedTheme;
+        }
+    }
+
+    function yarararaEnd() {
+        localStorage.setItem('petYarararaUnlocked', '1');
+        unlockYarararaTheme();
+        yarararaActive = false;
+        giveCustomAchievement('yararara',
+            '🔴', 'ярарара', 'прослушал YARARARA до конца',
+            'уф, эта песенка меня вымотала... но мне понравилось~', 'laughing');
+        setTimeout(() => {
+            const savedTheme = localStorage.getItem('petTheme') || 'dark';
+            if (savedTheme === 'yararara') {
+                document.body.className = 'theme-yararara';
+                showLayer('yararara15');
+            } else {
+                document.body.className = savedTheme === 'dark' ? '' : 'theme-' + savedTheme;
+                if (state === 'idle') { setMood(null); enterIdle(); }
+            }
+        }, 5000);
+    }
+
+    function unlockYarararaTheme() {
+        if (document.querySelector('.theme-btn[data-theme="yararara"]')) return;
+        const btn = document.createElement('button');
+        btn.className = 'theme-btn';
+        btn.dataset.theme = 'yararara';
+        btn.title = 'ярарара';
+        btn.style.background = 'linear-gradient(135deg, #e01720, #8a0a0f)';
         document.querySelector('.theme-switcher').appendChild(btn);
         btn.addEventListener('click', () => handleThemeClick(btn));
     }
@@ -616,6 +684,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showLayer('backrooms14');
             document.body.className = 'theme-backrooms';
         }
+        /* ФИКС: если это yararara-трек — показать 15.png */
+        if (currentTrack === 4) {
+            yarararaActive = true;
+            showLayer('yararara15');
+            document.body.className = 'theme-yararara';
+        }
     });
 
     audioEl.addEventListener('pause', () => {
@@ -629,6 +703,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentTrack === 3 && backroomsActive) {
             clearInterval(blinkTimer);
             showLayer('backrooms14');
+            return;
+        }
+        /* ФИКС: при паузе на yararara — показать 15.png */
+        if (currentTrack === 4 && yarararaActive) {
+            clearInterval(blinkTimer);
+            showLayer('yararara15');
             return;
         }
         if (state === 'idle') enterIdle();
@@ -647,6 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEl.addEventListener('ended', () => {
         const track = TRACKS[currentTrack];
         if (track && track.onEnd === 'backroomsEnd') backroomsEnd();
+        if (track && track.onEnd === 'yarararaEnd') yarararaEnd();
         if (isRepeat) {
             firedEvents = new Set(); onPlayTriggeredForTrack = -1;
             stopRandomSing(); specificSingActive = false;
@@ -754,8 +835,9 @@ document.addEventListener('DOMContentLoaded', () => {
         sleep1: 'images/1.png', sleep2: 'images/2.png', wake: 'images/3.png',
         blink: 'images/4.png', idle: 'images/5.png', talk1: 'images/6.png', talk2: 'images/7.png',
         happy1: 'images/8.png', happy2: 'images/9.png', angry: 'images/10.png',
-        laugh: 'images/11.png', tease: 'images/12.png', flashback: 'images/13.png',
-        backrooms14: 'images/14.png'
+        laugh: 'images/11.png', tease: 'images/12.png',         flashback: 'images/13.png',
+        backrooms14: 'images/14.png',
+        yararara15: 'images/15.png'
     };
     Object.values(IMAGES).forEach(src => { const i = new Image(); i.src = src; });
 
@@ -1199,17 +1281,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="ach-group-body">
                     ${customAchievements.map(id => {
-                        if (id === 'backrooms') {
-                            return `<div class="ach-item unlocked">
-                                <div class="ach-icon">🌫</div>
-                                <div class="ach-info">
-                                    <div class="ach-title">попал в бекрумс</div>
-                                    <div class="ach-desc">прослушал looping the rooms до конца</div>
-                                </div>
-                                <div class="ach-status">✓</div>
-                            </div>`;
-                        }
-                        return '';
+                     if (id === 'backrooms') {
+                        return `<div class="ach-item unlocked">
+                            <div class="ach-icon">🌫</div>
+                            <div class="ach-info">
+                                <div class="ach-title">попал в бекрумс</div>
+                                <div class="ach-desc">прослушал looping the rooms до конца</div>
+                            </div>
+                            <div class="ach-status">✓</div>
+                        </div>`;
+                    }
+                    if (id === 'yararara') {
+                        return `<div class="ach-item unlocked">
+                            <div class="ach-icon">🔴</div>
+                            <div class="ach-info">
+                                <div class="ach-title">ярарара</div>
+                                <div class="ach-desc">прослушал YARARARA до конца</div>
+                            </div>
+                            <div class="ach-status">✓</div>
+                        </div>`;
+                    }
+                    return '';
                     }).join('')}
                 </div>
             </div>`;
@@ -2151,6 +2243,24 @@ function renderVitrinaPanel() {
             chatReactionTimer = setTimeout(() => {
                 if (state === 'idle') {
                     if (backroomsActive) showLayer('backrooms14');
+                    else if (yarararaActive) showLayer('yararara15');
+                    else { setMood(null); enterIdle(); }
+                }
+            }, 2400);
+            return;
+        }
+
+        /* Специальный mood: ярарара — показываем 15.png */
+        if (mood === 'yararara') {
+            cancelIdlePhrase();
+            clearInterval(blinkTimer);
+            clearInterval(chatReactionAnim);
+            clearTimeout(chatReactionTimer);
+            showLayer('yararara15');
+            chatReactionTimer = setTimeout(() => {
+                if (state === 'idle') {
+                    if (yarararaActive) showLayer('yararara15');
+                    else if (backroomsActive) showLayer('backrooms14');
                     else { setMood(null); enterIdle(); }
                 }
             }, 2400);
@@ -2497,18 +2607,22 @@ function renderVitrinaPanel() {
         idlePhraseActive = false;
         if (isOffended) { clearInterval(blinkTimer); showLayer('angry'); return; }
         if (backroomsActive) {
-            /* ФИКС: сохраняем backrooms-кадр при idle, если трек backrooms */
             showLayer('backrooms14');
+            clearInterval(blinkTimer);
+            return;
+        }
+        if (yarararaActive) {
+            showLayer('yararara15');
             clearInterval(blinkTimer);
             return;
         }
         showLayer('idle');
         clearInterval(blinkTimer);
         blinkTimer = setInterval(() => {
-            if (state !== 'idle' || idlePhraseActive || isBusy() || isOffended || backroomsActive) return;
+            if (state !== 'idle' || idlePhraseActive || isBusy() || isOffended || backroomsActive || yarararaActive) return;
             showLayer('blink');
             setTimeout(() => {
-                if (state === 'idle' && !idlePhraseActive && !isBusy() && !isOffended && !backroomsActive) showLayer('idle');
+                if (state === 'idle' && !idlePhraseActive && !isBusy() && !isOffended && !backroomsActive && !yarararaActive) showLayer('idle');
             }, 160);
         }, 4000);
         scheduleIdleTimers();
@@ -2516,8 +2630,11 @@ function renderVitrinaPanel() {
     function goToSleep() {
         if (isBusy()) return;
         if (backroomsActive) {
-            /* Не засыпает в backrooms */
             showLayer('backrooms14');
+            return;
+        }
+        if (yarararaActive) {
+            showLayer('yararara15');
             return;
         }
         setState('sleeping');
@@ -2530,6 +2647,10 @@ function renderVitrinaPanel() {
         setState('waking');
         if (backroomsActive) {
             showLayer('backrooms14');
+            return;
+        }
+        if (yarararaActive) {
+            showLayer('yararara15');
             return;
         }
         showLayer('wake');
@@ -2580,14 +2701,28 @@ function renderVitrinaPanel() {
 
     function handleThemeClick(btn) {
         const theme = btn.dataset.theme;
+        if (theme !== 'yararara' && yarararaActive) yarararaActive = false;
+        if (theme !== 'backrooms' && backroomsActive && currentTrack !== 3) backroomsActive = false;
         document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
         localStorage.setItem('petTheme', theme);
         cancelIdlePhrase();
         if (state === 'sleeping' || state === 'waking') return;
         if (state === 'talking') return;
 
-        if (theme === 'backrooms') {
+                if (theme === 'backrooms') {
             forcePlayPhrase({ text: 'брр, у меня странные ощущения от этого фона...', mood: 'neutral' }, finishDialog);
+            return;
+        }
+        if (theme === 'yararara') {
+            yarararaActive = true;
+            cancelIdlePhrase();
+            clearInterval(blinkTimer);
+            clearTimeout(idleTimer); clearTimeout(sleepTimer);
+            clearTimeout(idlePhrase1); clearTimeout(idlePhrase2);
+            stopBreathing();
+            showLayer('yararara15');
+            setMood('laughing');
+            forcePlayPhrase({ text: 'ярарара! этот фон мне нравится~', mood: 'laughing' }, finishDialog);
             return;
         }
         if (themeChanges >= THEME_REACTIONS.length) return;
@@ -2606,11 +2741,19 @@ function renderVitrinaPanel() {
                 document.body.className = 'theme-backrooms';
                 unlockBackroomsTheme();
             }
+        } else if (saved === 'yararara') {
+            if (localStorage.getItem('petYarararaUnlocked') === '1') {
+                document.body.className = 'theme-yararara';
+                unlockYarararaTheme();
+                yarararaActive = true;
+                showLayer('yararara15');
+            }
         } else {
             document.body.className = 'theme-' + saved;
         }
     }
     if (localStorage.getItem('petBackroomsUnlocked') === '1') unlockBackroomsTheme();
+    if (localStorage.getItem('petYarararaUnlocked') === '1') unlockYarararaTheme();
 
     if (isOffended) petWidget.classList.add('offended');
 
@@ -2625,7 +2768,7 @@ function renderVitrinaPanel() {
                 'добавлены новые темы и фразы для чата',
                 'добавлена пасхалка и ачивки с меме',
                 'добавлена кнопка для добавления меме в избранное и смены порядка',
-                'добавлен новый трек и пасхальный фон',
+                'добавлено два новых трека и пасхальных фонов',
                 'добавлена система кормления, мытья, расчёсывания и настроения',
                 'добавлен магазин еды',
                 'добавлены ежедневные бонусы',
