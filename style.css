@@ -1530,10 +1530,10 @@ body.theme-backrooms {
    BACKROOMS: смещение Ками вниз (сидит на полу)
    ========================================================== */
 body.theme-backrooms .pet-widget {
-    transform: translateY(45px);
+    transform: translateY(120px);
 }
 body.theme-backrooms.chat-open .pet-widget {
-    transform: translateY(45px);
+    transform: translateY(120px);
 }
 
 /* ==========================================================
