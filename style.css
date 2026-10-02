@@ -2083,14 +2083,6 @@ body.theme-brown3 {
 }
 
 .theme-btn[data-theme="rgb"] {
-    animation: rgb-btn-flash 0.5s steps(1) infinite;
+    background: linear-gradient(135deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
     border: 2px solid rgba(255,255,255,0.4);
-}
-@keyframes rgb-btn-flash {
-    0%   { background: #ff0000; }
-    20%  { background: #00ff00; }
-    40%  { background: #0000ff; }
-    60%  { background: #ff00ff; }
-    80%  { background: #ffff00; }
-    100% { background: #00ffff; }
 }
