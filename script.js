@@ -3064,6 +3064,7 @@ function renderVitrinaPanel() {
             version: 'v 1.0.3', date: '2 окт 2026',
             changes: [
                 'исправление багов',
+                'добавлена кнопка сброса позиции плеера',
                 'добавлена иконка сайта',
                 'добавлена расширенная база триггер-фраз для чата',
                 'добавлено 7 новых пасхальных цветных фона',
@@ -3127,6 +3128,43 @@ function renderVitrinaPanel() {
         devlogBody.innerHTML = html;
     }
 
+       /* ===== Кнопка сброса позиции плеера ===== */
+    document.getElementById('resetVideoBtn').addEventListener('click', () => {
+        /* Сбрасываем сохранённые значения */
+        overlayPos = null;
+        overlaySize = null;
+        localStorage.removeItem('petOverlayPos');
+        localStorage.removeItem('petOverlaySize');
+
+        /* Сбрасываем inline-стили */
+        youtubeOverlay.style.left = '';
+        youtubeOverlay.style.top = '';
+        youtubeOverlay.style.width = '';
+        youtubeOverlay.style.height = '';
+        youtubeOverlay.style.transform = '';
+
+        /* Возвращаем над головой Ками */
+        const rect = petWidget.getBoundingClientRect();
+        const w = 400, h = 225;
+        overlayPos = {
+            x: Math.max(10, rect.left + rect.width / 2 - w / 2),
+            y: Math.max(10, rect.top - h - 30)
+        };
+        overlaySize = { w, h };
+        localStorage.setItem('petOverlayPos', JSON.stringify(overlayPos));
+        localStorage.setItem('petOverlaySize', JSON.stringify(overlaySize));
+
+        youtubeOverlay.style.left = overlayPos.x + 'px';
+        youtubeOverlay.style.top = overlayPos.y + 'px';
+        youtubeOverlay.style.width = w + 'px';
+        youtubeOverlay.style.height = h + 'px';
+        youtubeOverlay.style.transform = 'none';
+
+        /* Реакция Ками */
+        if (state !== 'sleeping') {
+            forcePlayPhrase({ text: 'вернула плеер на место!', mood: 'happy' }, finishDialog);
+        }
+    }); 
     document.getElementById('devVersion').addEventListener('click', () => {
         renderDevlog();
         devlogModal.classList.add('open');
