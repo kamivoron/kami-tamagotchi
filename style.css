@@ -2082,20 +2082,15 @@ body.theme-brown3 {
     --speech-border: #b08050;
 }
 
-/* ============ РАДУЖНАЯ ТЕМА ============ */
-body.theme-rainbow {
-    --accent: #ff5a8a;
-    --speech-bg: rgba(20, 15, 15, 0.92);
-    --speech-border: #ff5a8a;
-    animation: rainbow-bg 8s linear infinite !important;
+.theme-btn[data-theme="rgb"] {
+    animation: rgb-btn-flash 0.5s steps(1) infinite;
+    border: 2px solid rgba(255,255,255,0.4);
 }
-@keyframes rainbow-bg {
+@keyframes rgb-btn-flash {
     0%   { background: #ff0000; }
-    14%  { background: #ff7700; }
-    28%  { background: #ffdd00; }
-    42%  { background: #00dd44; }
-    57%  { background: #0088ff; }
-    71%  { background: #6622cc; }
-    85%  { background: #ff00aa; }
-    100% { background: #ff0000; }
+    20%  { background: #00ff00; }
+    40%  { background: #0000ff; }
+    60%  { background: #ff00ff; }
+    80%  { background: #ffff00; }
+    100% { background: #00ffff; }
 }
