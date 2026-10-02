@@ -2506,7 +2506,8 @@ function renderVitrinaPanel() {
                 btn.className = 'theme-btn';
                 btn.dataset.theme = 'rgb';
                 btn.title = 'rgb';
-                btn.style.background = 'linear-gradient(135deg, #ff0000, #00ff00, #0000ff)';
+                btn.classList.add('rgb-btn');
+                btn.dataset.rgb = '1';
                 document.querySelector('.theme-switcher').appendChild(btn);
                 btn.addEventListener('click', () => handleThemeClick(btn));
                 localStorage.setItem('petRgbUnlocked', '1');
@@ -3027,7 +3028,8 @@ function renderVitrinaPanel() {
             btn.className = 'theme-btn';
             btn.dataset.theme = 'rgb';
             btn.title = 'rgb';
-            btn.style.background = 'linear-gradient(135deg, #ff0000, #00ff00, #0000ff)';
+            btn.classList.add('rgb-btn');
+            btn.dataset.rgb = '1';
             document.querySelector('.theme-switcher').appendChild(btn);
             btn.addEventListener('click', () => handleThemeClick(btn));
         }
