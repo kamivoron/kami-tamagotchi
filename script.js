@@ -3152,12 +3152,9 @@ function renderVitrinaPanel() {
     }
 
     function startRgbBtnAnim() {
-        if (rgbBtnTimer) clearInterval(rgbBtnTimer);
-        rgbBtnTimer = setInterval(() => {
-            const btn = document.querySelector('.theme-btn[data-theme="rgb"]');
-            if (!btn) return;
-            btn.style.background = randomRgbColor();
-        }, 120);
+        /* Кнопка теперь статичная — мигает только фон */
+        const btn = document.querySelector('.theme-btn[data-theme="rgb"]');
+        if (btn) btn.style.background = 'linear-gradient(135deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)';
     }
 
     function startRgbBgAnim() {
