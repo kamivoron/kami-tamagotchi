@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const SPAM_WINDOW    = 2000;
     const SPAM_THRESHOLD = 5;
     let isVideoPlaying   = false;
+    let themeLock = localStorage.getItem('petThemeLock') === '1';
 
     /* ===== СТАТЫ ===== */
     const STATS_KEY = 'petStatsV1';
@@ -122,7 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
           events: [
               { time: 5, action: 'yarararaBegin' }
           ],
-          onEnd: 'yarararaEnd' }
+          onEnd: 'yarararaEnd' },
+        { file: 'music/6.mp3', title: 'любовная любовь',
+          hidden: true,
+          events: [
+              { time: 1, action: 'loveSongBegin' }
+          ],
+          onEnd: 'loveSongEnd' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -282,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         TRACKS.forEach((t, i) => {
+            if (t.hidden) return;
             const row = document.createElement('div');
             row.className = 'music-track' + (i === currentTrack ? ' active' : '');
             row.innerHTML = `<span class="music-track-num">${i + 1}</span><span>${t.title}</span>`;
@@ -367,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (ev.action === 'hideVideo') hideVideoOverlay();
         else if (ev.action === 'showLocalVideo') {
             if (ev.theme) {
-                document.body.className = ev.theme === 'dark' ? '' : 'theme-' + ev.theme;
+                if (!themeLock) document.body.className = ev.theme === 'dark' ? '' : 'theme-' + ev.theme;
                 localStorage.setItem('petTheme', ev.theme);
             }
             showLocalVideo(ev.src, ev.onEnd, ev.startAt || 0, false);
@@ -379,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (ev.action === 'specificSingOff') specificSingActive = false;
         else if (ev.action === 'backroomsBegin') backroomsBegin();
         else if (ev.action === 'yarararaBegin') yarararaBegin();
+        else if (ev.action === 'loveSongBegin') loveSongBegin();
     }
 
     function showFlashback() {
@@ -395,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function backroomsBegin() {
         if (backroomsActive) return;
         backroomsActive = true;
-        document.body.className = 'theme-backrooms';
+        if (!themeLock) document.body.className = 'theme-backrooms';
         localStorage.setItem('petTheme', 'backrooms');
         cancelIdlePhrase();
         clearInterval(blinkTimer);
@@ -450,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function yarararaBegin() {
         if (yarararaActive) return;
         yarararaActive = true;
-        document.body.className = 'theme-yararara';
+        if (!themeLock) document.body.className = 'theme-yararara';
         localStorage.setItem('petTheme', 'yararara');
         cancelIdlePhrase();
         clearInterval(blinkTimer);
@@ -503,7 +512,68 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.theme-switcher').appendChild(btn);
         btn.addEventListener('click', () => handleThemeClick(btn));
     }
+    /* ===== ЛЮБОВНАЯ ЛЮБОВЬ ===== */
+    let loveSongActive = false;
+    let heartInterval = null;
 
+    function unlockLoveSong() {
+        if (localStorage.getItem('petLoveSongUnlocked') === '1') return;
+        localStorage.setItem('petLoveSongUnlocked', '1');
+        /* Показываем трек */
+        const loveTrack = TRACKS.find(t => t.title === 'любовная любовь');
+        if (loveTrack) loveTrack.hidden = false;
+        renderTrackList();
+        /* Открываем розовые фоны */
+        ['pink1', 'pink2', 'pink3'].forEach((name, idx) => {
+            if (document.querySelector(`.theme-btn[data-theme="${name}"]`)) return;
+            const btn = document.createElement('button');
+            btn.className = 'theme-btn';
+            btn.dataset.theme = name;
+            btn.title = 'розовая';
+            const colors = { pink1: '#3d1a2a', pink2: '#4a2035', pink3: '#5a2840' };
+            btn.style.background = colors[name];
+            document.querySelector('.theme-switcher').appendChild(btn);
+            btn.addEventListener('click', () => handleThemeClick(btn));
+        });
+        /* Ачивка */
+        giveCustomAchievement('love_song', '💗', 'любовная любовь', 'открыл шестой трек',
+            'любовью любовной люби меня!', 'teasing');
+    }
+
+    function loveSongBegin() {
+        if (loveSongActive) return;
+        loveSongActive = true;
+        /* Рандомный розовый фон */
+        const themes = ['pink1', 'pink2', 'pink3'];
+        const chosen = themes[Math.floor(Math.random() * themes.length)];
+        if (!themeLock) {
+            document.body.className = 'theme-' + chosen;
+            localStorage.setItem('petTheme', chosen);
+        }
+        /* Запускаем сердечки */
+        if (heartInterval) clearInterval(heartInterval);
+        heartInterval = setInterval(spawnHeart, 400);
+    }
+
+    function loveSongEnd() {
+        if (heartInterval) { clearInterval(heartInterval); heartInterval = null; }
+        loveSongActive = false;
+    }
+
+    function spawnHeart() {
+        if (!loveSongActive) return;
+        const heart = document.createElement('div');
+        heart.className = 'heart-particle';
+        const symbols = ['♥', '♡', '💗', '💕', '❤'];
+        heart.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        heart.style.left = (Math.random() * window.innerWidth) + 'px';
+        heart.style.top = (window.innerHeight + 20) + 'px';
+        heart.style.fontSize = (14 + Math.random() * 22) + 'px';
+        heart.style.color = ['#ff8ab8', '#ffb0d0', '#ff5a8a', '#ffd0e0'][Math.floor(Math.random() * 4)];
+        heart.style.animationDuration = (3 + Math.random() * 2) + 's';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 5500);
+    }
     /* ===== ВИДЕО ===== */
     function showLocalVideo(src, endAction, startAt, unmute) {
         if (!localVideo || !youtubeOverlay) return;
@@ -739,12 +809,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const track = TRACKS[currentTrack];
         if (track && track.onEnd === 'backroomsEnd') backroomsEnd();
         if (track && track.onEnd === 'yarararaEnd') yarararaEnd();
+        if (track && track.onEnd === 'loveSongEnd') loveSongEnd();
         if (isRepeat) {
             firedEvents = new Set(); onPlayTriggeredForTrack = -1;
             stopRandomSing(); specificSingActive = false;
             audioEl.currentTime = 0; playTrack();
         } else {
-            loadTrack(currentTrack + 1, true);
+            loadTrack(getNextVisibleTrack(currentTrack + 1), true);
         }
     });
 
@@ -753,7 +824,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (audioEl.currentTime > 3) { audioEl.currentTime = 0; firedEvents = new Set(); }
         else loadTrack(currentTrack - 1, true);
     });
-    musicNextBtn.addEventListener('click', () => loadTrack(currentTrack + 1, true));
+        function getNextVisibleTrack(fromIdx) {
+        let i = fromIdx;
+        for (let step = 0; step < TRACKS.length; step++) {
+            const idx = ((i + step) % TRACKS.length + TRACKS.length) % TRACKS.length;
+            if (!TRACKS[idx].hidden) return idx;
+        }
+        return 0;
+    }
+    musicNextBtn.addEventListener('click', () => loadTrack(getNextVisibleTrack(currentTrack + 1), true);
     musicRepeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
         musicRepeatBtn.classList.toggle('active', isRepeat);
@@ -1022,14 +1101,14 @@ document.addEventListener('DOMContentLoaded', () => {
         { type: 'friendship', target: 25,  icon: "🦋", title: "знакомый", desc: "кажется, у вас всё же есть что-то общее", text: "ладно, ты мне нравишься", mood: "happy" },
         { type: 'friendship', target: 50,  icon: "🐝", title: "друг", desc: "видимо, тебе понравилось обсуждать с ней то аниме про айдолов в двадцатый раз?", text: "я тебя запомнила, знай!", mood: "happy" },
         { type: 'friendship', target: 67,  icon: "🤖", title: "67", desc: "67676767676767", text: "67... сикс севен... брейнрот detected", mood: "laughing" },
-        { type: 'friendship', target: 100, icon: "👤", title: "теневой", desc: "когда вы успели стать так близки?", text: "ты стала моим лучшим другом~", mood: "laughing" },
-        { type: 'time', target: 5 * 60,    icon: "⏱", title: "5 минут",   desc: "проведи с ками 5 минут", text: "пять минут вместе — уже что-то!", mood: "happy" },
-        { type: 'time', target: 10 * 60,   icon: "⏱", title: "10 минут",  desc: "проведи с ками 10 минут", text: "десять минут! время летит~", mood: "happy" },
-        { type: 'time', target: 30 * 60,   icon: "⏳", title: "полчаса",   desc: "проведи с ками 30 минут", text: "полчаса вместе, вот это да!", mood: "happy" },
-        { type: 'time', target: 60 * 60,   icon: "⏰", title: "час",       desc: "проведи с ками 1 час", text: "целый час! я тронута~", mood: "happy" },
-        { type: 'time', target: 2 * 3600,  icon: "🕐", title: "2 часа",    desc: "проведи с ками 2 часа", text: "2 часа вместе, я впечатлена!", mood: "laughing" },
-        { type: 'time', target: 5 * 3600,  icon: "🕔", title: "5 часов",   desc: "проведи с ками 5 часов", text: "5 часов... ты серьёзно?!", mood: "laughing" },
-        { type: 'time', target: 10 * 3600, icon: "🌙", title: "10 часов",  desc: "проведи с ками 10 часов", text: "10 часов вместе... ты мой теневой теперь!", mood: "laughing" },
+        { type: 'friendship', target: 100, icon: "👤", title: "теневой", desc: "когда вы успели стать так близки?", text: "ты стал моим лучшим другом~", mood: "laughing" },
+        { type: 'time', target: 5 * 60,    icon: "⏱", title: "5 минут",   desc: "первое совместное мгновение — с чего-то же надо начинать!", text: "пять минут вместе — уже что-то!", mood: "happy" },
+        { type: 'time', target: 10 * 60,   icon: "⏱", title: "10 минут",  desc: "ты не ушёл сразу — и это уже приятно", text: "десять минут! время летит~", mood: "happy" },
+        { type: 'time', target: 30 * 60,   icon: "⏳", title: "полчаса",   desc: "полчаса — а кажется, что мы знакомы давно", text: "полчаса вместе, вот это да!", mood: "happy" },
+        { type: 'time', target: 60 * 60,   icon: "⏰", title: "час",       desc: "целый час рядом со мной. я это запомню", text: "целый час! я тронута~", mood: "happy" },
+        { type: 'time', target: 2 * 3600,  icon: "🕐", title: "2 часа",    desc: "ты правда остался на два часа... я впечатлена", text: "2 часа вместе, я впечатлена!", mood: "laughing" },
+        { type: 'time', target: 5 * 3600,  icon: "🕔", title: "5 часов",   desc: "пять часов. это уже не случайность, это судьба", text: "5 часов... ты серьёзно?!", mood: "laughing" },
+        { type: 'time', target: 10 * 3600, icon: "🌙", title: "10 часов",  desc: "десять часов вместе... ты стал моим теневым", text: "10 часов вместе... ты мой теневой теперь!", mood: "laughing" },
         { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",  desc: "отправь ками 1 сообщение", text: "ты написал мне первое сообщение! ура!", mood: "happy" },
         { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",   desc: "отправь ками 5 сообщений", text: "пять сообщений! мы болтаем!", mood: "happy" },
         { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",  desc: "отправь ками 10 сообщений", text: "десять сообщений, так держать!", mood: "happy" },
@@ -1038,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { type: 'messages', target: 67,  icon: "🔢", title: "67 сообщений",  desc: "отправь ками 67 сообщений", text: "67 сообщений... это судьба", mood: "laughing" },
         { type: 'messages', target: 100, icon: "💯", title: "100 сообщений", desc: "отправь ками 100 сообщений", text: "сто сообщений! ты меня завалил болтовнёй~", mood: "laughing" },
         { type: 'memes', target: 1,  icon: "🎬", title: "любопытный",        desc: "найти 1 пасхалку", text: "ты нашёл первую пасхалку! таких ещё много~", mood: "happy" },
-        { type: 'memes', target: 10, icon: "📼", title: "пару раз смотрел",  desc: "найти 10 пасхалок", text: "десять мемов! ты знаток~", mood: "laughing" },
+        { type: 'memes', target: 10, icon: "📼", title: "пару раз смотрел",  desc: "найти 10 пасхалок", text: "десять меме! ты знаток~", mood: "laughing" },
         { type: 'memes', target: 25, icon: "🎞", title: "немного шаришь",    desc: "найти 25 пасхалок", text: "двадцать пять! ты почти всё нашёл!", mood: "laughing" },
         { type: 'memes', target: 45, icon: "🏆", title: "главный фанат",     desc: "найти все 45 пасхалок", text: "ты нашёл ВСЁ! ты настоящая легенда!!", mood: "laughing" }
     ];
@@ -1323,6 +1402,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="ach-status">✓</div>
                         </div>`;
                     }
+                     if (id === 'love_song') {
+                        return `<div class="ach-item unlocked">
+                            <div class="ach-icon">💗</div>
+                            <div class="ach-info">
+                                <div class="ach-title">любовная любовь</div>
+                                <div class="ach-desc">открыл шестой трек</div>
+                            </div>
+                            <div class="ach-status">✓</div>
+                        </div>`;
+                    }
                     return '';
                     }).join('')}
                 </div>
@@ -1344,11 +1433,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const vb = achPanel.querySelector('#vitrinaBtn');
-        if (vb) vb.addEventListener('click', () => {
+        if (vb) vb.addEventListener('click', (e) => {
+            e.stopPropagation();
             vitrinaPanel.classList.toggle('open');
             renderVitrinaPanel();
         });
-    }
 
     achBtn.addEventListener('click', () => {
         achPanel.classList.toggle('open');
@@ -1357,6 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shopPanel.classList.remove('open');
         dailyPanel.classList.remove('open');
         invPanel.classList.remove('open');
+        vitrinaPanel.classList.remove('open');
         if (achPanel.classList.contains('open')) {
             unreadAchievements = 0;
             updateAchBadge();
@@ -1443,6 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shopPanel.classList.remove('open');
         dailyPanel.classList.remove('open');
         invPanel.classList.remove('open');
+        vitrinaPanel.classList.remove('open');
     });
 
     /* ==========================================================
@@ -1602,6 +1693,7 @@ document.addEventListener('DOMContentLoaded', () => {
         carePanel.classList.remove('open');
         shopPanel.classList.remove('open');
         invPanel.classList.remove('open');
+        vitrinaPanel.classList.remove('open');
         if (dailyPanel.classList.contains('open')) renderDailyPanel();
     });
 
@@ -1695,6 +1787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         carePanel.classList.remove('open');
         shopPanel.classList.remove('open');
         dailyPanel.classList.remove('open');
+        vitrinaPanel.classList.remove('open');
         if (invPanel.classList.contains('open')) renderInvPanel();
     });
 
@@ -1935,6 +2028,7 @@ function renderVitrinaPanel() {
         memePanel.classList.remove('open');
         dailyPanel.classList.remove('open');
         invPanel.classList.remove('open');
+        vitrinaPanel.classList.remove('open');
         if (!carePanel.classList.contains('open')) shopPanel.classList.remove('open');
         renderCarePanel();
     });
@@ -2476,7 +2570,10 @@ function renderVitrinaPanel() {
         /* ===== СПЕЦИАЛЬНЫЕ ТРИГГЕРЫ (с логикой) ===== */
     function checkSpecialTriggers(text) {
         const t = text.toLowerCase().trim();
-
+        /* Разблокировка 6-й песни при упоминании любви */
+        if (['любовь', 'любовью', 'любовной', 'люби меня', 'полюбить'].some(k => t.includes(k))) {
+            unlockLoveSong();
+        }
         /* Коричневый — открывает 3 темы */
         if (['коричневый', 'коричневого', 'коричневому', 'коричневая', 'коричневое'].some(k => t.includes(k))) {
             let unlocked = false;
@@ -2534,7 +2631,19 @@ function renderVitrinaPanel() {
             return norm.includes(' ' + k + ' ');
         })) {
             if (state !== 'sleeping') {
-                setTimeout(() => goToSleep(), 1500);
+                setTimeout(() => {
+                    /* Пауза музыки, если играет */
+                    if (isPlaying) audioEl.pause();
+                    /* Принудительно укладываем спать, игнорируя isBusy */
+                    stopTalkAnim();
+                    showSpeech(false);
+                    setMood(null);
+                    themeChanges = 0;
+                    backroomsActive = false;
+                    yarararaActive = false;
+                    setState('sleeping');
+                    startBreathing();
+                }, 1500);
                 return { text: 'хорошо!', mood: 'happy' };
             }
         }
@@ -3042,6 +3151,21 @@ function renderVitrinaPanel() {
             }
         });
     }
+            if (localStorage.getItem('petLoveSongUnlocked') === '1') {
+        const loveTrack = TRACKS.find(t => t.title === 'любовная любовь');
+        if (loveTrack) loveTrack.hidden = false;
+        ['pink1', 'pink2', 'pink3'].forEach((name) => {
+            if (document.querySelector(`.theme-btn[data-theme="${name}"]`)) return;
+            const btn = document.createElement('button');
+            btn.className = 'theme-btn';
+            btn.dataset.theme = name;
+            btn.title = 'розовая';
+            const colors = { pink1: '#3d1a2a', pink2: '#4a2035', pink3: '#5a2840' };
+            btn.style.background = colors[name];
+            document.querySelector('.theme-switcher').appendChild(btn);
+            btn.addEventListener('click', () => handleThemeClick(btn));
+        });
+    }
     if (localStorage.getItem('petRgbUnlocked') === '1') {
         if (!document.querySelector('.theme-btn[data-theme="rgb"]')) {
             const btn = document.createElement('button');
@@ -3064,6 +3188,10 @@ function renderVitrinaPanel() {
             version: 'v 1.0.3', date: '2 окт 2026',
             changes: [
                 'исправление багов',
+                'добавлен ползунок блокировки принудительной смены фона',
+                'добавлена пасхальная песня и фоны (что-то там про любовь)',
+                'ачивки времени получили описания',
+                'сон по команде теперь ставит музыку на паузу',
                 'добавлена кнопка сброса позиции плеера',
                 'добавлена иконка сайта',
                 'добавлена расширенная база триггер-фраз для чата',
@@ -3210,6 +3338,34 @@ function renderVitrinaPanel() {
 
     /* Запуск анимации кнопки сразу, если она уже в DOM */
     startRgbBtnAnim();
+            /* Закрытие витрины при клике в любом другом месте */
+    document.addEventListener('click', (e) => {
+        if (!vitrinaPanel.classList.contains('open')) return;
+        if (e.target.closest('#vitrinaPanel')) return;
+        if (e.target.closest('#vitrinaBtn')) return;
+        vitrinaPanel.classList.remove('open');
+    });
+            /* ===== Ползунок заморозки фона ===== */
+    const themeLockBtn = document.getElementById('themeLockBtn');
+    function renderThemeLock() {
+        themeLockBtn.classList.toggle('active', themeLock);
+        themeLockBtn.textContent = themeLock ? '🔒' : '🔓';
+        themeLockBtn.title = themeLock
+            ? 'фон заморожен — автоматические смены отключены'
+            : 'фон меняется автоматически';
+    }
+    themeLockBtn.addEventListener('click', () => {
+        themeLock = !themeLock;
+        localStorage.setItem('petThemeLock', themeLock ? '1' : '0');
+        renderThemeLock();
+        if (state !== 'sleeping') {
+            forcePlayPhrase({
+                text: themeLock ? 'окей, больше не буду менять фон самовольно!' : 'ура, снова могу менять фон~',
+                mood: 'happy'
+            }, finishDialog);
+        }
+    });
+    renderThemeLock();
     renderFriendship(false);
     renderAchPanel();
     renderMemePanel();
