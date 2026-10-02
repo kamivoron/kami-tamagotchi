@@ -1051,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (customAchievements.includes(id)) return;
         customAchievements.push(id);
         localStorage.setItem('petCustomAch', JSON.stringify(customAchievements));
+        renderAchPanel();        /* ← обновляем панель сразу */
         onAchievementUnlocked();
         setTimeout(() => {
             if (state === 'sleeping') return;
@@ -1308,6 +1309,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="ach-info">
                                 <div class="ach-title">ярарара</div>
                                 <div class="ach-desc">прослушал YARARARA до конца</div>
+                            </div>
+                            <div class="ach-status">✓</div>
+                        </div>`;
+                    }
+                     if (id === 'brown') {
+                        return `<div class="ach-item unlocked">
+                            <div class="ach-icon">🤎</div>
+                            <div class="ach-info">
+                                <div class="ach-title">коричневый фанат</div>
+                                <div class="ach-desc">открыл коричневые темы</div>
                             </div>
                             <div class="ach-status">✓</div>
                         </div>`;
