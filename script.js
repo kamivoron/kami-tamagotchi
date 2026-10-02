@@ -2957,6 +2957,11 @@ function renderVitrinaPanel() {
         const theme = btn.dataset.theme;
         if (theme !== 'yararara' && yarararaActive) yarararaActive = false;
         if (theme !== 'backrooms' && backroomsActive && currentTrack !== 3) backroomsActive = false;
+
+        /* Остановка/запуск RGB-фона */
+        if (theme !== 'rgb') stopRgbBgAnim();
+        if (theme === 'rgb') startRgbBgAnim();
+
         document.body.className = theme === 'dark' ? '' : 'theme-' + theme;
         localStorage.setItem('petTheme', theme);
         cancelIdlePhrase();
@@ -2989,6 +2994,10 @@ function renderVitrinaPanel() {
     });
 
     const saved = localStorage.getItem('petTheme');
+    if (saved === 'rgb') {
+        /* если была активна rgb — фон включим после загрузки */
+        setTimeout(() => startRgbBgAnim(), 500);
+    }
     if (saved && saved !== 'dark') {
         if (saved === 'backrooms') {
             if (localStorage.getItem('petBackroomsUnlocked') === '1') {
@@ -3119,6 +3128,42 @@ function renderVitrinaPanel() {
     /* ==========================================================
        СТАРТ
        ========================================================== */
+        /* ===== RGB: полный рандом ===== */
+    let rgbBgTimer = null;
+    let rgbBtnTimer = null;
+
+    function randomRgbColor() {
+        /* Полностью случайный цвет, включая тёмные и пастельные */
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+
+    function startRgbBtnAnim() {
+        if (rgbBtnTimer) clearInterval(rgbBtnTimer);
+        rgbBtnTimer = setInterval(() => {
+            const btn = document.querySelector('.theme-btn[data-theme="rgb"]');
+            if (!btn) return;
+            btn.style.background = randomRgbColor();
+        }, 120);
+    }
+
+    function startRgbBgAnim() {
+        if (rgbBgTimer) clearInterval(rgbBgTimer);
+        rgbBgTimer = setInterval(() => {
+            if (!document.body.classList.contains('theme-rgb')) return;
+            document.body.style.background = randomRgbColor();
+        }, 120);
+    }
+
+    function stopRgbBgAnim() {
+        if (rgbBgTimer) { clearInterval(rgbBgTimer); rgbBgTimer = null; }
+        document.body.style.background = '';
+    }
+
+    /* Запуск анимации кнопки сразу, если она уже в DOM */
+    startRgbBtnAnim();
     renderFriendship(false);
     renderAchPanel();
     renderMemePanel();
