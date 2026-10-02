@@ -46,8 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const elapsed = Math.max(0, (now - stats.lastUpdate) / 1000);
         const awayHours = Math.max(0, (now - lastInteraction) / 3600000);
 
-        if (elapsed >= 600) stats.fullness = Math.max(0, stats.fullness - Math.floor(elapsed / 600));
-        if (elapsed >= 3600) stats.cleanliness = Math.max(0, stats.cleanliness - Math.floor(elapsed / 3600));
+                /* Голод: -1 каждые 5 минут */
+        if (elapsed >= 300) stats.fullness = Math.max(0, stats.fullness - Math.floor(elapsed / 300));
+        /* Чистота: -2 каждые 25 минут */
+        if (elapsed >= 1500) stats.cleanliness = Math.max(0, stats.cleanliness - Math.floor(elapsed / 1500) * 2);
         if ((stats.fullness === 0 || stats.cleanliness === 0) && elapsed >= 300) {
             stats.mood = Math.max(0, stats.mood - Math.floor(elapsed / 300));
         }
@@ -1439,7 +1441,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const DAILY_KEY_STREAK = 'petDailyStreak';
     const DAILY_KEY_HISTORY = 'petDailyHistory'; // { date: '01.10.26', reward: 30 }
     const DAILY_REWARDS = [30, 50, 80, 120, 170, 230, null]; // 7-й = null → секретное блюдо
+    function getNextMskMidnight() {
+        const now = Date.now();
+        const MSK_OFFSET = 3 * 3600000;
+        const DAY_MS = 24 * 3600000;
+        const mskNow = now + MSK_OFFSET;
+        const nextMidnightFrame = (Math.floor(mskNow / DAY_MS) + 1) * DAY_MS;
+        return nextMidnightFrame - MSK_OFFSET;
+    }
 
+    function getNextNewYear() {
+        const mskYear = new Date(Date.now() + 3 * 3600000).getUTCFullYear();
+        return Date.UTC(mskYear + 1, 0, 1, 0, 0, 0) - 3 * 3600000;
+    }
     function getMskDateKey() {
         const d = new Date();
         const mskTime = new Date(d.getTime() + (d.getTimezoneOffset() + 180) * 60000);
@@ -1447,9 +1461,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hasDailyAvailable() {
-        const last = parseInt(localStorage.getItem(DAILY_KEY_LAST) || '0', 10);
-        if (!last) return true;
-        return (Date.now() - last) >= 24 * 3600 * 1000;
+        const lastDate = localStorage.getItem('petDailyLastDate') || '';
+        const todayKey = getMskDateKey();
+        return lastDate !== todayKey;
     }
 
     function getDailyStreak() {
@@ -1459,9 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getNextResetTime() {
-        const last = parseInt(localStorage.getItem(DAILY_KEY_LAST) || '0', 10);
-        if (!last) return 0;
-        return last + 24 * 3600 * 1000;
+        return getNextMskMidnight();
     }
 
     function renderDailyPanel() {
@@ -1551,6 +1563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (streak >= DAILY_REWARDS.length) streak = DAILY_REWARDS.length - 1;
 
         localStorage.setItem(DAILY_KEY_LAST, String(Date.now()));
+        localStorage.setItem('petDailyLastDate', getMskDateKey());
         localStorage.setItem(DAILY_KEY_STREAK, String(streak));
 
         renderDailyPanel();
@@ -1695,17 +1708,30 @@ if (kompotRec && !kompotRec.desc) {
         saveVitrina();
     }
 
-if (!vitrinaRecords.find(r => r.id === 'kompot_01_10_26')) {
-    vitrinaRecords.push({
-        id: 'kompot_01_10_26',
-        name: 'компот от юли',
-        desc: 'его всегда мало, ведь он такая вкуснятина!',
-        date: '01.10.26',
-        bought: false,
-        icon: '🥤'
-    });
-    saveVitrina();
-}
+    /* При первом запуске фиксируем запись про компот (пропущенный) */
+    if (!vitrinaRecords.find(r => r.id === 'kompot_01_10_26')) {
+        vitrinaRecords.push({
+            id: 'kompot_01_10_26',
+            name: 'компот от юли',
+            desc: 'его всегда мало, ведь он такая вкуснятина!',
+            date: '01.10.26',
+            bought: false,
+            icon: '🥤'
+        });
+        saveVitrina();
+    }
+    /* Пицца как текущее предложение дня — добавляем, если ещё нет */
+    if (!vitrinaRecords.find(r => r.id === 'pizza_02_10_26')) {
+        vitrinaRecords.push({
+            id: 'pizza_02_10_26',
+            name: 'домашняя пицца',
+            desc: 'с пылу с жару, приготовленная пицца от камички, налетай!',
+            date: '02.10.26',
+            bought: false,
+            icon: '🍕'
+        });
+        saveVitrina();
+    }
 
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
@@ -1730,13 +1756,21 @@ function renderVitrinaPanel() {
        МАГАЗИН И УХОД
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
+    const TODAY_LIMITED = {
+        id: 'pizza_02_10_26',
+        icon: '🍕',
+        name: 'домашняя пицца',
+        price: 25,
+        hunger: 70,
+        date: '02.10.26'
+    };
+
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
-        localStorage.setItem(LIMITED_OFFER_KEY, String(Date.now() + 24 * 3600 * 1000));
+        localStorage.setItem(LIMITED_OFFER_KEY, String(getNextMskMidnight()));
     }
 
     function getLimitedOfferRemaining() {
-        const end = parseInt(localStorage.getItem(LIMITED_OFFER_KEY) || '0', 10);
-        return Math.max(0, end - Date.now());
+        return Math.max(0, getNextMskMidnight() - Date.now());
     }
 
     const SHOP_ITEMS = [
@@ -1796,15 +1830,15 @@ function renderVitrinaPanel() {
 
         if (remaining > 0) {
             html += `<div class="shop-section-title">⚡ ограниченное предложение</div>`;
-            const available = friendship >= 20;
-            html += `<div class="shop-item limited ${available ? '' : 'disabled'}" data-id="kompot">
-                <div class="shop-item-icon">🥤</div>
+            const available = friendship >= TODAY_LIMITED.price;
+            html += `<div class="shop-item limited ${available ? '' : 'disabled'}" data-id="limited_today">
+                <div class="shop-item-icon">${TODAY_LIMITED.icon}</div>
                 <div class="shop-item-info">
-                    <div class="shop-item-title">компот от юли</div>
-                    <div class="shop-item-desc">+40 сытости · попадёт в сумку</div>
-                    <div class="shop-limited-timer">осталось: ${hours}ч ${mins}мин</div>
+                    <div class="shop-item-title">${TODAY_LIMITED.name}</div>
+                    <div class="shop-item-desc">+${TODAY_LIMITED.hunger} сытости · попадёт в сумку</div>
+                    <div class="shop-limited-timer">до ${Math.floor(remaining/3600000)}ч ${Math.floor((remaining%3600000)/60000)}мин</div>
                 </div>
-                <div class="shop-item-price">20</div>
+                <div class="shop-item-price">${TODAY_LIMITED.price}</div>
             </div>`;
         }
 
@@ -1838,11 +1872,13 @@ function renderVitrinaPanel() {
     function buyFood(id) {
         if (state === 'sleeping') { addSystemMessage('сначала разбуди меня!'); return; }
 
-        let item, price;
-        if (id === 'kompot') {
+        let item, price, isLimited = false, recordId = null;
+        if (id === 'limited_today') {
             if (getLimitedOfferRemaining() <= 0) return;
-            item = { icon: '🥤', title: 'компот от юли', hunger: 40, isLimited: true };
-            price = 20;
+            item = { icon: TODAY_LIMITED.icon, title: TODAY_LIMITED.name, hunger: TODAY_LIMITED.hunger, isLimited: true, desc: TODAY_LIMITED.desc };
+            price = TODAY_LIMITED.price;
+            isLimited = true;
+            recordId = TODAY_LIMITED.id;
         } else {
             item = SHOP_ITEMS.find(i => i.id === id);
             if (!item) return;
@@ -1859,18 +1895,22 @@ function renderVitrinaPanel() {
 
         /* В инвентарь */
         addToInventory({
-            id: (id === 'kompot' ? 'kompot_' + Date.now() : id + '_' + Date.now()),
+            id: (isLimited ? recordId + '_' + Date.now() : id + '_' + Date.now()),
             icon: item.icon,
             title: item.title,
             hunger: item.hunger,
-            isLimited: item.isLimited || false,
+            isLimited: isLimited,
+            desc: item.desc || '',
             date: getMskDateKey()
         });
 
-        /* В витрину, если лимит */
-        if (id === 'kompot') {
-            const rec = vitrinaRecords.find(r => r.id === 'kompot_01_10_26');
+        if (isLimited && recordId) {
+            const rec = vitrinaRecords.find(r => r.id === recordId);
             if (rec) { rec.bought = true; saveVitrina(); }
+            else {
+                vitrinaRecords.push({ id: recordId, name: item.title, desc: item.desc, date: TODAY_LIMITED.date, bought: true, icon: item.icon });
+                saveVitrina();
+            }
             localStorage.setItem(LIMITED_OFFER_KEY, '0');
         }
 
@@ -2016,6 +2056,7 @@ function renderVitrinaPanel() {
         "что-то мне сегодня лень думать, давай о другом?",
         "многа букаф, ни асилил.",
         "я на такие темы не умею разговаривать("
+        "я умею отвечать лишь на триггер-слова! полноценный диалог со мной не получится. :("
     ];
     const OFFENDED_REPLIES = [
         "я обиделась, знаешь ли.", "извинись, и я подумаю над ответом тебе.",
@@ -2034,7 +2075,7 @@ function renderVitrinaPanel() {
       replies: [
           "компот юли - самое вкусное, что я пробовала в этой жизни!",
           "купи мне компотика юли... я так хочу его попробовать!",
-          "1 октября - единственный день, когда его можно купить!",
+          "1 октября - единственный день, когда его можно было купить!",
           "а ты покормишь меня им?",
           "нямочка, вкуснямочка~"
       ], mood: 'happy' },
@@ -2050,7 +2091,129 @@ function renderVitrinaPanel() {
           "о нет, не напоминай..",
           "да я своего рода тоже могу попасть туда...!"
       ], mood: 'backrooms' },
-        
+
+            /* ---- пицца ---- */
+    { keywords: ['пицца', 'пиццу', 'пиццей', 'пицца твоя', 'твоя пицца'],
+      replies: [
+          "я приготовила пиццу! не то, чтобы я хочу, чтобы ты её попробовал..!",
+          "и вовсе я не готовила её для тебя! правда...",
+          "2 октября - единственный день, когда её можно купить!",
+          "ради тебя я туда даже ананасы добавила... а? я сказала это вслух?",
+          "я старалась сделать её вкусной для тебя~"
+      ], mood: 'happy' },
+
+            /* ---- новые ---- */
+    { keywords: ['темы', 'тема', 'тему', 'темой', 'фон', 'фоны'],
+      replies: ["чтобы открыть новые фоны, попробуй дослушать песни до конца!","тебе нравятся существующие фоны? а что, если я скажу, что можно открыть новые?"], mood: 'happy' },
+    { keywords: ['!хелп', 'хелп', 'хэлп', 'помощь'],
+      replies: ["я умею отвечать лишь на триггер-слова! полноценный диалог со мной не получится. :("], mood: 'neutral' },
+    { keywords: ['новый год', 'нового года', 'новым годом', 'новому году'],
+      replies: ["я обожаю новый год, это мой любимый праздник!","ооо, я люблю новый год!!", (() => { const t = new Date('2027-01-01T00:00:00+03:00').getTime(); const d = t - Date.now(); const days = Math.floor(d/86400000); const h = Math.floor((d%86400000)/3600000); const m = Math.floor((d%3600000)/60000); return `до нового года осталось ${days} дней, ${h} часов и ${m} минут`; })()], mood: 'happy' },
+    { keywords: ['фруктовый', 'фруктовое', 'фруктовая', 'фруктового', 'фруктовому'],
+      replies: ["звучит вкусно...","о, у меня духи фруктового вкуса!"], mood: 'happy' },
+    { keywords: ['я тут'], replies: ["я там!"], mood: 'happy' },
+    { keywords: ['я там'], replies: ["я тут!"], mood: 'happy' },
+    { keywords: ['моргни если'], replies: ["ой, я моргнула, не верь!","*усиленно моргаю*"], mood: 'happy' },
+    { keywords: ['тут'], replies: ["я тут, я тут!","потерял меня?","соскучился?"], mood: 'happy' },
+    { keywords: ['дай'], replies: ["держи, солнце!","для тебя что угодно!","только не урони~"], mood: 'happy' },
+    { keywords: ['думай', 'подумай'], replies: ["думаю... думаю...","я так сильно задумалась, что у меня голова заболела!","хммм...."], mood: 'neutral' },
+    { keywords: ['ютуб', 'ют', 'youtube', 'yt', 'ютюб'],
+      replies: ["мой ютуб-канал? надеюсь, ты подписан, иначе укушу! вот: youtube.com/@kami_voron","ой, хочешь подписаться? держи! youtube.com/@kami_voron","надеюсь, ты не читеришь с получением пасхалок? youtube.com/@kami_voron"], mood: 'happy' },
+    { keywords: ['канал', 'тг', 'телеграм', 'телеграмм', 'телега', 'телегу', 'телегой', 'тгк'],
+      replies: ["мой тгк закрыт для лишних глазок! но в лс можешь написать: t.me/kami_voron","в моём тгк только избранные, и ты в их числе) а если скучно, я всегда здесь: t.me/kami_voron"], mood: 'happy' },
+    { keywords: ['не спи до рассвета', 'не грызи ногти', 'уступи дорогу', 'педагог', 'педагогу', 'пидагог', 'ни германия', 'пидорас', 'жид', 'пидор', 'негр', 'педик', 'нэгр', 'пид', 'нег', 'негритенок', 'инцел', 'ниггер', 'нигга', 'нига', 'гомик', 'петух', 'хач', 'куколд', 'симп'],
+      replies: ["ОООЙ, ОСУЖДАЮ!!","ты что такое говоришь?! осуждаю!!","асууу!!"], mood: 'angry' },
+    { keywords: ['не давай'], replies: ["ну раз не давай, то не давай..."], mood: 'neutral' },
+    { keywords: ['отказ', 'отказываю'], replies: ["оу... ну хорошо :(","ох.. ну ладно :("], mood: 'neutral' },
+    { keywords: ['ок', 'соглашаюсь', 'окей'], replies: ["ура!! супер","ура-ура!! я рада"], mood: 'happy' },
+    { keywords: ['нота', 'до', 'ре', 'ми', 'фа', 'соль', 'ля', 'си'],
+      replies: ["распеваешься? 🎶","ля-ля-ля 🎵","🎵🎶🎵🎶"], mood: 'happy' },
+    { keywords: ['спой', 'пой', 'петь', 'споешь', 'споёшь', 'запой'],
+      replies: ["я знаю твой телефон, но никогда не позвоню... 🎵🎶","снова космос хочется взять и, в песне воспеть, чего ради? 🎶🎵"], mood: 'happy' },
+    { keywords: ['нюта', 'нюте', 'нютой', 'нюту'],
+      replies: ["кукла ты в чужих руках, но с дуба рухнул, если ты подумал, что ни раз ни в чём и не был виноватым никогда, да 🎶","дорогая нюта, я вижу, ты искренне не понимаешь всего... 🎵","глупа ты, нюта, мала и бестактна, молю тебя, как повзрослеешь, о людях не думай, что все абсолютно добры или все абсолютно ублюдки... 🎶"], mood: 'neutral' },
+    { keywords: ['альфред', 'альфреду', 'альфредом', 'мишка', 'мишкой', 'мишаня', 'мишку'],
+      replies: ["нас сюжет куда-то несёт, но нам достаточно в жизни счастливый конец — и всё... 🎶","альфред, держи себя в руках! 🐻"], mood: 'neutral' },
+    { keywords: ['любовь', 'любовью', 'любовной', 'люби меня', 'люби', 'полюбить'],
+      replies: ["люби меня любовной любовью!","любовью любовной люби меня!","я полюбить любую не смогу, помни!","любимую люблю, люблю лишь тебя~","любовью в сердце отзываются чувства, и по-любому это чувства любви!","буду любить тебя любовной любовью, и ты меня любовной любовью люби!"], mood: 'teasing' },
+    { keywords: ['хорни'], replies: ["кто? ты? не знаю, чем тебе помочь..."], mood: 'neutral' },
+    { keywords: ['бесит', 'бесишь', 'бесил', 'бесила', 'выбесила', 'выбесило', 'выбесил', 'взбесил', 'вызбесила', 'взбесило', 'достал', 'достало', 'раздражает', 'раздражаешь'],
+      replies: ["охх, успокойся, солнце..","спокойно, спокойно, всё хорошо!","спокойствие, только спокойствие!"], mood: 'neutral' },
+    { keywords: ['летишь', 'полёт', 'самолёт', 'самолет', 'полет', 'лететь', 'полетишь', 'прилетишь', 'поездка', 'поезду', 'полетом', 'полета'],
+      replies: ["пока не планирую никуда лететь, хаха!"], mood: 'neutral' },
+    { keywords: ['колобок повесился', 'чебурашка оглох', 'русалка села на шпагат', 'бегемот застрял в болоте', 'буратино утонул', 'лысый поехал в пустыню', 'ёж с кирпичом'],
+      replies: ["ну капец, а чёт пооригинальнее не придумал?"], mood: 'neutral' },
+    { keywords: ['я забыл', 'я забыла'], replies: ["вспоминай скорее!!"], mood: 'happy' },
+    { keywords: ['забыла', 'ты забыла'], replies: ["пупупу, опять я что-то забыла..."], mood: 'neutral' },
+    { keywords: ['забота', 'заботу', 'заботой'], replies: ["заботься обо мне через кнопочку сверху слева!!"], mood: 'happy' },
+    { keywords: ['для тебя'], replies: ["для меняяя???"], mood: 'happy' },
+    { keywords: ['для себя'], replies: ["для тебя что угодно!"], mood: 'happy' },
+    { keywords: ['печалик', 'веселик', 'весёлик'],
+      replies: ["я такой печалик, когда кто-то плачет...","я такой весёлик, когда всё иначе!"], mood: 'happy' },
+    { keywords: ['океан', 'море', 'озеро', 'речка', 'река', 'бассейн'],
+      replies: ["ля, щас бы искупаться там!"], mood: 'happy' },
+    { keywords: ['лужа', 'болото', 'тина'], replies: ["ну уж нет, там я купаться не буду!"], mood: 'neutral' },
+    { keywords: ['какая ты рыбка', 'какая ты рыба'], replies: ["я - акула! ам!"], mood: 'happy' },
+    { keywords: ['чиз'], replies: ["чииииз... не, так только вася может произносить)"], mood: 'happy' },
+    { keywords: ['какая ты'], replies: ["самая лучшая из всех!"], mood: 'happy' },
+    { keywords: ['я дам'], replies: ["я буду хранить это...","я буду беречь это!"], mood: 'happy' },
+    { keywords: ['чуешь'], replies: ["чую)"], mood: 'happy' },
+    { keywords: ['плавай', 'плыви'], replies: ["уже натягиваю купальник..~"], mood: 'happy' },
+    { keywords: ['пожарник'], replies: ["да, я мечтала, будучи детсадовцем, быть пожарником..."], mood: 'neutral' },
+    { keywords: ['программист'], replies: ["да, я хотела пойти на программиста в средней школе..."], mood: 'neutral' },
+    { keywords: ['дизайнер'], replies: ["да, я хотела быть дизайнером в 9 классе..."], mood: 'neutral' },
+    { keywords: ['дабл клик', 'даббл клик', 'даблклик'], replies: ["У НЕГО ДАБЛ КЛИК!!!!"], mood: 'laughing' },
+    { keywords: ['кто я?'], replies: ["ты - мой лучший друг!"], mood: 'happy' },
+    { keywords: ['некий шанс', 'шанс'], replies: ["есть некий шанс..."], mood: 'neutral' },
+    { keywords: ['рарити', 'рэрити'], replies: ["это модная поняшка, знак щедрости. мне больше нравятся другие! :("], mood: 'neutral' },
+    { keywords: ['твайлайт', 'спаркл'], replies: ["это умная поняшка, знак магии. любимая пони юли! потому что фиолетовая)"], mood: 'happy' },
+    { keywords: ['искорка', 'сумеречная'], replies: ["вообще-то её зовут твайлайт спаркл! 🤬"], mood: 'angry' },
+    { keywords: ['рэйнбоу', 'дэш', 'деш', 'рейнбоу'], replies: ["радужная поняшка, знак верности. она мне нравится, прикольная :>"], mood: 'happy' },
+    { keywords: ['радуга'], replies: ["вообще-то её зовут рэйнбоу дэш! 🤬"], mood: 'angry' },
+    { keywords: ['пинки', 'пай', 'пинкамина'], replies: ["одна из моих любимых поняшек, знак радости :>"], mood: 'happy' },
+    { keywords: ['флаттершай', 'флаттер', 'флатер', 'шай', 'флатершай'], replies: ["моя самая любимая поняшка, и мой кинн :3 знак доброты! и она такая милашка~"], mood: 'happy' },
+    { keywords: ['эплджек', 'эпл джек', 'эпплджек', 'эппл джек'], replies: ["деревенщина поня, знак честности, не люблю её..."], mood: 'neutral' },
+    { keywords: ['концерт', 'концерты', 'концертик'], replies: ["чей концерт? когда?!","концерт? я иду!!"], mood: 'happy' },
+    { keywords: ['поиграть', 'играть'], replies: ["играть?? пошли!!"], mood: 'happy' },
+    { keywords: ['погладить', 'гладить', 'глажу'], replies: ["урр... спасибо за это~","мне очень приятно.. ~"], score: 2, mood: 'happy' },
+    { keywords: ['mzlff crew', 'mzlffcrew'], replies: ["да, было время..."], mood: 'neutral' },
+    { keywords: ['башня'], replies: ["слушаю, пилот?","пилот, а ну за работу!"], mood: 'neutral' },
+    { keywords: ['поподробнее', 'подробнее'], replies: ["никаких подробностей!"], mood: 'happy' },
+    { keywords: ['ссылка', 'ссылку', 'ссылкой', 'ссылке'],
+      replies: ["ссылки на мои соц. сетки - youtube.com/@kami_voron и t.me/kami_voron"], mood: 'happy' },
+    { keywords: ['просплю', 'проспишь', 'проспала', 'проспал'],
+      replies: ["я не просплю ничего!! только учёбу, разве что)"], mood: 'happy' },
+    { keywords: ['апчхи', 'пчхи', 'апчи', 'чихаю', 'чихнул', 'чихнула'], replies: ["будь здоров!"], mood: 'happy' },
+    { keywords: ['сабо', 'ло', 'луффи', 'зоро', 'нами'], replies: ["да, это персонаж из ванписа"], mood: 'neutral' },
+    { keywords: ['эйс', 'эйса', 'эйсу', 'эйсом'],
+      replies: ["это муж юли! был...","в сердце юли он жив всегда..."], mood: 'neutral' },
+    { keywords: ['ванпис', 'ван', 'пис', 'писа', 'писом', 'пису', 'кусок'],
+      replies: ["я запланировала посмотреть ремейк ванписа кста!","очень интересно, но чересчур много серий, а ещё рисовка старая, это отталкивает...","любимое аниме юли!"], mood: 'happy' },
+    { keywords: ['птица'], replies: ["ворон!"], mood: 'happy' },
+    { keywords: ['ворон'], replies: ["яяяя! 🐦‍⬛️"], mood: 'happy' },
+    { keywords: ['любимое животное'], replies: ["мне очень нравятся лисички! а ещё панды!"], mood: 'happy' },
+    { keywords: ['тотемное животное'], replies: ["я думаю, мое тотемное животное - панда :> она миленькая, валяется, кушает и спит, ну я!"], mood: 'happy' },
+    { keywords: ['трахер', 'трахать', 'трах', 'трахнуть'], replies: ["ой-ой-ой, не надо мне такого...😳"], mood: 'teasing' },
+    { keywords: ['уже приехали'], replies: ["нет, ещё не приехали","да, приехали!"], mood: 'neutral' },
+    { keywords: ['тот кто всегда'], replies: ["чувак.. ты все испортил..."], mood: 'neutral' },
+    { keywords: ['невдуплёныш', 'невдупленыш', 'в скорлупке'], replies: ["кто невдупленыш? яяяя?!"], mood: 'angry' },
+    { keywords: ['у тебя'], replies: ["у меня... есть такое..."], mood: 'neutral' },
+    { keywords: ['световой'], replies: ["световых нет, только теневые!"], mood: 'happy' },
+    { keywords: ['город, в котором меня нет', 'город в котором меня нет'],
+      replies: ["одно из моих любимых аниме про перемотку времени!","там такой эндинг крутецкий, ух!"], mood: 'happy' },
+    { keywords: ['бабочка'], replies: ["🦋 это действие имеет последствия."], mood: 'neutral' },
+    { keywords: ['лис', 'лиса', 'лисичка'], replies: ["да, мне очень нравятся лисички! 🦊"], mood: 'happy' },
+    { keywords: ['стар', 'против сил зла', 'баттерфляй', 'звездочка', 'силам зла', 'марко', 'диаз', 'том'],
+      replies: ["ты говоришь про мой самый любимый мультик??","о боже, я обожаю стар против сил зла!!","старко канон!!"], mood: 'happy' },
+    { keywords: ['life is strange', 'лайф ис', 'стрендж', 'лайв ис'],
+      replies: ["игрулька для подростков, про перемотку времени. не играла в нее."], mood: 'neutral' },
+    { keywords: ['соник х', 'кексики', 'соник ехе', 'соник экзе', 'слендер', 'утопленник'],
+      replies: ["страшилка..."], mood: 'neutral' },
+    { keywords: ['майнкрафт', 'майн', 'minecraft'],
+      replies: ["мне очень нравится строить вишнёвые домики там!!","не люблю ванильное выживание, мне больше интересно строить всякое!"], mood: 'happy' },
+    { keywords: ['сосу', 'с осу', 'сосать', 'соси', 'насасывай', 'насоси', 'высоси', 'высасывай'],
+      replies: ["соси)"], mood: 'teasing' },
+    { keywords: ['osu', 'осу'], replies: ["моя самая любимая ритм-игра!","а ты пойдешь со мной в осу??"], mood: 'happy' },
         { keywords: ['класс', 'пон', 'понятно', 'супер', 'ясно', 'ладно'], replies: ["пончик, пончик","ваще класс","ладно-ладно","понятненько"], mood: 'happy' },
         { keywords: ['шучу', 'шутка', 'пошутил', 'пошутила'], replies: ["забавно)","смешняво)","я похихикала)"], mood: 'laughing' },
         { keywords: ['бейба', 'бейби', 'малышка', 'малыш'], replies: ["кто, яяяя?","ну да, я малюточка)"], mood: 'teasing' },
@@ -2091,7 +2254,7 @@ function renderVitrinaPanel() {
         { keywords: ['утопия'], replies: ["вижу как ты мертвецки устал...."], mood: 'neutral' },
         { keywords: ['день рождения', 'др'], replies: ["я родилась 6 июля.","6 июля, запиши в календарике!","мой день рождения? 6 июля, не проспи!","теперь ты приглашён, 6 июля!"], mood: 'happy' },
         { keywords: ['амням'], replies: ["это и есть амням"], mood: 'happy' },
-        { keywords: ['где живёшь'], replies: ["в твоём сердечке, конечно! ❤️"], mood: 'happy' },
+        { keywords: ['где живёшь', 'где живешь', 'живешь', 'живёшь', 'обитаешь'], replies: ["в твоём сердечке, конечно! ❤️"], mood: 'happy' },
         { keywords: ['соня'], replies: ["я соня? или ты про сестру васи?"], mood: 'neutral' },
         { keywords: ['сестра васи', 'сестру васи'], replies: ["сестру васи зовут соня! у нее день рождения 29 января"], mood: 'neutral' },
         { keywords: ['лапки', 'руки'], replies: ["у меня лапки 🥺"], mood: 'happy' },
@@ -2106,18 +2269,18 @@ function renderVitrinaPanel() {
         { keywords: ['обнимать', 'обнимаю', 'объятия', 'обними', 'обнимашки', 'объятие', 'обнял', 'обняла', 'обнять'], replies: ["*робко обняла* 🥺","*нежно обнимаю* 🥺"], score: 2, mood: 'happy' },
         { keywords: ['поцелуй', 'поцелую', 'целуй', 'целую', 'чмок', 'муа', 'поцелуйчик'], replies: ["*посылаю воздушный поцелуй* 😋","умф... *робко целую в щёчку* 🥺","я... я же стесняюсь...","*целую в лобик*"], mood: 'teasing' },
         { keywords: ['грустно', 'грустново', 'плохо', 'плоховато', 'тяжело', 'тяжеловато', 'депресся', 'депрессия', 'тоскливо', 'печально', 'печалька'], replies: ["э-эй, не грусти!! я тут, знаешь ли","ну-у чего ты? 🥺 иди обниму!","расскажи, что случилось?"], mood: 'neutral' },
-        { keywords: ['стринова', 'стринову', 'стриновы', 'стриновой', 'подрыв', 'вспышка', 'вспышкой', 'вспышку', 'вспышке'], replies: ["блин, может каточку во вспышку?)","о, гоу со мной во вспышку!!","там в стринове скоро добавят экстракшен мод...","мне немного одиноко играть одной :(","жаль, что ты не пойдешь со мной играть.."], mood: 'happy' },
+        { keywords: ['strinova', 'стринова', 'стринову', 'стриновы', 'стриновой', 'подрыв', 'вспышка', 'вспышкой', 'вспышку', 'вспышке'], replies: ["блин, может каточку во вспышку?)","о, гоу со мной во вспышку!!","там в стринове скоро добавят экстракшен мод...","мне немного одиноко играть одной :(","жаль, что ты не пойдешь со мной играть.."], mood: 'happy' },
         { keywords: ['рафт', 'рафтом', 'рафту'], replies: ["ох, я там такой кораблище забацала!","обожаю рафт блин, жаль, что мы нечасто собираемся в него...","мне нужны доски, БОЛЬШЕ ДОСОК!","э-эй, я приготовила кучу рыбы, почему никто не ест?!"], mood: 'happy' },
-        { keywords: ['мимесис', 'прэтфолл', 'пратфолл', 'претфолл', 'скамлайн', 'скам лайн', 'мека хамелеон', 'мека', 'хамелеон', 'фазма', 'фазмафобия', 'гамба', 'солар', 'соларпанк', 'сигаме', 'сигама', 'сигейм', 'богос', 'чикен хорс', 'курица лошадь', 'джекбокс', 'пати бокс', 'патибокс', 'гартик', 'бункер', 'меме полис', 'мемеполис', 'шарарам', 'роблокс', 'фейт', 'триггер'], replies: ["может, однажды ещё соберемся в эту веселую игрульку, однажды...","когда-нибудь точно у всех совпадут расписания и мы пойдём играть в это..."], mood: 'neutral' },
+        { keywords: ['машин пати', 'воид трейн', 'войд трейн', 'воидтрейн', 'voidtrain', 'void train', 'мимесис', 'mimesis', 'прэтфолл', 'пратфолл', 'претфолл', 'pratfall', 'скамлайн', 'скам лайн', 'scamline', 'scam line', 'мека хамелеон', 'мека', 'хамелеон', 'фазма', 'фазмафобия', 'гамба', 'солар', 'соларпанк', 'solarpunk', 'сигаме', 'сигама', 'сигейм', 'sigame', 'богос', 'чикен хорс', 'курица лошадь', 'jackbox', 'джекбокс', 'жекбокс', 'жехбох', 'жека', 'жеку', 'жеке', 'tomodachi', 'томодачи', 'тамадачи', 'томадачи', 'тамодачи', 'partybox', 'party box', 'пати бокс', 'патибокс', 'gartic' 'гартик', 'бункер', 'меме полис', 'memepolice', 'meme police', 'мемеполис', 'шарарам', 'roblox', 'роблокс', 'fate trigger', 'фейт', 'триггер'], replies: ["может, однажды ещё соберемся в эту веселую игрульку, однажды...","когда-нибудь точно у всех совпадут расписания и мы пойдём играть в это..."], mood: 'neutral' },
         { keywords: ['хес', 'хесус', 'авгн', 'jesusavgn', 'hesus'], replies: ["110","ихихяхя","это уже ихи или это хяхя?","нина, голова болит","вот и дымайте, вот те на те"], mood: 'laughing' },
         { keywords: ['хрен в томате'], replies: ["вот те на те)"], mood: 'laughing' },
         { keywords: ['мазеллов', 'илья', 'мзлфф', 'мзифф', 'мазелов', 'mzlff', 'mazellovvv', 'коряков'], replies: ["кому мы оставим мир, если даже всех нас некому спасти?...","мало ребёнком быть, сложней остаться им взрослым...","и в твоих руках моё сердце, оставь себе ❤️","спасибо всем, дальше — хуже, путь долгий, но будет что вспомнить...","вас побеждает ворона, нас побеждаете вы!","и души переплетаясь, тянут всё за собой в этот мерзкий медленный танец...","давай меняться: тебе это, тебе это — по рукам","а чё грустить? можно кататься без очереди все дни!","альфред, держи себя в руках... 🐻","нас сюжет куда-то несёт, о нам достаточно в жизни счастливый конец — и всё..."], mood: 'neutral' },
-        { keywords: ['звездное дитя', 'звёздное дитя', 'ребенок идола', 'ребёнок идола', 'oshi no ko', 'арима', 'кана', 'мемчо', 'мемто', 'ай хошино', 'хошино', 'руби', 'бикомачи', 'би комачи'], replies: ["о, речь про моё любимое аниме!!","ах, звездное дитя... когда же 4 сезон уже?~","ля, щас бы опенинги оттуда сыграть на пианинко","кана, моя любимая каночка...","anata no aidoru, sign wa B! chu!~ ой, запелась я что-то."], mood: 'happy' },
-        { keywords: ['врата штейна', 'steins gate', 'штейн', 'курису', 'макисэ', 'окабэ', 'ринтаро', 'фэйрис', 'маюши', 'маюри'], replies: ["ой, часики маюши опять остановились..."], mood: 'neutral' },
+        { keywords: ['звездное дитя', 'звёздное дитя', 'ребенок идола', 'ребёнок идола', 'oshi no ko', 'арима', 'кана', 'мемчо', 'мемто', 'ай хошино', 'хошино', 'руби', 'бикомачи', 'би комачи', 'айдол', 'айдолство', 'айдола', 'идол', 'дитя'], replies: ["о, речь про моё любимое аниме!!","ах, звездное дитя... когда же 4 сезон уже?~","ля, щас бы опенинги оттуда сыграть на пианинко","кана, моя любимая каночка...","anata no aidoru, sign wa B! chu!~ ой, запелась я что-то."], mood: 'happy' },
+        { keywords: ['врата штейна', 'steins gate', 'штейн', 'курису', 'макисэ', 'окабэ', 'ринтаро', 'фэйрис', 'маюши', 'маюри', 'врата'], replies: ["ой, часики маюши опять остановились..."], mood: 'neutral' },
         { keywords: ['басня', 'басню', 'басне', 'фэйбл', 'фейбл', 'fable'], replies: ["да, я поставила этому аниме 9 баллов, и что с того?!","ну, это забавное аниме, смешнявое"], mood: 'neutral' },
         { keywords: ['аниме', 'анимехи', 'анимеха', 'анимешки', 'анимешка', 'аниму', 'что смотришь', 'какое смотришь'], replies: ["прямо сейчас я ликую, что закончилась игра лжецов, хаха!","думаю-думаю, какое бы аниме ещё заспидранить на 3х...","думаю, может, пересмотреть лов лайв?","пока не знаю что посмотреть, посоветуешь что-нибудь?"], mood: 'neutral' },
         { keywords: ['манга', 'маньхуа', 'манхва', 'мангу', 'что читаешь', 'какое читаешь'], replies: ["я пока не читаю мангу, но аниме смотрю! онгоинги, в основном","ой, я что-то и забыла, что можно что-то читать...","манга - тоже литература!","ой, мне так лень читать, многа букаф...."], mood: 'neutral' },
-        { keywords: ['пианино', 'синтезатор', 'пианинко', 'потрунькать'], replies: ["ля, после такого аж захотелось потрунькать","ооо, щас бы на пианинко сыграть!","ой, а если я сыграю тебе в дсе на пианино, ты послушаешь? 🥺"], mood: 'happy' },
+        { keywords: ['пианино', 'синтезатор', 'пианинко', 'потрунькать', 'пиано'], replies: ["ля, после такого аж захотелось потрунькать","ооо, щас бы на пианинко сыграть!","ой, а если я сыграю тебе в дсе на пианино, ты послушаешь? 🥺"], mood: 'happy' },
         { keywords: ['дружба', 'друзья', 'друг', 'подруга', 'очки', 'счёт', 'очков', 'насколько мы близки'],
           replies: [() => `у нас сейчас ${friendship} очков дружбы, между прочим!`, () => `наша с тобой дружба числится в очках, их целых ${friendship}!`], mood: 'happy' },
         { keywords: ['67', 'сикс', 'севен', 'брейнрот'], replies: ["67","67 67 67 67 67 67 67 67 67","сикс севен бреееейнроооот","да этот мем уже устарел, не?"], mood: 'laughing' },
@@ -2138,7 +2301,7 @@ function renderVitrinaPanel() {
         { keywords: ['спать', 'сон', 'устал', 'устала', 'хочу спать'], replies: ["иди поспи, я подожду~","сон - это святое!!","я тоже хочу спать, но я здесь, пока ты со мной","а может пойдем спать вместе?"], mood: 'neutral' },
         { keywords: ['пока', 'до свидания', 'увидимся', 'я пойду', 'я отойду', 'я ушел', 'я ушла', 'прощай', 'спокойной ночи'], replies: ["пока-пока, возвращайся скорее!","не уходи надолго, ладно?...","ох, я буду тебя ждать... здесь...","нет, не покидай меня..."], mood: 'neutral' },
         { keywords: ['как дела', 'как ты', 'что делаешь', 'чем занята', 'шо делаешь', 'чего делаешь', 'шо скажешь'], replies: ["у меня всё хорошо, я спала вот... правда меня разбудили","скучала по тебе, если честно...","да так, чиллю, валяюсь","да так, работу всё ищу...","мне немножко было скучно, но с тобой теперь мне весело!!"], mood: 'neutral' },
-        { keywords: ['привет', 'прив', 'хай', 'здаров', 'здравствуй', 'хаюшки', 'доброе утро', 'добрый день', 'добрый вечер', 'доброй ночи'], replies: ["ооо, привет-привет~","приивеееет!! я ждала тебя~","доброго времени суток!~ как ты?","урааа!! ты пришёл~","прив!! я соскучилась~"], mood: 'happy' }
+        { keywords: ['привет', 'прив', 'хай', 'здаров', 'здравствуй', 'ку', 'хаюшки', 'доброе утро', 'добрый день', 'добрый вечер', 'доброй ночи'], replies: ["ооо, привет-привет~","приивеееет!! я ждала тебя~","доброго времени суток!~ как ты?","урааа!! ты пришёл~","прив!! я соскучилась~"], mood: 'happy' }
     ];
 
     function matchesTrigger(text, keyword) {
@@ -2299,6 +2462,73 @@ function renderVitrinaPanel() {
     }
 
     const chatChoices = document.getElementById('chatChoices');
+        /* ===== СПЕЦИАЛЬНЫЕ ТРИГГЕРЫ (с логикой) ===== */
+    function checkSpecialTriggers(text) {
+        const t = text.toLowerCase().trim();
+
+        /* Коричневый — открывает 3 темы */
+        if (['коричневый', 'коричневого', 'коричневому', 'коричневая', 'коричневое'].some(k => t.includes(k))) {
+            let unlocked = false;
+            ['brown1', 'brown2', 'brown3'].forEach(name => {
+                if (!document.querySelector(`.theme-btn[data-theme="${name}"]`)) {
+                    unlocked = true;
+                    const btn = document.createElement('button');
+                    btn.className = 'theme-btn';
+                    btn.dataset.theme = name;
+                    btn.title = 'коричневая';
+                    const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
+                    btn.style.background = colors[name];
+                    document.querySelector('.theme-switcher').appendChild(btn);
+                    btn.addEventListener('click', () => handleThemeClick(btn));
+                }
+            });
+            if (unlocked) {
+                localStorage.setItem('petBrownUnlocked', '1');
+                giveCustomAchievement('brown', '🤎', 'коричневый фанат', 'открыл коричневые темы',
+                    'о, коричневый - любимый цвет васи!', 'happy');
+            }
+            return { text: 'о, коричневый - любимый цвет васи!', mood: 'happy' };
+        }
+
+        /* Фиолетовый — меняет тему рандомно */
+        if (['фиолетовый', 'фиолетовое', 'фиолетовая', 'фиолетовому', 'фиолетового'].some(k => t.includes(k))) {
+            const themes = ['violet', 'lavender', 'lilac'];
+            const chosen = themes[Math.floor(Math.random() * themes.length)];
+            document.body.className = 'theme-' + chosen;
+            localStorage.setItem('petTheme', chosen);
+            return { text: 'о, фиолетовый - любимый цвет юли! и мой тоже!', mood: 'happy' };
+        }
+
+        /* Радужный / RGB — открывает RGB-тему */
+        if (['радужный', 'rgb', 'ргб', 'радужное', 'радужная'].some(k => t.includes(k))) {
+            if (!document.querySelector('.theme-btn[data-theme="rgb"]')) {
+                const btn = document.createElement('button');
+                btn.className = 'theme-btn';
+                btn.dataset.theme = 'rgb';
+                btn.title = 'rgb';
+                btn.style.background = 'linear-gradient(135deg, #ff0000, #00ff00, #0000ff)';
+                document.querySelector('.theme-switcher').appendChild(btn);
+                btn.addEventListener('click', () => handleThemeClick(btn));
+                localStorage.setItem('petRgbUnlocked', '1');
+                giveCustomAchievement('rgb', '🌈', 'радуга', 'открыл RGB-тему',
+                    'зря ты это сказал...', 'laughing');
+            }
+            return { text: 'зря ты это сказал... береги глаза...', mood: 'laughing' };
+        }
+
+        /* Сон по просьбе */
+        if (['спи', 'усни', 'поспи', 'отдохни', 'лежи', 'ложись', 'отдыхай', 'засыпай', 'ленись'].some(k => {
+            const norm = ' ' + t.replace(/[^\p{L}\p{N}]+/gu, ' ') + ' ';
+            return norm.includes(' ' + k + ' ');
+        })) {
+            if (state !== 'sleeping') {
+                setTimeout(() => goToSleep(), 1500);
+                return { text: 'хорошо!', mood: 'happy' };
+            }
+        }
+
+        return null;
+    }
     function handleMemeEaster(meme) {
         chatBlocked = true;
         chatPanel.classList.add('has-choices');
@@ -2381,11 +2611,25 @@ function renderVitrinaPanel() {
             addSystemMessage('[чит] неизвестная команда.');
             return;
         }
-        messagesSent++;
+               messagesSent++;
         localStorage.setItem('petMessagesSent', messagesSent);
         touchInteraction();
         addStat('mood', 1);
         if (meme) { handleMemeEaster(meme); return; }
+
+        /* Специальные триггеры с логикой */
+        const special = checkSpecialTriggers(text);
+        if (special) {
+            const typing0 = addTypingIndicator();
+            setTimeout(() => {
+                typing0.remove();
+                addChatMessage('pet', special.text);
+                if (special.mood) showChatReaction(special.mood);
+                changeFriendship(1);
+            }, 500);
+            return;
+        }
+
         checkAllAchievements();
         const result = findChatReply(text);
         if (result.apology) setOffended(false);
@@ -2763,13 +3007,47 @@ function renderVitrinaPanel() {
     }
     if (localStorage.getItem('petBackroomsUnlocked') === '1') unlockBackroomsTheme();
     if (localStorage.getItem('petYarararaUnlocked') === '1') unlockYarararaTheme();
-
+    if (localStorage.getItem('petBrownUnlocked') === '1') {
+        ['brown1', 'brown2', 'brown3'].forEach(name => {
+            if (!document.querySelector(`.theme-btn[data-theme="${name}"]`)) {
+                const btn = document.createElement('button');
+                btn.className = 'theme-btn';
+                btn.dataset.theme = name;
+                btn.title = 'коричневая';
+                const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
+                btn.style.background = colors[name];
+                document.querySelector('.theme-switcher').appendChild(btn);
+                btn.addEventListener('click', () => handleThemeClick(btn));
+            }
+        });
+    }
+    if (localStorage.getItem('petRgbUnlocked') === '1') {
+        if (!document.querySelector('.theme-btn[data-theme="rgb"]')) {
+            const btn = document.createElement('button');
+            btn.className = 'theme-btn';
+            btn.dataset.theme = 'rgb';
+            btn.title = 'rgb';
+            btn.style.background = 'linear-gradient(135deg, #ff0000, #00ff00, #0000ff)';
+            document.querySelector('.theme-switcher').appendChild(btn);
+            btn.addEventListener('click', () => handleThemeClick(btn));
+        }
+    }
     if (isOffended) petWidget.classList.add('offended');
 
     /* ==========================================================
        ДЕВ-ЛОГ
        ========================================================== */
     const DEVLOG = [
+        {
+            version: 'v 1.0.3', date: '2 окт 2026',
+            changes: [
+                'исправление багов',
+                'добавлена расширенная база триггер-фраз для чата',
+                'добавлено 7 новых пасхальных цветных фона',
+                'добавлено новое ограниченное предложение',
+                'добавлен новый интерактив (удары, поцелуи, поглаживания и приказ уснуть)',
+            ]
+        },
         {
             version: 'v 1.0.2', date: '1 окт 2026',
             changes: [
