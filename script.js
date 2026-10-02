@@ -1438,6 +1438,7 @@ document.addEventListener('DOMContentLoaded', () => {
             vitrinaPanel.classList.toggle('open');
             renderVitrinaPanel();
         });
+    }
 
     achBtn.addEventListener('click', () => {
         achPanel.classList.toggle('open');
