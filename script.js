@@ -832,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return 0;
     }
-    musicNextBtn.addEventListener('click', () => loadTrack(getNextVisibleTrack(currentTrack + 1), true);
+    musicNextBtn.addEventListener('click', () => loadTrack(getNextVisibleTrack(currentTrack + 1), true));
     musicRepeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
         musicRepeatBtn.classList.toggle('active', isRepeat);
