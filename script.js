@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('petTheme', 'tomorrow');
         }
 
-        /* Меняем персонажа */
+        /* Меняем персонажа и фиксируем его на весь трек */
         cancelIdlePhrase();
         clearInterval(blinkTimer);
         clearTimeout(idleTimer); clearTimeout(sleepTimer);
@@ -553,15 +553,29 @@ document.addEventListener('DOMContentLoaded', () => {
         showLayer('tomorrow16');
         setMood('neutral');
 
-        /* Фраза */
+        /* Фраза — но НЕ вызываем finishDialog, а возвращаемся в свой idle */
         setTimeout(() => {
             if (state === 'sleeping') return;
-            forcePlayPhrase({ text: 'что-то меняется...', mood: 'neutral' }, finishDialog);
+            cancelIdlePhrase();
+            setState('talking');
+            petSpeech.textContent = 'что-то меняется...';
+            showSpeech(true);
+            setMood('neutral');
+            clearTimeout(talkTimer);
+            talkTimer = setTimeout(() => {
+                showSpeech(false);
+                setMood(null);
+                enterIdle();
+            }, 2500);
         }, 800);
     }
-
     function tomorrowEnd() {
         tomorrowActive = false;
+     /* Возвращаем её в обычное состояние, если сидит */
+        if (state === 'idle') {
+            setMood(null);
+            enterIdle();
+        }
     }
 
     function unlockTomorrowTheme() {
@@ -833,6 +847,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showLayer('yararara15');
             document.body.className = 'theme-yararara';
         }
+        /* ФИКС: если это who's ready for tomorrow — показать 16.png */
+        if (currentTrack === 5) {
+            tomorrowActive = true;
+            showLayer('tomorrow16');
+            if (!themeLock) document.body.className = 'theme-tomorrow';
+        }
     });
 
     audioEl.addEventListener('pause', () => {
@@ -852,6 +872,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentTrack === 4 && yarararaActive) {
             clearInterval(blinkTimer);
             showLayer('yararara15');
+            return;
+        }
+        /* ФИКС: при паузе на who's ready for tomorrow — показать 16.png */
+        if (currentTrack === 5 && tomorrowActive) {
+            clearInterval(blinkTimer);
+            showLayer('tomorrow16');
             return;
         }
         if (state === 'idle') enterIdle();
@@ -3222,6 +3248,11 @@ function renderVitrinaPanel() {
             clearInterval(blinkTimer);
             return;
         }
+        if (tomorrowActive) {
+            showLayer('tomorrow16');
+            clearInterval(blinkTimer);
+            return;
+        }
         showLayer('idle');
         clearInterval(blinkTimer);
         blinkTimer = setInterval(() => {
@@ -3243,6 +3274,10 @@ function renderVitrinaPanel() {
             showLayer('yararara15');
             return;
         }
+        if (tomorrowActive) {
+            showLayer('tomorrow16');
+            return;
+        }
         setState('sleeping');
         showSpeech(false); setMood(null);
         themeChanges = 0;
@@ -3257,6 +3292,10 @@ function renderVitrinaPanel() {
         }
         if (yarararaActive) {
             showLayer('yararara15');
+            return;
+        }
+        if (tomorrowActive) {
+            showLayer('tomorrow16');
             return;
         }
         showLayer('wake');
