@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.className = 'theme-yararara';
         }
         /* ФИКС: если это who's ready for tomorrow — показать 16.png */
-        if (currentTrack === 5) {
+        if (currentTrack === 6) {
             tomorrowActive = true;
             showLayer('tomorrow16');
             if (!themeLock) document.body.className = 'theme-tomorrow';
@@ -875,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         /* ФИКС: при паузе на who's ready for tomorrow — показать 16.png */
-        if (currentTrack === 5 && tomorrowActive) {
+        if (currentTrack === 6 && tomorrowActive) {
             clearInterval(blinkTimer);
             showLayer('tomorrow16');
             return;
