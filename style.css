@@ -2164,3 +2164,10 @@ body.theme-pink3 { --bg: #5a2840; --accent: #ffd8e8; --speech-bg: rgba(70, 30, 5
     color: var(--accent);
     text-shadow: 0 0 8px rgba(226,106,106,0.6);
 }
+body.theme-tomorrow {
+    --bg: #d7fe05;
+    --accent: #2a2a00;
+    --speech-bg: rgba(30, 40, 0, 0.92);
+    --speech-border: #d7fe05;
+    background: #d7fe05 !important;
+}
