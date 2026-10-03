@@ -129,7 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
           events: [
               { time: 1, action: 'loveSongBegin' }
           ],
-          onEnd: 'loveSongEnd' }
+          onEnd: 'loveSongEnd' },
+        { file: 'music/7.m4a', title: "who's ready for tomorrow",
+          events: [
+              { time: 1, action: 'tomorrowBegin' }
+          ],
+          onEnd: 'tomorrowEnd' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -168,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let onPlayTriggeredForTrack = -1;
     let backroomsActive = false;
     let yarararaActive = false;
+    let tomorrowActive = false;
 
     /* Фикс кликов по видео */
     ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'dblclick'].forEach(evt => {
@@ -325,6 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (t.title !== 'ヤラララ / YARARARA' && yarararaActive) {
             resetYararara();
         }
+                if (t.title !== "who's ready for tomorrow" && tomorrowActive) {
+            tomorrowActive = false;
+        }
 
         if (state === 'idle') { setMood(null); enterIdle(); }
         if (autoplay) playTrack();
@@ -388,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (ev.action === 'backroomsBegin') backroomsBegin();
         else if (ev.action === 'yarararaBegin') yarararaBegin();
         else if (ev.action === 'loveSongBegin') loveSongBegin();
+        else if (ev.action === 'tomorrowBegin') tomorrowBegin();
     }
 
     function showFlashback() {
@@ -509,6 +519,58 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.dataset.theme = 'yararara';
         btn.title = 'ярарара';
         btn.style.background = 'linear-gradient(135deg, #e01720, #8a0a0f)';
+        document.querySelector('.theme-switcher').appendChild(btn);
+        btn.addEventListener('click', () => handleThemeClick(btn));
+    }
+        /* ===== WHO'S READY FOR TOMORROW ===== */
+    function tomorrowBegin() {
+        if (tomorrowActive) return;
+        tomorrowActive = true;
+
+        /* Открываем тему, если ещё нет */
+        if (!localStorage.getItem('petTomorrowUnlocked')) {
+            localStorage.setItem('petTomorrowUnlocked', '1');
+            unlockTomorrowTheme();
+            giveCustomAchievement('tomorrow', '🟡', 'кто готов к завтрашнему дню',
+                "прослушал who's ready for tomorrow",
+                'интересно, что будет завтра...', 'neutral');
+        } else {
+            unlockTomorrowTheme();
+        }
+
+        /* Меняем фон (если не стоит лок) */
+        if (!themeLock) {
+            document.body.className = 'theme-tomorrow';
+            localStorage.setItem('petTheme', 'tomorrow');
+        }
+
+        /* Меняем персонажа */
+        cancelIdlePhrase();
+        clearInterval(blinkTimer);
+        clearTimeout(idleTimer); clearTimeout(sleepTimer);
+        clearTimeout(idlePhrase1); clearTimeout(idlePhrase2);
+        stopBreathing();
+        showLayer('tomorrow16');
+        setMood('neutral');
+
+        /* Фраза */
+        setTimeout(() => {
+            if (state === 'sleeping') return;
+            forcePlayPhrase({ text: 'что-то меняется...', mood: 'neutral' }, finishDialog);
+        }, 800);
+    }
+
+    function tomorrowEnd() {
+        tomorrowActive = false;
+    }
+
+    function unlockTomorrowTheme() {
+        if (document.querySelector('.theme-btn[data-theme="tomorrow"]')) return;
+        const btn = document.createElement('button');
+        btn.className = 'theme-btn';
+        btn.dataset.theme = 'tomorrow';
+        btn.title = 'кислотный';
+        btn.style.background = '#d7fe05';
         document.querySelector('.theme-switcher').appendChild(btn);
         btn.addEventListener('click', () => handleThemeClick(btn));
     }
@@ -810,6 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (track && track.onEnd === 'backroomsEnd') backroomsEnd();
         if (track && track.onEnd === 'yarararaEnd') yarararaEnd();
         if (track && track.onEnd === 'loveSongEnd') loveSongEnd();
+        if (track && track.onEnd === 'tomorrowEnd') tomorrowEnd();
         if (isRepeat) {
             firedEvents = new Set(); onPlayTriggeredForTrack = -1;
             stopRandomSing(); specificSingActive = false;
@@ -927,7 +990,8 @@ document.addEventListener('DOMContentLoaded', () => {
         happy1: 'images/8.png', happy2: 'images/9.png', angry: 'images/10.png',
         laugh: 'images/11.png', tease: 'images/12.png',         flashback: 'images/13.png',
         backrooms14: 'images/14.png',
-        yararara15: 'images/15.png'
+        yararara15: 'images/15.png',
+        tomorrow16: 'images/16.png'
     };
     Object.values(IMAGES).forEach(src => { const i = new Image(); i.src = src; });
 
@@ -1408,6 +1472,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="ach-info">
                                 <div class="ach-title">любовная любовь</div>
                                 <div class="ach-desc">открыл шестой трек</div>
+                            </div>
+                            <div class="ach-status">✓</div>
+                        </div>`;
+                    }
+                      if (id === 'tomorrow') {
+                        return `<div class="ach-item unlocked">
+                            <div class="ach-icon">🟡</div>
+                            <div class="ach-info">
+                                <div class="ach-title">готов к завтрашнему дню</div>
+                                <div class="ach-desc">прослушал who's ready for tomorrow</div>
                             </div>
                             <div class="ach-status">✓</div>
                         </div>`;
@@ -3250,6 +3324,17 @@ function renderVitrinaPanel() {
             forcePlayPhrase({ text: 'брр, у меня странные ощущения от этого фона...', mood: 'neutral' }, finishDialog);
             return;
         }
+                if (theme === 'tomorrow') {
+            cancelIdlePhrase();
+            clearInterval(blinkTimer);
+            clearTimeout(idleTimer); clearTimeout(sleepTimer);
+            clearTimeout(idlePhrase1); clearTimeout(idlePhrase2);
+            stopBreathing();
+            showLayer('tomorrow16');
+            setMood('neutral');
+            forcePlayPhrase({ text: 'что-то меняется...', mood: 'neutral' }, finishDialog);
+            return;
+        }
         if (theme === 'yararara') {
             yarararaActive = true;
             cancelIdlePhrase();
@@ -3313,6 +3398,7 @@ function renderVitrinaPanel() {
             if (localStorage.getItem('petLoveSongUnlocked') === '1') {
         const loveTrack = TRACKS.find(t => t.title === 'любовная любовь');
         if (loveTrack) loveTrack.hidden = false;
+        renderTrackList();
         ['pink1', 'pink2', 'pink3'].forEach((name) => {
             if (document.querySelector(`.theme-btn[data-theme="${name}"]`)) return;
             const btn = document.createElement('button');
@@ -3325,6 +3411,9 @@ function renderVitrinaPanel() {
             document.querySelector('.theme-switcher').appendChild(btn);
             btn.addEventListener('click', () => handleThemeClick(btn));
         });
+    }
+        if (localStorage.getItem('petTomorrowUnlocked') === '1') {
+        unlockTomorrowTheme();
     }
     if (localStorage.getItem('petRgbUnlocked') === '1') {
         if (!document.querySelector('.theme-btn[data-theme="rgb"]')) {
@@ -3348,6 +3437,7 @@ function renderVitrinaPanel() {
             version: 'v 1.0.4', date: '3 окт 2026',
             changes: [
                 'исправление багов',
+                'добавлен новый трек, тема, спрайт и ачивка',
                 'добавлены новые триггер-фразы для чата',
                 'добавлено новое ограниченное предложение',
                 'переименованы коричневые и розовые темы',
