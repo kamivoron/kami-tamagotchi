@@ -3374,6 +3374,7 @@ function renderVitrinaPanel() {
             showLayer('piano17');
             clearInterval(blinkTimer);
             return;
+        }
         if (backroomsActive) {
             showLayer('backrooms14');
             clearInterval(blinkTimer);
