@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const SPAM_WINDOW    = 2000;
     const SPAM_THRESHOLD = 5;
     let isVideoPlaying   = false;
+    let pianoMode        = false;
+    let pianoAudio       = null;
+    let lastPianoIndex   = -1;
     let themeLock = localStorage.getItem('petThemeLock') === '1';
 
     /* ===== СТАТЫ ===== */
@@ -650,6 +653,99 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(heart);
         setTimeout(() => heart.remove(), 5500);
     }
+        /* ===== ПИАНИНО ===== */
+    const PIANO_TRACKS = [
+        { file: 'music/piano1.mp3', name: 'опенинг аниме "твоя апрельская ложь"' },
+        { file: 'music/piano2.mp3', name: 'песня из столовой (mlpeg)' },
+        { file: 'music/piano3.mp3', name: 'ajr - world\'s smallest violin' },
+        { file: 'music/piano4.mp3', name: 'эндинг аниме "город, в котором меня нет"' },
+        { file: 'music/piano5.mp3', name: 'опенинг аниме "садистская смесь"' },
+        { file: 'music/piano6.mp3', name: 'эндинг аниме "этот глупый свин не понимает мечту девочки-зайки"' }
+    ];
+
+    function ensurePianoAudio() {
+        if (!pianoAudio) {
+            pianoAudio = new Audio();
+            pianoAudio.volume = 0.7;
+            pianoAudio.addEventListener('ended', () => {
+                if (pianoMode) stopPiano();
+            });
+        }
+        return pianoAudio;
+    }
+
+    function startPiano(forceIndex) {
+        if (state === 'sleeping') return;
+        if (pianoMode) return;
+
+        pianoMode = true;
+
+        /* Сбрасываем другие пасхальные режимы */
+        backroomsActive = false;
+        yarararaActive = false;
+        tomorrowActive = false;
+
+        /* Ставим основную музыку на паузу */
+        if (isPlaying) audioEl.pause();
+
+        /* Выбираем трек */
+        let idx;
+        if (typeof forceIndex === 'number') {
+            idx = forceIndex;
+        } else {
+            idx = Math.floor(Math.random() * PIANO_TRACKS.length);
+            if (PIANO_TRACKS.length > 1 && idx === lastPianoIndex) {
+                idx = (idx + 1) % PIANO_TRACKS.length;
+            }
+        }
+        lastPianoIndex = idx;
+        const track = PIANO_TRACKS[idx];
+
+        /* Сообщение в чат */
+        addChatMessage('pet', `хорошо, я сыграю: ${track.name}. напиши "хватит", чтобы остановить мою игру, и "некст", чтобы я сыграла что-то другое`);
+
+        /* Меняем спрайт на пианино */
+        cancelIdlePhrase();
+        clearInterval(blinkTimer);
+        clearTimeout(idleTimer); clearTimeout(sleepTimer);
+        clearTimeout(idlePhrase1); clearTimeout(idlePhrase2);
+        stopBreathing();
+        setState('idle');
+        showLayer('piano17');
+        setMood('happy');
+
+        /* Играем */
+        const p = ensurePianoAudio();
+        p.src = track.file;
+        p.currentTime = 0;
+        const playPromise = p.play();
+        if (playPromise && playPromise.catch) playPromise.catch(() => {});
+    }
+
+    function stopPiano() {
+        if (!pianoMode) return;
+        pianoMode = false;
+        if (pianoAudio) {
+            pianoAudio.pause();
+            pianoAudio.currentTime = 0;
+        }
+        if (state === 'idle') {
+            setMood(null);
+            enterIdle();
+        }
+    }
+
+    function nextPiano() {
+        if (!pianoMode) return;
+        if (isPlaying) audioEl.pause();
+        if (pianoAudio) {
+            pianoAudio.pause();
+            pianoAudio.currentTime = 0;
+        }
+        pianoMode = false;
+        startPiano();
+    }
+
     /* ===== ВИДЕО ===== */
     function showLocalVideo(src, endAction, startAt, unmute) {
         if (!localVideo || !youtubeOverlay) return;
@@ -828,6 +924,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePlayBtn();
         startMusicNotes();
 
+        /* Если играет пианино — останавливаем его и ругаемся */
+        if (pianoMode && pianoAudio && !pianoAudio.paused) {
+            pianoAudio.pause();
+            addChatMessage('pet', 'тебе что, не нравится моя игра? тогда напиши "хватит" и слушай свою музыку спокойно!');
+        }
+
+        /* Если идёт пианино — не трогаем спрайт */
+        if (pianoMode) return;
+
         /* ФИКС: если она спала — разбудить */
         if (state === 'sleeping') {
             wakeUp();
@@ -861,6 +966,9 @@ document.addEventListener('DOMContentLoaded', () => {
         stopMusicNotes();
         stopRandomSing();
         specificSingActive = false;
+
+        /* Если идёт пианино — не трогаем спрайт */
+        if (pianoMode) return;
 
         /* ФИКС: при паузе на backrooms — показать потерянный кадр, а не idle */
         if (currentTrack === 3 && backroomsActive) {
@@ -1017,7 +1125,8 @@ document.addEventListener('DOMContentLoaded', () => {
         laugh: 'images/11.png', tease: 'images/12.png',         flashback: 'images/13.png',
         backrooms14: 'images/14.png',
         yararara15: 'images/15.png',
-        tomorrow16: 'images/16.png'
+        tomorrow16: 'images/16.png',
+        piano17:    'images/17.png'
     };
     Object.values(IMAGES).forEach(src => { const i = new Image(); i.src = src; });
 
@@ -2822,6 +2931,14 @@ function renderVitrinaPanel() {
         /* ===== СПЕЦИАЛЬНЫЕ ТРИГГЕРЫ (с логикой) ===== */
     function checkSpecialTriggers(text) {
         const t = text.toLowerCase().trim();
+                /* Просьба сыграть на пианино */
+        const pianoWords = ['пианино', 'пиано', 'пианинко', 'синтезатор'];
+        const playWords = ['сыграй', 'поиграй', 'играй', 'исполни', 'потрунькай'];
+        if (pianoWords.some(p => t.includes(p)) && playWords.some(p => t.includes(p))) {
+            if (state === 'sleeping') return null;
+            setTimeout(() => startPiano(), 700);
+            return { text: 'сейчас-сейчас, сажусь за пианино~', mood: 'happy' };
+        }
                 /* Эмодзи-эхо: если сообщение состоит только из эмодзи — отвечаем тем же */
         const emojiOnly = /^[\p{Extended_Pictographic}\uFE0F\u200D\s]+$/u;
         if (emojiOnly.test(text.trim()) && /\p{Extended_Pictographic}/u.test(text.trim())) {
@@ -2974,6 +3091,21 @@ function renderVitrinaPanel() {
         chatInput.value = '';
         updateChatState();
         resetIdleCountdown();
+
+        /* Команды пианино */
+        if (pianoMode) {
+            const cmd = text.trim().toLowerCase();
+            if (cmd === 'хватит' || cmd === 'стоп' || cmd === 'пауза') {
+                addChatMessage('эх, а я ещё хотела сыграть!', 'хорошо, заканчиваю~');
+                setTimeout(() => stopPiano(), 500);
+                return;
+            }
+            if (cmd === 'некст' || cmd === 'ещё' || cmd === 'дальше' || cmd === 'другую') {
+                nextPiano();
+                return;
+            }
+        }
+
         if (isCheat) {
             const result = findChatReply(text);
             if (result.cheat === 'null') {
@@ -3238,6 +3370,10 @@ function renderVitrinaPanel() {
         setState('idle');
         idlePhraseActive = false;
         if (isOffended) { clearInterval(blinkTimer); showLayer('angry'); return; }
+        if (pianoMode) {
+            showLayer('piano17');
+            clearInterval(blinkTimer);
+            return;
         if (backroomsActive) {
             showLayer('backrooms14');
             clearInterval(blinkTimer);
@@ -3266,6 +3402,10 @@ function renderVitrinaPanel() {
     }
     function goToSleep() {
         if (isBusy()) return;
+        if (pianoMode) {
+            showLayer('piano17');
+            return;
+        }
         if (backroomsActive) {
             showLayer('backrooms14');
             return;
@@ -3286,6 +3426,10 @@ function renderVitrinaPanel() {
     function wakeUp() {
         stopBreathing();
         setState('waking');
+        if (pianoMode) {
+            showLayer('piano17');
+            return;
+        }
         if (backroomsActive) {
             showLayer('backrooms14');
             return;
@@ -3310,6 +3454,7 @@ function renderVitrinaPanel() {
     petWidget.addEventListener('click', (e) => {
         if (e.target.closest && e.target.closest('#youtubeOverlay')) return;
         if (careMode) return;
+        if (pianoMode) return;
 
         if (isSpamming()) {
             const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
@@ -3476,6 +3621,7 @@ function renderVitrinaPanel() {
             version: 'v 1.0.4', date: '3 окт 2026',
             changes: [
                 'исправление багов',
+                'добавлен новый интерактив: попроси её сыграть на пианино',
                 'добавлен новый трек, тема, спрайт и ачивка',
                 'добавлены новые триггер-фразы для чата',
                 'добавлено новое ограниченное предложение',
