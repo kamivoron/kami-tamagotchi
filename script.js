@@ -1871,6 +1871,7 @@ function renderVitrinaPanel() {
     /* ==========================================================
        МАГАЗИН И УХОД
        ========================================================== */
+    const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
     const TODAY_LIMITED = {
         id: 'mango_03_10_26',
         icon: '🥭',
