@@ -92,7 +92,7 @@ body {
 /* ============ ТАЙМЕР ============ */
 .timer-panel {
     position: fixed;
-    top: 118px;
+    top: 170px;
     right: 20px;
     display: flex;
     align-items: center;
@@ -1178,7 +1178,7 @@ body.theme-backrooms {
    ========================================================== */
 .stats-panel {
     position: fixed;
-    top: 160px;
+    top: 220px;
     right: 20px;
     display: flex;
     flex-direction: column;
