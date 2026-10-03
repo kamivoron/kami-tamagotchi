@@ -3302,6 +3302,7 @@ function renderVitrinaPanel() {
                 btn.className = 'theme-btn';
                 btn.dataset.theme = name;
                 const brownTitles = { brown1: 'шоколад', brown2: 'какао', brown3: 'кофе' };
+                const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
                 btn.title = brownTitles[name] || 'коричневая';
                 btn.style.background = colors[name];
                 document.querySelector('.theme-switcher').appendChild(btn);
@@ -3317,7 +3318,8 @@ function renderVitrinaPanel() {
             const btn = document.createElement('button');
             btn.className = 'theme-btn';
             btn.dataset.theme = name;
-            btn.title = 'розовая';
+            const pinkTitles = { pink1: 'роза', pink2: 'фуксия', pink3: 'пион' };
+            btn.title = pinkTitles[name] || 'розовая';
             const colors = { pink1: '#3d1a2a', pink2: '#4a2035', pink3: '#5a2840' };
             btn.style.background = colors[name];
             document.querySelector('.theme-switcher').appendChild(btn);
