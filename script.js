@@ -334,8 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (t.title !== 'ヤラララ / YARARARA' && yarararaActive) {
             resetYararara();
         }
-                if (t.title !== "who's ready for tomorrow" && tomorrowActive) {
+        if (t.title !== "who's ready for tomorrow" && tomorrowActive) {
             tomorrowActive = false;
+            if (!themeLock) {
+                const savedTheme = localStorage.getItem('petTheme') || 'dark';
+                document.body.className = savedTheme === 'dark' ? '' : 'theme-' + savedTheme;
+            }
         }
 
         if (state === 'idle') { setMood(null); enterIdle(); }
@@ -418,7 +422,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (backroomsActive) return;
         backroomsActive = true;
         if (!themeLock) document.body.className = 'theme-backrooms';
-        localStorage.setItem('petTheme', 'backrooms');
         cancelIdlePhrase();
         clearInterval(blinkTimer);
         clearTimeout(idleTimer); clearTimeout(sleepTimer);
@@ -473,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (yarararaActive) return;
         yarararaActive = true;
         if (!themeLock) document.body.className = 'theme-yararara';
-        localStorage.setItem('petTheme', 'yararara');
         cancelIdlePhrase();
         clearInterval(blinkTimer);
         clearTimeout(idleTimer); clearTimeout(sleepTimer);
@@ -541,10 +543,9 @@ document.addEventListener('DOMContentLoaded', () => {
             unlockTomorrowTheme();
         }
 
-        /* Меняем фон (если не стоит лок) */
+        /* Меняем фон (если не стоит лок) — НЕ пишем в localStorage, чтобы вернуть пользовательскую тему */
         if (!themeLock) {
             document.body.className = 'theme-tomorrow';
-            localStorage.setItem('petTheme', 'tomorrow');
         }
 
         /* Меняем персонажа и фиксируем его на весь трек */
@@ -627,7 +628,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const chosen = themes[Math.floor(Math.random() * themes.length)];
         if (!themeLock) {
             document.body.className = 'theme-' + chosen;
-            localStorage.setItem('petTheme', chosen);
         }
         /* Запускаем сердечки */
         if (heartInterval) clearInterval(heartInterval);
@@ -1313,6 +1313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { type: 'time', target: 2 * 3600,  icon: "🕐", title: "2 часа",    desc: "ты правда остался на два часа... я впечатлена", text: "2 часа вместе, я впечатлена!", mood: "laughing" },
         { type: 'time', target: 5 * 3600,  icon: "🕔", title: "5 часов",   desc: "пять часов. это уже не случайность, это судьба", text: "5 часов... ты серьёзно?!", mood: "laughing" },
         { type: 'time', target: 10 * 3600, icon: "🌙", title: "10 часов",  desc: "десять часов вместе... ты стал моим теневым", text: "10 часов вместе... ты мой теневой теперь!", mood: "laughing" },
+        { type: 'time', target: 24 * 3600, icon: "🌟", title: "24 часа", desc: "считай, целый день вместе провели, каково тебе жить со мной?", text: "целые сутки вместе! теперь я твоя навсегда~", mood: "laughing" },
         { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",  desc: "отправь ками 1 сообщение", text: "ты написал мне первое сообщение! ура!", mood: "happy" },
         { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",   desc: "отправь ками 5 сообщений", text: "пять сообщений! мы болтаем!", mood: "happy" },
         { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",  desc: "отправь ками 10 сообщений", text: "десять сообщений, так держать!", mood: "happy" },
@@ -1535,7 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const total = ACHIEVEMENTS.length;
         const totalUnlocked = ACHIEVEMENTS.filter(a => shownAchievements.has(achKey(a))).length;
-        const grandTotal = total + (customAchievements.length > 0 ? 1 : 0);
+        const grandTotal = total + customAchievements.length;
 
         let html = `<div class="ach-header">🏆 ачивки · ${totalUnlocked + customAchievements.length}/${grandTotal}</div>`;
 
@@ -1612,6 +1613,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="ach-info">
                                 <div class="ach-title">любовная любовь</div>
                                 <div class="ach-desc">открыл шестой трек</div>
+                            </div>
+                            <div class="ach-status">✓</div>
+                        </div>`;
+                    }
+                      if (id === 'rgb') {
+                        return `<div class="ach-item unlocked">
+                            <div class="ach-icon">🌈</div>
+                            <div class="ach-info">
+                                <div class="ach-title">спасите мои глаза...</div>
+                                <div class="ach-desc">открыл RGB-тему</div>
                             </div>
                             <div class="ach-status">✓</div>
                         </div>`;
@@ -1914,6 +1925,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* Таймер обновления бейджа раз в минуту */
     setInterval(updateDailyBadge, 60000);
+        /* Каждую минуту при общении/музыке/пианино +2 настроения */
+    setInterval(() => {
+        if (state === 'sleeping') return;
+        const recentChat = chatHistory.length > 0
+            && (Date.now() - chatHistory[chatHistory.length - 1].time < 60000);
+        if (isPlaying || pianoMode || recentChat) {
+            addStat('mood', 2);
+        }
+    }, 60000);
 
     /* ==========================================================
        ИНВЕНТАРЬ
@@ -2356,9 +2376,9 @@ function renderVitrinaPanel() {
         careLastX = e.clientX;
         careLastY = e.clientY;
 
-        /* Каждые 40 пикселей движения → +2 чистоты */
-        while (careMovementAccum >= 40 && careGained < 50) {
-            careMovementAccum -= 40;
+        /* Каждые 120 пикселей движения → +2 чистоты */
+        while (careMovementAccum >= 120 && careGained < 50) {
+            careMovementAccum -= 120;
             careGained += 2;
             addStat('cleanliness', 2);
             updateCareProgress();
@@ -2975,7 +2995,7 @@ function renderVitrinaPanel() {
                     const btn = document.createElement('button');
                     btn.className = 'theme-btn';
                     btn.dataset.theme = name;
-                    const brownTitles = { brown1: 'шоколад', brown2: 'какао', brown3: 'кофе' };
+                    const brownTitles = { brown1: 'шоколад', brown2: 'кофе', brown3: 'какао' };
                     btn.title = brownTitles[name] || 'коричневая';
                     const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
                     btn.style.background = colors[name];
@@ -3114,7 +3134,7 @@ function renderVitrinaPanel() {
         if (pianoMode) {
             const cmd = text.trim().toLowerCase();
             if (cmd === 'хватит' || cmd === 'стоп' || cmd === 'пауза') {
-                addChatMessage('эх, а я ещё хотела сыграть!', 'хорошо, заканчиваю~');
+                addChatMessage('pet', 'хорошо, заканчиваю~');
                 setTimeout(() => stopPiano(), 500);
                 return;
             }
@@ -3589,7 +3609,7 @@ function renderVitrinaPanel() {
                 const btn = document.createElement('button');
                 btn.className = 'theme-btn';
                 btn.dataset.theme = name;
-                const brownTitles = { brown1: 'шоколад', brown2: 'какао', brown3: 'кофе' };
+                const brownTitles = { brown1: 'шоколад', brown2: 'кофе', brown3: 'какао' };
                 const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
                 btn.title = brownTitles[name] || 'коричневая';
                 btn.style.background = colors[name];
@@ -3642,7 +3662,14 @@ function renderVitrinaPanel() {
                 'исправление багов',
                 'добавлено 5 новых треков в пианино',
                 'добавлено новое ограниченное предложение',
-                'добавлены новые триггер-фразы'
+                'добавлены новые триггер-фразы',
+                'исправлен счётчик ачивок',
+                'исправлено сообщение при остановке пианино',
+                'добавлена новая ачивка за время с ками',
+                'добавлена особая ачивка за RGB-тему',
+                'увеличено количество движений для расчёсывания и мытья',
+                'добавлен прирост настроения за общение и музыку',
+                'изменены названия коричневых тем'
             ]
         },
                 {
