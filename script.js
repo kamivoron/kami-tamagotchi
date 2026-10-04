@@ -660,7 +660,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/piano3.mp3', name: 'ajr - world\'s smallest violin' },
         { file: 'music/piano4.mp3', name: 'эндинг аниме "город, в котором меня нет"' },
         { file: 'music/piano5.mp3', name: 'опенинг аниме "садистская смесь"' },
-        { file: 'music/piano6.mp3', name: 'эндинг аниме "этот глупый свин не понимает мечту девочки-зайки"' }
+        { file: 'music/piano6.mp3', name: 'эндинг аниме "этот глупый свин не понимает мечту девочки-зайки"' },
+        { file: 'music/piano7.mp3', name: 'stevie wonder - isn\'t she lovely' },
+        { file: 'music/piano8.mp3', name: 'anamanaguchi - miku' },
+        { file: 'music/piano9.mp3', name: 'опенинг аниме "табакошка" (nannmonee)' },
+        { file: 'music/piano10.mp3', name: 'опенинг аниме "евангелион" (a cruel angel\'s thesis)' },
+        { file: 'music/piano11.mp3', name: 'опенинг аниме "первородный грех такопи" (happy lucky chappy)' }
     ];
 
     function ensurePianoAudio() {
@@ -2057,6 +2062,17 @@ if (kompotRec && !kompotRec.desc) {
         });
         saveVitrina();
     }
+        if (!vitrinaRecords.find(r => r.id === 'amniam_04_10_26')) {
+        vitrinaRecords.push({
+            id: 'amniam_04_10_26',
+            name: 'карамелька амняма',
+            desc: 'это и есть амням.. стоп, ты что, своровал у него карамельку? ты жесток...',
+            date: '04.10.26',
+            bought: false,
+            icon: '🍬'
+        });
+        saveVitrina();
+    }
 
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
@@ -2082,12 +2098,12 @@ function renderVitrinaPanel() {
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
     const TODAY_LIMITED = {
-        id: 'mango_03_10_26',
-        icon: '🥭',
-        name: 'мангонан',
-        price: 20,
-        hunger: 45,
-        date: '03.10.26',
+        id: 'amniam_04_10_26',
+        icon: '🍬',
+        name: 'карамелька амняма',
+        price: 7,
+        hunger: 10,
+        date: '04.10.26',
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -2396,6 +2412,8 @@ function renderVitrinaPanel() {
     const APOLOGY_KEYWORDS = ['извини', 'прости', 'сорри', 'соррян', 'соррянчик', 'прошу прощения', 'виноват', 'виновата'];
 
     const CHAT_TRIGGERS = [
+    { keywords: ['мангонан'], replies: ["продавался только 3 октября!"], mood: 'neutral' },
+    { keywords: ['амням', 'карамелька', 'карамельку', 'амняма'], replies: ["продается только 4 октября!", "это и есть амням!"], mood: 'happy' },
             /* ---- компот ---- */
     { keywords: ['компот', 'компота', 'компоту', 'компот юли', 'компотик'],
       replies: [
@@ -2423,7 +2441,7 @@ function renderVitrinaPanel() {
       replies: [
           "я приготовила пиццу! не то, чтобы я хочу, чтобы ты её попробовал..!",
           "и вовсе я не готовила её для тебя! правда...",
-          "2 октября - единственный день, когда её можно купить!",
+          "2 октября - единственный день, когда её можно было купить!",
           "ради тебя я туда даже ананасы добавляла... а? я сказала это вслух?",
           "я старалась сделать её вкусной для тебя~"
       ], mood: 'happy' },
@@ -3619,10 +3637,19 @@ function renderVitrinaPanel() {
        ========================================================== */
     const DEVLOG = [
                 {
+            version: 'v 1.0.5', date: '4 окт 2026',
+            changes: [
+                'исправление багов',
+                'добавлено 5 новых треков в пианино',
+                'добавлено новое ограниченное предложение',
+                'добавлены новые триггер-фразы'
+            ]
+        },
+                {
             version: 'v 1.0.4', date: '3 окт 2026',
             changes: [
                 'исправление багов',
-                'добавлен новый интерактив: попроси её сыграть на пианино',
+                'добавлен новый интерактив (попроси её сыграть на пианино)',
                 'добавлен новый трек, тема, спрайт и ачивка',
                 'добавлены новые триггер-фразы для чата',
                 'добавлено новое ограниченное предложение',
