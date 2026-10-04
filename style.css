@@ -2070,16 +2070,16 @@ body.theme-brown1 {
     --speech-border: #a67c52;
 }
 body.theme-brown2 {
-    --bg: #6b4a32;
-    --accent: #d4a574;
-    --speech-bg: rgba(50, 35, 22, 0.95);
-    --speech-border: #d4a574;
-}
-body.theme-brown3 {
     --bg: #2e1f14;
     --accent: #b08050;
     --speech-bg: rgba(30, 20, 12, 0.95);
     --speech-border: #b08050;
+}
+body.theme-brown3 {
+    --bg: #6b4a32;
+    --accent: #d4a574;
+    --speech-bg: rgba(50, 35, 22, 0.95);
+    --speech-border: #d4a574;
 }
 
 .theme-btn[data-theme="rgb"] {
