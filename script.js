@@ -2997,7 +2997,7 @@ function renderVitrinaPanel() {
                     btn.dataset.theme = name;
                     const brownTitles = { brown1: 'шоколад', brown2: 'кофе', brown3: 'какао' };
                     btn.title = brownTitles[name] || 'коричневая';
-                    const colors = { brown1: '#3a2820', brown2: '#5a4030', brown3: '#2a1e18' };
+                    const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
                     btn.style.background = colors[name];
                     document.querySelector('.theme-switcher').appendChild(btn);
                     btn.addEventListener('click', () => handleThemeClick(btn));
@@ -3610,7 +3610,7 @@ function renderVitrinaPanel() {
                 btn.className = 'theme-btn';
                 btn.dataset.theme = name;
                 const brownTitles = { brown1: 'шоколад', brown2: 'кофе', brown3: 'какао' };
-                const colors = { brown1: '#3a2820', brown2: '#5a4030', brown3: '#2a1e18' };
+                const colors = { brown1: '#3a2820', brown2: '#2a1e18', brown3: '#5a4030' };
                 btn.title = brownTitles[name] || 'коричневая';
                 btn.style.background = colors[name];
                 document.querySelector('.theme-switcher').appendChild(btn);
