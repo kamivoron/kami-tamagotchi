@@ -1314,6 +1314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { type: 'time', target: 5 * 3600,  icon: "🕔", title: "5 часов",   desc: "пять часов. это уже не случайность, это судьба", text: "5 часов... ты серьёзно?!", mood: "laughing" },
         { type: 'time', target: 10 * 3600, icon: "🌙", title: "10 часов",  desc: "десять часов вместе... ты стал моим теневым", text: "10 часов вместе... ты мой теневой теперь!", mood: "laughing" },
         { type: 'time', target: 24 * 3600, icon: "🌟", title: "24 часа", desc: "считай, целый день вместе провели, каково тебе жить со мной?", text: "целые сутки вместе! теперь я твоя навсегда~", mood: "laughing" },
+        { type: 'time', target: 48 * 3600, icon: "💞", title: "48 часов с ками", desc: "мы с тобой вместе уже два дня... как детей назовём?~", text: "два дня вместе! как детей назовём?~", mood: "teasing" },
         { type: 'messages', target: 1,   icon: "✉",  title: "первое слово",  desc: "отправь ками 1 сообщение", text: "ты написал мне первое сообщение! ура!", mood: "happy" },
         { type: 'messages', target: 5,   icon: "✉",  title: "5 сообщений",   desc: "отправь ками 5 сообщений", text: "пять сообщений! мы болтаем!", mood: "happy" },
         { type: 'messages', target: 10,  icon: "💬", title: "10 сообщений",  desc: "отправь ками 10 сообщений", text: "десять сообщений, так держать!", mood: "happy" },
@@ -2093,6 +2094,17 @@ if (kompotRec && !kompotRec.desc) {
         });
         saveVitrina();
     }
+        if (!vitrinaRecords.find(r => r.id === 'organic_05_10_26')) {
+        vitrinaRecords.push({
+            id: 'organic_05_10_26',
+            name: 'жареная органика',
+            desc: 'блюдо. привыкнуть можно ко всему. даже если это не очень похоже на еду.',
+            date: '05.10.26',
+            bought: false,
+            icon: '🍖'
+        });
+        saveVitrina();
+    }
 
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
@@ -2118,12 +2130,12 @@ function renderVitrinaPanel() {
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
     const TODAY_LIMITED = {
-        id: 'amniam_04_10_26',
-        icon: '🍬',
-        name: 'карамелька амняма',
-        price: 7,
+        id: 'organic_05_10_26',
+        icon: '🍖',
+        name: 'жареная органика',
+        price: 12,
         hunger: 10,
-        date: '04.10.26',
+        date: '05.10.26',
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -3656,6 +3668,13 @@ function renderVitrinaPanel() {
        ДЕВ-ЛОГ
        ========================================================== */
     const DEVLOG = [
+                {
+            version: 'v 1.0.6', date: '5 окт 2026',
+            changes: [
+                'добавлено новое ограниченное предложение',
+                'добавлена новая ачивка за время с ками'
+            ]
+        },
                 {
             version: 'v 1.0.5', date: '4 окт 2026',
             changes: [
