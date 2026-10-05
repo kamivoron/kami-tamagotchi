@@ -665,7 +665,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/piano8.mp3', name: 'anamanaguchi - miku' },
         { file: 'music/piano9.mp3', name: 'опенинг аниме "табакошка" (nannmonee)' },
         { file: 'music/piano10.mp3', name: 'опенинг аниме "евангелион" (a cruel angel\'s thesis)' },
-        { file: 'music/piano11.mp3', name: 'опенинг аниме "первородный грех такопи" (happy lucky chappy)' }
+        { file: 'music/piano11.mp3', name: 'опенинг аниме "первородный грех такопи" (happy lucky chappy)' },
+        { file: 'music/piano12.mp3', name: 'опенинг аниме "врата штейна" (hacking to the gate)' },
+        { file: 'music/piano13.mp3', name: 'the living tombstone - it\'s been so long' }
     ];
 
     function ensurePianoAudio() {
