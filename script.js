@@ -133,11 +133,142 @@ document.addEventListener('DOMContentLoaded', () => {
               { time: 1, action: 'loveSongBegin' }
           ],
           onEnd: 'loveSongEnd' },
-        { file: 'music/7.m4a', title: "who's ready for tomorrow",
+                { file: 'music/7.m4a', title: "who's ready for tomorrow",
           events: [
               { time: 1, action: 'tomorrowBegin' }
           ],
-          onEnd: 'tomorrowEnd' }
+          onEnd: 'tomorrowEnd' },
+
+        /* ===== mzlff ===== */
+        { file: 'music/8.mp3', title: 'mzlff - бессмертен' },
+        { file: 'music/9.mp3', title: 'mzlff - страбоскоп' },
+        { file: 'music/10.mp3', title: 'mzlff - руку на пульсе' },
+        { file: 'music/11.mp3', title: 'mzlff - станционный смотритель' },
+        { file: 'music/12.mp3', title: 'mzlff - эдемово яблоко' },
+        { file: 'music/13.mp3', title: 'mzlff - смерть на перепутье' },
+        { file: 'music/14.mp3', title: 'mzlff - история о семействе мушек с хорошей концовкой' },
+        { file: 'music/15.mp3', title: 'mzlff - отражение' },
+        { file: 'music/16.mp3', title: 'mzlff - город за горизонтом' },
+        { file: 'music/17.mp3', title: 'mzlff - графиками выходных' },
+        { file: 'music/18.mp3', title: 'mzlff - бес концепта' },
+        { file: 'music/19.mp3', title: 'mzlff - девочка из аптечной' },
+        { file: 'music/20.mp3', title: 'mzlff - неудачный фильм' },
+        { file: 'music/21.mp3', title: 'mzlff - космоцветок' },
+        { file: 'music/22.mp3', title: 'mzlff - новая муза' },
+        { file: 'music/23.mp3', title: 'mzlff - шестьдесят минут' },
+        { file: 'music/24.mp3', title: 'mzlff - эвкалиптова ветвь' },
+        { file: 'music/25.mp3', title: 'mzlff - диана' },
+        { file: 'music/26.mp3', title: 'mzlff - сказка о теневом мире' },
+        { file: 'music/27.mp3', title: 'mzlff, ксх - противоречие выборов' },
+        { file: 'music/28.mp3', title: 'mzlff - люцифер стихотворное' },
+        { file: 'music/29.mp3', title: 'mzlff - в абрикосовой долине' },
+        { file: 'music/30.mp3', title: 'mzlff - оттепель' },
+        { file: 'music/31.mp3', title: 'mzlff, всегдамечтал - это моя весна' },
+        { file: 'music/32.mp3', title: 'mzlff - увидимся следующим летом' },
+        { file: 'music/33.mp3', title: 'mzlff - капель' },
+        { file: 'music/34.mp3', title: 'mzlff - бумажный самолет' },
+        { file: 'music/35.mp3', title: 'firstfeel, beatcaster, юг 404, n.masteroff, mzlff, фрик пати, monrau, золотое перо, booker, delorenzy, skurt - atm 3' },
+        { file: 'music/36.mp3', title: 'mzlff, стинт - первый секс' },
+        { file: 'music/37.mp3', title: 'mzlff - беспорядочная сказка' },
+        { file: 'music/38.mp3', title: 'mzlff - который ищет маяк' },
+        { file: 'music/39.mp3', title: 'mzlff - позже будет больнее' },
+        { file: 'music/40.mp3', title: 'mzlff - человейники' },
+        { file: 'music/41.mp3', title: 'mzlff - глобальный вайп' },
+        { file: 'music/42.mp3', title: 'mzlff - аэростат' },
+        { file: 'music/43.mp3', title: 'mzlff - тэм на коллеж' },
+        { file: 'music/44.mp3', title: 'mzlff - кто-то должен опылять цветок' },
+        { file: 'music/45.mp3', title: 'mzlff - рожденный умереть' },
+        { file: 'music/46.mp3', title: 'mzlff, qwiza - ты рядом' },
+        { file: 'music/47.mp3', title: 'mzlff - не то, что ты хотела бы слышать под лоуфай' },
+        { file: 'music/48.mp3', title: 'mzlff - оттепели не быть' },
+        { file: 'music/49.mp3', title: 'mzlff - тебе понравится' },
+        { file: 'music/50.mp3', title: 'mzlff - царапка' },
+        { file: 'music/51.mp3', title: 'mzlff, серега пират - я не боюсь ошибаться' },
+        { file: 'music/52.mp3', title: 'mzlff - почему космос не пишет про нас' },
+        { file: 'music/53.mp3', title: 'mzlff, sted.d - однополярности' },
+        { file: 'music/54.mp3', title: 'mzlff - дорога из миннесоты' },
+        { file: 'music/55.mp3', title: 'mzlff - родинки' },
+        { file: 'music/56.mp3', title: 'mzlff - снежинка' },
+        { file: 'music/57.mp3', title: 'mzlff - мое имя' },
+        { file: 'music/58.mp3', title: 'mzlff - анабиоз' },
+        { file: 'music/59.mp3', title: 'mzlff - красивая красота' },
+        { file: 'music/60.mp3', title: 'mzlff - новогодний' },
+        { file: 'music/61.mp3', title: 'mzlff, слава кпсс - старая панк волна' },
+        { file: 'music/62.mp3', title: 'mzlff - ракушки и ракушки' },
+        { file: 'music/63.mp3', title: 'mzlff, стинт - ты не поймешь' },
+        { file: 'music/64.mp3', title: 'mzlff, cmh - catharsis' },
+        { file: 'music/65.mp3', title: 'mzlff, изтолпы - пойдем со мной' },
+        { file: 'music/66.mp3', title: 'mzlff, cmh - бэйслайн бизнес' },
+        { file: 'music/67.mp3', title: 'mzlff - привет' },
+        { file: 'music/68.mp3', title: 'mzlff, sted.d, канги - буря, метель и мгла' },
+        { file: 'music/69.mp3', title: 'mzlff - для тебя' },
+        { file: 'music/70.mp3', title: 'mzlff - всем вернется' },
+        { file: 'music/71.mp3', title: 'mzlff - поровну' },
+        { file: 'music/72.mp3', title: 'mzlff - в пряничном домике' },
+        { file: 'music/73.mp3', title: 'mzlff - сейв' },
+        { file: 'music/74.mp3', title: 'mzlff, екатерина яшникова - почемучка' },
+        { file: 'music/75.mp3', title: 'mzlff - примагнитило' },
+        { file: 'music/76.mp3', title: 'mzlff - кто убил лирический рэп' },
+        { file: 'music/77.mp3', title: 'mzlff - ящики' },
+        { file: 'music/78.mp3', title: 'mzlff, слава кпсс - hate core' },
+        { file: 'music/79.mp3', title: 'mzlff, playingtheangel - не создать цветы' },
+        { file: 'music/80.mp3', title: 'mzlff - кладбище спасательных кругов' },
+        { file: 'music/81.mp3', title: 'mzlff, sted.d - другая сторона' },
+        { file: 'music/82.mp3', title: 'mzlff - мои маленькие кошмары' },
+        { file: 'music/83.mp3', title: 'booker, cmh, mzlff, слава кпсс - gde papa longmix' },
+        { file: 'music/84.mp3', title: 'mzlff - чёртово колесо' },
+        { file: 'music/85.mp3', title: 'слава кпсс, skurt, mzlff - rolls royce phantom' },
+        { file: 'music/86.mp3', title: 'mzlff - откат (2025)' },
+        { file: 'music/87.mp3', title: 'mzlff - цветочек маленький (2025)' },
+        { file: 'music/88.mp3', title: 'mzlff - космоцветок (2025)' },
+        { file: 'music/89.mp3', title: 'mzlff - эвкалиптова ветвь (2025)' },
+        { file: 'music/90.mp3', title: 'mzlff - графиками выходных (2025)' },
+        { file: 'music/91.mp3', title: 'mzlff - станционный смотритель (2025)' },
+        { file: 'music/92.mp3', title: 'mzlff - руку на пульсе (2025)' },
+        { file: 'music/93.mp3', title: 'наше последнее лето, mzlff - я устал' },
+        { file: 'music/94.mp3', title: 'mzlff - 1212' },
+        { file: 'music/95.mp3', title: 'mzlff, gspd - мы не станем другими' },
+        { file: 'music/96.mp3', title: 'mzlff, изтолпы, ксх - trinity cypher' },
+        { file: 'music/97.mp3', title: 'mzlff - во дворе' },
+        { file: 'music/98.mp3', title: 'mzlff - с самим собой' },
+        { file: 'music/99.mp3', title: 'mzlff - невыносимо' },
+        { file: 'music/100.mp3', title: 'mzlff - мало-помалу' },
+        { file: 'music/101.mp3', title: 'mzlff - медленный танец' },
+        { file: 'music/102.mp3', title: 'mzlff - phantasmagoria' },
+        { file: 'music/103.mp3', title: 'mzlff - карусель' },
+        { file: 'music/104.mp3', title: 'mzlff - комната смеха' },
+        { file: 'music/105.mp3', title: 'mzlff - автодром' },
+        { file: 'music/106.mp3', title: 'mzlff - свободное падение' },
+        { file: 'music/107.mp3', title: 'mzlff - эпилог' },
+        { file: 'music/108.mp3', title: 'mzlff - айзек' },
+        { file: 'music/109.mp3', title: 'mzlff - культурный слой' },
+        { file: 'music/110.mp3', title: 'mzlff, pyrokinesis - оставь себе' },
+        { file: 'music/111.mp3', title: 'mzlff - обыкновенная жизнь' },
+        { file: 'music/112.mp3', title: 'mzlff - ворона' },
+        { file: 'music/113.mp3', title: 'mzlff - запой' },
+        { file: 'music/114.mp3', title: 'mzlff - разрешаю запрещаю' },
+        { file: 'music/115.mp3', title: 'mzlff - смартик' },
+
+        /* ===== стинт ===== */
+        { file: 'music/116.mp3', title: 'стинт - девочка' },
+        { file: 'music/117.mp3', title: 'стинт - идиот' },
+        { file: 'music/118.mp3', title: 'стинт, mellsher - холода' },
+        { file: 'music/119.mp3', title: 'стинт - хрясь!' },
+        { file: 'music/120.mp3', title: 'стинт - армагеддон' },
+        { file: 'music/121.mp3', title: 'стинт - разбивай' },
+        { file: 'music/122.mp3', title: 'стинт - это не мой вайб' },
+        { file: 'music/123.mp3', title: 'стинт - телепорт' },
+        { file: 'music/124.mp3', title: 'стинт - свистит башка' },
+        { file: 'music/125.mp3', title: 'стинт - выходные' },
+        { file: 'music/126.mp3', title: 'стинт, братишкин - пить тупить' },
+        { file: 'music/127.mp3', title: 'стинт - туда-сюда' },
+        { file: 'music/128.mp3', title: 'стинт - фура' },
+        { file: 'music/129.mp3', title: 'стинт - фуджи' },
+        { file: 'music/130.mp3', title: 'стинт, lida - plastic' },
+        { file: 'music/131.mp3', title: 'стинт - питер-москва' },
+        { file: 'music/132.mp3', title: 'стинт, mzlff - черным по белому' },
+        { file: 'music/133.mp3', title: 'стинт - я ждал тебя вечность' },
+        { file: 'music/134.mp3', title: 'стинт - ля ля ля' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -152,6 +283,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicRepeatBtn = document.getElementById('musicRepeat');
     const musicExpandBtn = document.getElementById('musicExpand');
     const musicList = document.getElementById('musicList');
+    const musicShuffleBtn = document.getElementById('musicShuffle');
+    const musicSearchWrap = document.getElementById('musicSearchWrap');
+    const musicSearchInput = document.getElementById('musicSearch');
     const youtubeOverlay = document.getElementById('youtubeOverlay');
     const youtubeIframe = document.getElementById('youtubeIframe');
     const localVideo = document.getElementById('localVideo');
@@ -174,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isExpanded = false;
     let firedEvents = new Set();
     let onPlayTriggeredForTrack = -1;
+    let isShuffled = false;
     let backroomsActive = false;
     let yarararaActive = false;
     let tomorrowActive = false;
@@ -297,18 +432,27 @@ document.addEventListener('DOMContentLoaded', () => {
             musicList.innerHTML = '<div class="music-track"><span class="music-track-num">—</span>треки не добавлены</div>';
             return;
         }
+        const query = (musicSearchInput && musicSearchInput.value ? musicSearchInput.value : '').trim().toLowerCase();
+        let hasVisible = false;
         TRACKS.forEach((t, i) => {
             if (t.hidden) return;
+            if (query && !t.title.toLowerCase().includes(query)) return;
+            hasVisible = true;
             const row = document.createElement('div');
             row.className = 'music-track' + (i === currentTrack ? ' active' : '');
+            row.dataset.idx = i;
             row.innerHTML = `<span class="music-track-num">${i + 1}</span><span>${t.title}</span>`;
             row.addEventListener('click', () => { loadTrack(i); playTrack(); });
             musicList.appendChild(row);
         });
+        if (!hasVisible) {
+            musicList.innerHTML = '<div class="music-track"><span class="music-track-num">—</span>ничего не найдено</div>';
+        }
     }
     function updateListActive() {
-        musicList.querySelectorAll('.music-track').forEach((el, i) => {
-            el.classList.toggle('active', i === currentTrack);
+        musicList.querySelectorAll('.music-track').forEach(el => {
+            const idx = parseInt(el.dataset.idx, 10);
+            el.classList.toggle('active', idx === currentTrack);
         });
     }
 
@@ -1038,7 +1182,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (audioEl.currentTime > 3) { audioEl.currentTime = 0; firedEvents = new Set(); }
         else loadTrack(currentTrack - 1, true);
     });
-        function getNextVisibleTrack(fromIdx) {
+    function isSpecialTrack(idx) {
+        const t = TRACKS[idx];
+        if (!t) return false;
+        if (t.onEnd) return true;
+        if (t.events) {
+            const specialActions = ['backroomsBegin', 'yarararaBegin', 'loveSongBegin', 'tomorrowBegin'];
+            if (t.events.some(ev => specialActions.includes(ev.action))) return true;
+            if (t.events.some(ev => ev.theme)) return true;
+        }
+        return false;
+    }
+
+    function getShuffleIndex() {
+        const candidates = [];
+        TRACKS.forEach((t, i) => {
+            if (t.hidden) return;
+            if (isSpecialTrack(i)) return;
+            if (i === currentTrack) return;
+            candidates.push(i);
+        });
+        if (candidates.length === 0) return currentTrack;
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    function getNextVisibleTrack(fromIdx) {
+        if (isShuffled) return getShuffleIndex();
         let i = fromIdx;
         for (let step = 0; step < TRACKS.length; step++) {
             const idx = ((i + step) % TRACKS.length + TRACKS.length) % TRACKS.length;
@@ -1056,6 +1225,21 @@ document.addEventListener('DOMContentLoaded', () => {
         isExpanded = !isExpanded;
         musicList.classList.toggle('open', isExpanded);
         musicExpandBtn.classList.toggle('open', isExpanded);
+        musicSearchWrap.classList.toggle('open', isExpanded);
+        if (isExpanded) {
+            setTimeout(() => { if (musicSearchInput) musicSearchInput.focus(); }, 300);
+        }
+    });
+
+    musicShuffleBtn.addEventListener('click', () => {
+        isShuffled = !isShuffled;
+        musicShuffleBtn.classList.toggle('active', isShuffled);
+        musicShuffleBtn.title = isShuffled ? 'перемешать (вкл)' : 'перемешать (выкл)';
+    });
+
+    musicSearchInput.addEventListener('input', () => {
+        renderTrackList();
+        updateListActive();
     });
     musicProgressWrap.addEventListener('click', (e) => {
         if (!audioEl.duration || !isFinite(audioEl.duration)) return;
@@ -3697,6 +3881,9 @@ function renderVitrinaPanel() {
                 {
             version: 'v 1.0.7', date: '6 окт 2026',
             changes: [
+                'в плейлист добавлены треки ильи и стинта',
+                'добавлен поиск по плейлисту',
+                'добавлена кнопка перемешивания треков',
                 'добавлено новое ограниченное предложение',
                 'добавлено 10 новых треков в пианино'
             ]
