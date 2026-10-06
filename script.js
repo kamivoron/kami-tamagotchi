@@ -667,7 +667,17 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/piano10.mp3', name: 'опенинг аниме "евангелион" (a cruel angel\'s thesis)' },
         { file: 'music/piano11.mp3', name: 'опенинг аниме "первородный грех такопи" (happy lucky chappy)' },
         { file: 'music/piano12.mp3', name: 'опенинг аниме "врата штейна" (hacking to the gate)' },
-        { file: 'music/piano13.mp3', name: 'the living tombstone - it\'s been so long' }
+        { file: 'music/piano13.mp3', name: 'the living tombstone - it\'s been so long' },
+        { file: 'music/piano14.mp3', name: 'gooseworx - the one who\'s running the show' },
+        { file: 'music/piano15.mp3', name: 'harry dacre - daisy bell' },
+        { file: 'music/piano16.mp3', name: 'gooseworx - your new home' },
+        { file: 'music/piano17.mp3', name: 'заставка "финес и ферб" (today is gonna be a great day)' },
+        { file: 'music/piano18.mp3', name: 'C418 - chirp' },
+        { file: 'music/piano19.mp3', name: 'encanto - we don\'t talk about bruno' },
+        { file: 'music/piano20.mp3', name: 'эндинг аниме "звёздное дитя 2" (burning)' },
+        { file: 'music/piano21.mp3', name: 'эндинг аниме "100 девушек, которые очень любят тебя 2" (unmei?)' },
+        { file: 'music/piano22.mp3', name: 'gooseworx - main theme' },
+        { file: 'music/piano23.mp3', name: 'ajr - weak' }
     ];
 
     function ensurePianoAudio() {
@@ -2107,6 +2117,18 @@ if (kompotRec && !kompotRec.desc) {
         });
         saveVitrina();
     }
+        if (!vitrinaRecords.find(r => r.id === 'seeds_06_10_26')) {
+        vitrinaRecords.push({
+            id: 'seeds_06_10_26',
+            name: 'секретная позиция',
+            boughtName: 'три семечки',
+            desc: 'вы че ёбнулись? вы чё гоните?',
+            date: '06.10.26',
+            bought: false,
+            icon: '🌰'
+        });
+        saveVitrina();
+    }
 
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
@@ -2117,7 +2139,7 @@ function renderVitrinaPanel() {
         html += `<div class="vitrina-item ${rec.bought ? 'owned' : 'missed'}">
             <div class="vitrina-icon">${rec.icon || (rec.bought ? '🎁' : '🔒')}</div>
             <div class="vitrina-info">
-                <div class="vitrina-title">${rec.bought ? rec.name : '???'}</div>
+                <div class="vitrina-title">${rec.bought ? (rec.boughtName || rec.name) : '???'}</div>
                 ${descHtml}
                 <div class="vitrina-date">${rec.bought ? 'куплено ' + rec.date : 'продавалось ' + rec.date}</div>
             </div>
@@ -2132,12 +2154,13 @@ function renderVitrinaPanel() {
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
     const TODAY_LIMITED = {
-        id: 'organic_05_10_26',
-        icon: '🍖',
-        name: 'жареная органика',
-        price: 12,
-        hunger: 10,
-        date: '05.10.26',
+        id: 'seeds_06_10_26',
+        icon: '🌰',
+        name: 'секретная позиция',
+        inventoryName: 'три семечки',
+        price: 200,
+        hunger: 2,
+        date: '06.10.26',
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -2250,7 +2273,8 @@ function renderVitrinaPanel() {
         let item, price, isLimited = false, recordId = null;
         if (id === 'limited_today') {
             if (getLimitedOfferRemaining() <= 0) return;
-            item = { icon: TODAY_LIMITED.icon, title: TODAY_LIMITED.name, hunger: TODAY_LIMITED.hunger, isLimited: true, desc: TODAY_LIMITED.desc };
+            const inventoryTitle = TODAY_LIMITED.inventoryName || TODAY_LIMITED.name;
+            item = { icon: TODAY_LIMITED.icon, title: inventoryTitle, hunger: TODAY_LIMITED.hunger, isLimited: true, desc: TODAY_LIMITED.desc };
             price = TODAY_LIMITED.price;
             isLimited = true;
             recordId = TODAY_LIMITED.id;
@@ -3671,10 +3695,18 @@ function renderVitrinaPanel() {
        ========================================================== */
     const DEVLOG = [
                 {
+            version: 'v 1.0.7', date: '6 окт 2026',
+            changes: [
+                'добавлено новое ограниченное предложение',
+                'добавлено 10 новых треков в пианино'
+            ]
+        },
+                {
             version: 'v 1.0.6', date: '5 окт 2026',
             changes: [
                 'добавлено новое ограниченное предложение',
-                'добавлена новая ачивка за время с ками'
+                'добавлена новая ачивка за время с ками',
+                'добавлено 2 новых трека в пианино'
             ]
         },
                 {
