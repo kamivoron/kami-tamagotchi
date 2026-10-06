@@ -2171,3 +2171,37 @@ body.theme-tomorrow {
     --speech-border: #d7fe05;
     background: #d7fe05 !important;
 }
+.music-shuffle.active {
+    background: linear-gradient(135deg, #ff5a8a, #ff7a5a);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255,90,138,0.6);
+}
+.music-search-wrap {
+    padding: 0 12px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+}
+.music-search-wrap.open {
+    max-height: 46px;
+    padding: 0 12px 10px;
+}
+.music-search {
+    width: 100%;
+    padding: 7px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text);
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+.music-search:focus { border-color: var(--accent); background: rgba(255,255,255,0.08); }
+.music-search::placeholder { color: rgba(255,255,255,0.35); }
+body.theme-light .music-search {
+    background: rgba(0,0,0,0.05);
+    color: #222;
+    border-color: rgba(0,0,0,0.1);
+}
