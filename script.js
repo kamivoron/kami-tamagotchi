@@ -3109,6 +3109,7 @@ function renderVitrinaPanel() {
     function findChatReply(text) {
         const trimmed = text.trim().toLowerCase();
         if (trimmed === '!null') return { cheat: 'null' };
+        if (trimmed === '!ник' || trimmed === '!nick') return { cheat: 'nick' };
         if (trimmed.startsWith('!give ')) {
             const amount = parseInt(trimmed.slice(6).trim(), 10);
             if (!isNaN(amount)) return { cheat: 'give', amount: amount };
@@ -3451,6 +3452,24 @@ function renderVitrinaPanel() {
                 addSystemMessage(`[чит] добавлено ${result.amount} очков. теперь ${friendship}.`);
                 return;
             }
+            if (result.cheat === 'nick') {
+                const currentNick = localStorage.getItem('petNickname') || '';
+                const nick = prompt('как хочешь, чтобы я к тебе обращалась? (оставь пустым, чтобы убрать)', currentNick);
+                if (nick !== null) {
+                    const trimmed2 = nick.trim();
+                    if (trimmed2) {
+                        localStorage.setItem('petNickname', trimmed2);
+                        addSystemMessage(`[ник] обращение установлено: ${trimmed2}`);
+                        setTimeout(() => {
+                            if (state !== 'sleeping') forcePlayPhrase({ text: `приятно познакомиться, ${trimmed2}! буду так тебя называть~`, mood: 'happy' }, finishDialog);
+                        }, 500);
+                    } else {
+                        localStorage.removeItem('petNickname');
+                        addSystemMessage('[ник] обращение убрано.');
+                    }
+                }
+                return;
+            }
             addSystemMessage('[чит] неизвестная команда.');
             return;
         }
@@ -3788,6 +3807,20 @@ function renderVitrinaPanel() {
         if (e.target.closest && e.target.closest('#youtubeOverlay')) return;
         if (careMode) return;
         if (pianoMode) return;
+                /* Намёк про ник: если streak >= 7 и ник не задан, покажем один раз за сессию */
+        (function() {
+            const streak = parseInt(localStorage.getItem('DAILY_KEY_STREAK') || '0', 10);
+            const hasNick = !!localStorage.getItem('petNickname');
+            const hinted = sessionStorage.getItem('petNickHinted') === '1';
+            if (streak >= 7 && !hasNick && !hinted) {
+                sessionStorage.setItem('petNickHinted', '1');
+                setTimeout(() => {
+                    if (state !== 'sleeping') {
+                        addChatMessage('pet', 'кстати, раз уж ты у меня уже неделю — хочешь, я буду тебя называть как-то по-особенному? напиши мне в чат «!ник»~');
+                    }
+                }, 4000);
+            }
+        })();
 
         if (isSpamming()) {
             const p = SPAM_PHRASES[Math.floor(Math.random() * SPAM_PHRASES.length)];
