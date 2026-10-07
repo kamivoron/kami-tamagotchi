@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
               { time: 5, action: 'yarararaBegin' }
           ],
           onEnd: 'yarararaEnd' },
-        { file: 'music/6.mp3', title: 'любовная любовь',
+        { file: 'music/6.mp3', title: 'стинт - любовная любовь',
           hidden: true,
           events: [
               { time: 1, action: 'loveSongBegin' }
@@ -268,7 +268,46 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/131.mp3', title: 'стинт - питер-москва' },
         { file: 'music/132.mp3', title: 'стинт, mzlff - черным по белому' },
         { file: 'music/133.mp3', title: 'стинт - я ждал тебя вечность' },
-        { file: 'music/134.mp3', title: 'стинт - ля ля ля' }
+        { file: 'music/134.mp3', title: 'стинт - ля ля ля' },
+
+        /* ===== lida ===== */
+        { file: 'music/135.mp3', title: 'lida, cmh - стикер' },
+        { file: 'music/136.mp3', title: 'lida - евробит' },
+        { file: 'music/137.mp3', title: 'lida - amg' },
+        { file: 'music/138.mp3', title: 'lida - лиза' },
+        { file: 'music/139.mp3', title: 'lida, skurt - ᐸ3' },
+        { file: 'music/140.mp3', title: 'lida, morgenstern - цветы' },
+        { file: 'music/141.mp3', title: 'lida - ира' },
+        { file: 'music/142.mp3', title: 'lida - секс' },
+        { file: 'music/143.mp3', title: 'lida, серега пират - чсв' },
+        { file: 'music/144.mp3', title: 'lida - лада турбо спейс' },
+        { file: 'music/145.mp3', title: 'lida - фото со звездой' },
+        { file: 'music/146.mp3', title: 'lida - дубай' },
+        { file: 'music/147.mp3', title: 'lida - кошка' },
+        { file: 'music/148.mp3', title: 'lida - always' },
+        { file: 'music/149.mp3', title: 'lida, tenderlybae - грустный реп' },
+        { file: 'music/150.mp3', title: 'lida - гэнг бэнг' },
+        { file: 'music/151.mp3', title: 'lida - мое имя лида' },
+        { file: 'music/152.mp3', title: 'lida - ради бога' },
+        { file: 'music/153.mp3', title: 'lida - эго' },
+        { file: 'music/154.mp3', title: 'lida - утро' },
+        { file: 'music/155.mp3', title: 'lida - сумасшедшая' },
+        { file: 'music/156.mp3', title: 'lida - лох' },
+        { file: 'music/157.mp3', title: 'lida - лида навсегда' },
+        { file: 'music/158.mp3', title: 'lida - танцуй или умри' },
+        { file: 'music/159.mp3', title: 'lida - фотки' },
+        { file: 'music/160.mp3', title: 'lida - swagga boy' },
+        { file: 'music/161.mp3', title: 'lida - new rock' },
+        { file: 'music/162.mp3', title: 'lida, maybe baby - дурка' },
+        { file: 'music/163.mp3', title: 'lida, sqwoz bab - blum' },
+        { file: 'music/164.mp3', title: 'lida, dk - все что мне осталось от тебя' },
+        { file: 'music/165.mp3', title: 'lida, плм - все будет так' },
+        { file: 'music/166.mp3', title: 'lida - ты сбегала по ночам' },
+        { file: 'music/167.mp3', title: 'lida, baby melo - габба банда' },
+        { file: 'music/168.mp3', title: 'lida - хочешь' },
+        { file: 'music/169.mp3', title: 'lida, greyrock - d3m0n' },
+        { file: 'music/170.mp3', title: 'lida - гиперфикс' },
+        { file: 'music/171.mp3', title: 'lida - тысячи рук' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -2078,6 +2117,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             /* Добавляем в витрину */
             addVitrinaRecord({ id: 'secret_dish', name: 'секретное блюдо', date: getMskDateKey(), bought: true, icon: '🍰' });
+
+            /* Спрашиваем обращение */
+            setTimeout(() => {
+                const currentNick = localStorage.getItem('petNickname') || '';
+                const nick = prompt('как хочешь, чтобы я к тебе обращалась? (оставь пустым, чтобы убрать)', currentNick);
+                if (nick !== null) {
+                    const trimmed = nick.trim();
+                    if (trimmed) {
+                        localStorage.setItem('petNickname', trimmed);
+                        setTimeout(() => {
+                            if (state !== 'sleeping') forcePlayPhrase({ text: `приятно познакомиться, ${trimmed}! буду так тебя называть~`, mood: 'happy' }, finishDialog);
+                        }, 300);
+                    } else {
+                        localStorage.removeItem('petNickname');
+                    }
+                }
+            }, 1500);
+
             if (state !== 'sleeping') forcePlayPhrase({ text: 'вау! секретное блюдо!! спасибо за неделю со мной~', mood: 'laughing' }, finishDialog);
         } else {
             changeFriendship(reward);
@@ -2313,6 +2370,17 @@ if (kompotRec && !kompotRec.desc) {
         });
         saveVitrina();
     }
+        if (!vitrinaRecords.find(r => r.id === 'zebra_07_10_26')) {
+        vitrinaRecords.push({
+            id: 'zebra_07_10_26',
+            name: 'тортик «зебра»',
+            desc: 'идеальный баланс между ванилькой и шоколадом. не слишком сладко - идеально с чаем!',
+            date: '07.10.26',
+            bought: false,
+            icon: '🎂'
+        });
+        saveVitrina();
+    }
 
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
@@ -2337,15 +2405,16 @@ function renderVitrinaPanel() {
        МАГАЗИН И УХОД
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
-    const TODAY_LIMITED = {
-        id: 'seeds_06_10_26',
-        icon: '🌰',
-        name: 'секретная позиция',
-        inventoryName: 'три семечки',
-        price: 200,
-        hunger: 2,
-        date: '06.10.26',
+        const TODAY_LIMITED = {
+        id: 'zebra_07_10_26',
+        icon: '🎂',
+        name: 'тортик «зебра»',
+        price: 15,
+        hunger: 35,
+        date: '07.10.26',
     };
+    const _OLD_TODAY_LIMITED = {
+        id: 'organic_05_10_26',
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
         localStorage.setItem(LIMITED_OFFER_KEY, String(getNextMskMidnight()));
@@ -3080,6 +3149,11 @@ function renderVitrinaPanel() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     function addChatMessage(from, text) {
+        /* Ками добавляет обращение в начало, только в чате */
+        if (from === 'pet') {
+            const nick = localStorage.getItem('petNickname');
+            if (nick) text = nick + ', ' + text;
+        }
         const el = document.createElement('div');
         el.className = 'chat-msg ' + from;
         el.textContent = text;
@@ -3878,6 +3952,14 @@ function renderVitrinaPanel() {
        ДЕВ-ЛОГ
        ========================================================== */
     const DEVLOG = [
+                {
+            version: 'v 1.0.8', date: '7 окт 2026',
+            changes: [
+                'добавлено новое ограниченное предложение',
+                'в плейлист добавлены треки лиды',
+                'добавлена награда на 7-й день ежедневного бонуса'
+            ]
+        },
                 {
             version: 'v 1.0.7', date: '6 окт 2026',
             changes: [
