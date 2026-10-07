@@ -2413,8 +2413,6 @@ function renderVitrinaPanel() {
         hunger: 35,
         date: '07.10.26',
     };
-    const _OLD_TODAY_LIMITED = {
-        id: 'organic_05_10_26',
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
         localStorage.setItem(LIMITED_OFFER_KEY, String(getNextMskMidnight()));
