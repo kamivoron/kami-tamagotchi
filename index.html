@@ -55,25 +55,31 @@
     </div>
 
     <div class="music-player" id="musicPlayer">
+        <div class="music-drag-handle" id="musicDragHandle">⋮⋮⋮</div>
         <div class="music-bar">
             <button class="music-btn" id="musicPrev" title="предыдущий">⏮</button>
             <button class="music-btn music-play" id="musicPlay" title="играть">▶</button>
             <button class="music-btn" id="musicNext" title="следующий">⏭</button>
+
             <div class="music-info">
                 <div class="music-title" id="musicTitle">нет треков</div>
                 <div class="music-progress-wrap" id="musicProgressWrap">
                     <div class="music-progress-fill" id="musicProgressFill"></div>
                 </div>
             </div>
+
             <div class="music-time" id="musicTime">0:00 / 0:00</div>
+
             <div class="music-volume-wrap" title="громкость">
                 <span class="music-vol-icon">🔊</span>
                 <input type="range" class="music-volume" id="musicVolume" min="0" max="1" step="0.01" value="0.7">
             </div>
+
             <button class="music-btn music-shuffle" id="musicShuffle" title="перемешать">🔀</button>
             <button class="music-btn music-repeat" id="musicRepeat" title="повтор">🔁</button>
             <button class="music-btn music-expand" id="musicExpand" title="плейлист">▼</button>
         </div>
+        <div class="music-authors" id="musicAuthors"></div>
         <div class="music-search-wrap" id="musicSearchWrap">
             <input type="text" class="music-search" id="musicSearch" placeholder="поиск трека..." autocomplete="off">
         </div>
@@ -116,7 +122,7 @@
     <div class="care-progress" id="careProgress"></div>
     <button class="theme-lock-btn" id="themeLockBtn" title="не менять фон">🔒</button>
     <div class="reset-video-btn" id="resetVideoBtn" title="ресет плеера">⟲</div>
-    <div class="dev-version" id="devVersion">v 1.0.8</div>
+    <div class="dev-version" id="devVersion">v 1.0.9</div>
 
     <div class="devlog-modal" id="devlogModal">
         <div class="devlog-box">
