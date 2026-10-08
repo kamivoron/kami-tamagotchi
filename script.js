@@ -371,7 +371,69 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/222.mp3', title: 'morgenstern - повод' },
         { file: 'music/223.mp3', title: 'morgenstern - антидепрессанты' },
         { file: 'music/224.mp3', title: 'morgenstern - пустой вокзал' },
-        { file: 'music/225.mp3', title: 'morgenstern - цветок' }
+        { file: 'music/225.mp3', title: 'morgenstern - цветок' },
+
+        /* ===== японское ===== */
+        { file: 'music/226.mp3', title: 'monet - wakacchainaine' },
+        { file: 'music/227.mp3', title: 'deco*27 - vampire' },
+        { file: 'music/228.mp3', title: 'deco*27 - salamander' },
+        { file: 'music/229.mp3', title: 'deco*27 - rabbit hole' },
+        { file: 'music/230.mp3', title: 'deco*27 - monitoring' },
+        { file: 'music/231.mp3', title: 'deco*27 - monitoring (best friend remix)' },
+        { file: 'music/232.mp3', title: 'deco*27 - hello, sekai' },
+        { file: 'music/233.mp3', title: 'deco*27 - telepathy' },
+        { file: 'music/234.mp3', title: 'deco*27 - cherry pop' },
+        { file: 'music/235.mp3', title: 'deco*27 - marshmallow' },
+        { file: 'music/236.mp3', title: 'deco*27 - stuckmoth' },
+        { file: 'music/237.mp3', title: 'deco*27 - love words V' },
+        { file: 'music/238.mp3', title: 'inabakumori - lost umbrella' },
+        { file: 'music/239.mp3', title: 'siinamota - young girl a' },
+        { file: 'music/240.mp3', title: 'hiroki. - which one?' },
+        { file: 'music/241.mp3', title: '32ki - mesmerizer' },
+        { file: 'music/242.mp3', title: 'nakiso - retry now' },
+        { file: 'music/243.mp3', title: 'livetune - tell your world' },
+        { file: 'music/244.mp3', title: 'nashimoto ui - aaaaaaaa' },
+        { file: 'music/245.mp3', title: 'sawtowne - m@gical☆cure! love ♥ shot!' },
+        { file: 'music/246.mp3', title: 'sawtowne - confessions of a rotten girl' },
+        { file: 'music/247.mp3', title: 'syudou - bitter choco decoration' },
+        { file: 'music/248.mp3', title: 'anamanaguchi - miku' },
+        { file: 'music/249.mp3', title: 'nightcord at 25:00 - bug' },
+        { file: 'music/250.mp3', title: 'nightcord at 25:00 - jishou mushoku' },
+        { file: 'music/251.mp3', title: 'nightcord at 25:00 - bocca della verità' },
+        { file: 'music/252.mp3', title: 'nightcord at 25:00 - saisei' },
+        { file: 'music/253.mp3', title: 'touhou project - bad apple!!' },
+        { file: 'music/254.mp3', title: 'pinocchiop - anonymous m' },
+        { file: 'music/255.mp3', title: 'gumi - copycat' },
+        { file: 'music/256.mp3', title: 'gumi, kira - monster' },
+        { file: 'music/257.mp3', title: 'giga - gimme×gimme' },
+        { file: 'music/258.mp3', title: 'maretu - even though i loved you' },
+        { file: 'music/259.mp3', title: 'maretu - suck it up' },
+        { file: 'music/260.mp3', title: 'ぬぬぬぬぬぬ - mimukauwa nice try' },
+        { file: 'music/261.mp3', title: 'hatsune miku - 39 music!' },
+        { file: 'music/262.mp3', title: 'tomodachi no imouto ga ore ni dake uzai (op tv)' },
+        { file: 'music/263.mp3', title: 'mayonaka punch (op tv) - gimme gimme' },
+        { file: 'music/264.mp3', title: 'higurashi (op tv) - happy! lucky! dochy!' },
+        { file: 'music/265.mp3', title: 'takopii no genzai (op) - happy lucky chappy' },
+        { file: 'music/266.mp3', title: 'gnosia (ed tv) - floor killer' },
+        { file: 'music/267.mp3', title: 'giga, gnosia (op tv) - bake no kawa' },
+        { file: 'music/268.mp3', title: '9lana - neo-luddite' },
+        { file: 'music/269.mp3', title: 'the 100 girlfriends who really love you (ed 1 tv) - sweet sign' },
+        { file: 'music/270.mp3', title: 'the 100 girlfriends who really love you (ed 2 tv) - unmei?' },
+        { file: 'music/271.mp3', title: 'the 100 girlfriends who really love you (ed 3 tv) - kore koi itare ai' },
+        { file: 'music/272.mp3', title: 'make a heroine ga oosugiru (op tv) - tsuyogaru girl' },
+        { file: 'music/273.mp3', title: 'oshi no ko (op 1 tv) - idol' },
+        { file: 'music/274.mp3', title: 'oshi no ko (ed 1 tv) - mephisto' },
+        { file: 'music/275.mp3', title: 'oshi no ko (op 2 tv) - fatale' },
+        { file: 'music/276.mp3', title: 'oshi no ko (ed 2 tv) - burning' },
+        { file: 'music/277.mp3', title: 'oshi no ko (op 3 tv) - test me' },
+        { file: 'music/278.mp3', title: 'oshi no ko (ed 3 tv) - serenade' },
+        { file: 'music/279.mp3', title: 'game center shoujo to ibunka kouryuu (ed tv) - amusing flavor' },
+        { file: 'music/280.mp3', title: 'watashi ga koibito ni nareru wake nai jan, muri muri! (op tv) - muri muri shinkaron' },
+        { file: 'music/281.mp3', title: 'lycoris recoil (ed tv) - hana no tou' },
+        { file: 'music/282.mp3', title: 'summertime rendering (ed 2) - shitsuren song takusan kiite naite bakari no watashi wa mou' },
+        { file: 'music/283.mp3', title: 'satsuriku no tenshi (ed) - pray' },
+        { file: 'music/284.mp3', title: 'shoushimin series (op 2 tv) - martian' },
+        { file: 'music/285.mp3', title: 'shoushimin series (ed 2 tv) - sugariddle' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -409,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /* ===== КАРТА АВТОРОВ (индексы в TRACKS, 0-based) ===== */
     const AUTHOR_PLAYLISTS = {
+        'японское':    [3, 4, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284],
         'mzlff':         [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,131],
         'стинт':         [5,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133],
         'lida':          [134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170],
@@ -552,11 +615,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let indices;
 
         if (currentAuthor === 'all') {
-            indices = [];
+            const jpSet = new Set(AUTHOR_PLAYLISTS['японское'] || []);
+            const before = [];
+            const japanese = [];
+            const after = [];
             TRACKS.forEach((t, i) => {
                 if (t.hidden) return;
-                indices.push(i);
+                if (i <= 6) before.push(i);
+                else if (jpSet.has(i)) japanese.push(i);
+                else after.push(i);
             });
+            indices = before.concat(japanese, after);
         } else {
             indices = (AUTHOR_PLAYLISTS[currentAuthor] || []).slice();
             /* в авторском плейлисте показываем все треки, включая скрытые (например, любовная любовь у стинта) */
