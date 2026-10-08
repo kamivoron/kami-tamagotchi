@@ -2205,3 +2205,116 @@ body.theme-light .music-search {
     color: #222;
     border-color: rgba(0,0,0,0.1);
 }
+/* ============ ПЛЕЕР: ручка перетаскивания ============ */
+.music-player {
+    resize: both;
+    overflow: auto;
+    min-width: 320px;
+    min-height: 46px;
+    max-width: 95vw;
+    max-height: 90vh;
+}
+.music-drag-handle {
+    height: 10px;
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.25);
+    cursor: grab;
+    user-select: none;
+    line-height: 10px;
+}
+.music-drag-handle:active { cursor: grabbing; }
+body.theme-light .music-drag-handle { color: rgba(0,0,0,0.25); }
+
+/* ============ КНОПКИ АВТОРОВ ============ */
+.music-authors {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.music-authors.open { display: flex; }
+.music-author-btn {
+    padding: 5px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+}
+.music-author-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+.music-author-btn.active {
+    background: linear-gradient(135deg, #ff5a8a, #ff7a5a);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 12px rgba(255,90,138,0.5);
+}
+
+/* ============ ИЗБРАННОЕ (звёздочки) ============ */
+.music-fav-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: inherit;
+    padding: 0;
+    line-height: 1;
+}
+.music-fav-btn:hover { color: #ffd54a; transform: translateY(-50%) scale(1.2); }
+.music-fav-btn.active { color: #ffd54a; text-shadow: 0 0 8px rgba(255,213,74,0.7); }
+.music-track { position: relative; padding-right: 32px !important; }
+
+.music-fav-move {
+    position: absolute;
+    right: 32px;
+    width: 18px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    font-size: 9px;
+    font-family: inherit;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.music-fav-move.up { top: 2px; }
+.music-fav-move.down { bottom: 2px; }
+.music-fav-move:hover:not(:disabled) { color: var(--accent); }
+.music-fav-move:disabled { opacity: 0.2; cursor: not-allowed; }
+
+/* Разделитель между избранным и остальными */
+.music-separator {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.4;
+    padding: 8px 6px 4px;
+    color: var(--accent);
+}
