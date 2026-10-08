@@ -1430,14 +1430,14 @@ document.addEventListener('DOMContentLoaded', () => {
             stopRandomSing(); specificSingActive = false;
             audioEl.currentTime = 0; playTrack();
         } else {
-            loadTrack(getNextVisibleTrack(currentTrack + 1), true);
+            loadTrack(getNextInPlaylist(1), true);
         }
     });
 
     musicPlayBtn.addEventListener('click', () => { if (isPlaying) pauseTrack(); else playTrack(); });
     musicPrevBtn.addEventListener('click', () => {
         if (audioEl.currentTime > 3) { audioEl.currentTime = 0; firedEvents = new Set(); }
-        else loadTrack(currentTrack - 1, true);
+        else loadTrack(getNextInPlaylist(-1), true);
     });
     function isSpecialTrack(idx) {
         const t = TRACKS[idx];
@@ -1451,28 +1451,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    function getShuffleIndex() {
-        const candidates = [];
-        TRACKS.forEach((t, i) => {
-            if (t.hidden) return;
-            if (isSpecialTrack(i)) return;
-            if (i === currentTrack) return;
-            candidates.push(i);
-        });
-        if (candidates.length === 0) return currentTrack;
-        return candidates[Math.floor(Math.random() * candidates.length)];
+    /* Возвращает список индексов треков текущего плейлиста */
+    function getCurrentPlaylist() {
+        if (currentAuthor === 'all') {
+            const arr = [];
+            TRACKS.forEach((t, i) => { if (!t.hidden) arr.push(i); });
+            return arr;
+        }
+        return (AUTHOR_PLAYLISTS[currentAuthor] || []).slice();
     }
 
-    function getNextVisibleTrack(fromIdx) {
-        if (isShuffled) return getShuffleIndex();
-        let i = fromIdx;
-        for (let step = 0; step < TRACKS.length; step++) {
-            const idx = ((i + step) % TRACKS.length + TRACKS.length) % TRACKS.length;
-            if (!TRACKS[idx].hidden) return idx;
+    /* step: +1 — следующий, -1 — предыдущий. Учитывает и текущего автора, и shuffle */
+    function getNextInPlaylist(step) {
+        const list = getCurrentPlaylist();
+        if (list.length === 0) return currentTrack;
+
+        /* В разброс — только обычные треки из текущего плейлиста */
+        if (isShuffled) {
+            const candidates = list.filter(i => !isSpecialTrack(i) && i !== currentTrack);
+            if (candidates.length === 0) return currentTrack;
+            return candidates[Math.floor(Math.random() * candidates.length)];
         }
-        return 0;
+
+        const pos = list.indexOf(currentTrack);
+        if (pos === -1) return list[0];
+        const newPos = (pos + step + list.length) % list.length;
+        return list[newPos];
     }
-    musicNextBtn.addEventListener('click', () => loadTrack(getNextVisibleTrack(currentTrack + 1), true));
+    musicNextBtn.addEventListener('click', () => loadTrack(getNextInPlaylist(1), true));
     musicRepeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
         musicRepeatBtn.classList.toggle('active', isRepeat);
@@ -1488,6 +1494,9 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAuthorButtons();
             renderTrackList();
             updateListActive();
+        } else {
+            /* Сбрасываем заданную пользователем высоту, чтобы плеер сжался до контента */
+            musicPlayer.style.height = '';
         }
     });
 
