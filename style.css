@@ -2207,8 +2207,9 @@ body.theme-light .music-search {
 }
 /* ============ ПЛЕЕР: ручка перетаскивания ============ */
 .music-player {
+    position: fixed;
     resize: both;
-    overflow: auto;
+    overflow: hidden;
     min-width: 320px;
     min-height: 46px;
     max-width: 95vw;
