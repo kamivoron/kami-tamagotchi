@@ -307,7 +307,71 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/168.mp3', title: 'lida - хочешь' },
         { file: 'music/169.mp3', title: 'lida, greyrock - d3m0n' },
         { file: 'music/170.mp3', title: 'lida - гиперфикс' },
-        { file: 'music/171.mp3', title: 'lida - тысячи рук' }
+        { file: 'music/171.mp3', title: 'lida - тысячи рук' },
+
+        /* ===== qwiza ===== */
+        { file: 'music/172.mp3', title: 'qwiza - номера' },
+        { file: 'music/173.mp3', title: 'qwiza - я бы мог' },
+        { file: 'music/174.mp3', title: 'qwiza - эстетика скандалов' },
+
+        /* ===== maybe baby ===== */
+        { file: 'music/175.mp3', title: 'maybe baby - sh1pu4ka!' },
+        { file: 'music/176.mp3', title: 'maybe baby - силиконовый гном' },
+        { file: 'music/177.mp3', title: 'maybe baby - babybars 4' },
+        { file: 'music/178.mp3', title: 'maybe baby - duraga' },
+        { file: 'music/179.mp3', title: 'maybe baby - принцесса диана' },
+        { file: 'music/180.mp3', title: 'maybe baby - golda' },
+        { file: 'music/181.mp3', title: 'maybe baby, дора, baby cute - вуаля' },
+        { file: 'music/182.mp3', title: 'maybe baby, lida - не беспокоюсь' },
+        { file: 'music/183.mp3', title: 'maybe baby - попкорн' },
+
+        /* ===== френдзона ===== */
+        { file: 'music/184.mp3', title: 'френдзона - последний экзамен' },
+        { file: 'music/185.mp3', title: 'френдзона - бойчик' },
+
+        /* ===== slava marlow ===== */
+        { file: 'music/186.mp3', title: 'slava marlow, mk - нет проблем' },
+        { file: 'music/187.mp3', title: 'slava marlow - ты дура, прости' },
+        { file: 'music/188.mp3', title: 'slava marlow - камри 3.5' },
+        { file: 'music/189.mp3', title: 'slava marlow - бизнес вумен' },
+        { file: 'music/190.mp3', title: 'slava marlow - где найти силы' },
+        { file: 'music/191.mp3', title: 'slava marlow - по глазам' },
+        { file: 'music/192.mp3', title: 'slava marlow - я в деле' },
+        { file: 'music/193.mp3', title: 'slava marlow - я потерялся' },
+        { file: 'music/194.mp3', title: 'slava marlow - каблуки' },
+        { file: 'music/195.mp3', title: 'slava marlow - лиза' },
+        { file: 'music/196.mp3', title: 'slava marlow - ровер' },
+        { file: 'music/197.mp3', title: 'slava marlow - o2' },
+        { file: 'music/198.mp3', title: 'slava marlow - забуду' },
+        { file: 'music/199.mp3', title: 'slava marlow - запретить' },
+        { file: 'music/200.mp3', title: 'slava marlow - я не могу тебя найти' },
+        { file: 'music/201.mp3', title: 'slava marlow, элджей - большие диски' },
+        { file: 'music/202.mp3', title: 'slava marlow, saluki - не забыл' },
+        { file: 'music/203.mp3', title: 'slava marlow, лсп - я ненавижу этот трек!!!' },
+        { file: 'music/204.mp3', title: 'slava marlow, glukoza - без аттестата' },
+        { file: 'music/205.mp3', title: 'slava marlow - мания' },
+
+        /* ===== morgenstern ===== */
+        { file: 'music/206.mp3', title: 'morgenstern - cristal & моёт' },
+        { file: 'music/207.mp3', title: 'morgenstern, dj smash - новая волна' },
+        { file: 'music/208.mp3', title: 'morgenstern - дуло' },
+        { file: 'music/209.mp3', title: 'morgenstern - show' },
+        { file: 'music/210.mp3', title: 'morgenstern - бебебе' },
+        { file: 'music/211.mp3', title: 'morgenstern - pablo' },
+        { file: 'music/212.mp3', title: 'morgenstern - аристократ' },
+        { file: 'music/213.mp3', title: 'morgenstern - папин танк' },
+        { file: 'music/214.mp3', title: 'morgenstern - я когда-нибудь уйду' },
+        { file: 'music/215.mp3', title: 'morgenstern - 12' },
+        { file: 'music/216.mp3', title: 'morgenstern - селяви' },
+        { file: 'music/217.mp3', title: 'morgenstern - номер' },
+        { file: 'music/218.mp3', title: 'morgenstern - шейх' },
+        { file: 'music/219.mp3', title: 'morgenstern - чёрный русский' },
+        { file: 'music/220.mp3', title: 'morgenstern - последняя любовь' },
+        { file: 'music/221.mp3', title: 'morgenstern - дом' },
+        { file: 'music/222.mp3', title: 'morgenstern - повод' },
+        { file: 'music/223.mp3', title: 'morgenstern - антидепрессанты' },
+        { file: 'music/224.mp3', title: 'morgenstern - пустой вокзал' },
+        { file: 'music/225.mp3', title: 'morgenstern - цветок' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -322,6 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicRepeatBtn = document.getElementById('musicRepeat');
     const musicExpandBtn = document.getElementById('musicExpand');
     const musicList = document.getElementById('musicList');
+    const musicAuthors = document.getElementById('musicAuthors');
+    const musicDragHandle = document.getElementById('musicDragHandle');
     const musicShuffleBtn = document.getElementById('musicShuffle');
     const musicSearchWrap = document.getElementById('musicSearchWrap');
     const musicSearchInput = document.getElementById('musicSearch');
@@ -341,6 +407,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const invBtn = document.getElementById('invBtn');
     const vitrinaPanel = document.getElementById('vitrinaPanel');
 
+        /* ===== КАРТА АВТОРОВ (индексы в TRACKS, 0-based) ===== */
+    const AUTHOR_PLAYLISTS = {
+        'mzlff':         [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,131],
+        'стинт':         [5,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133],
+        'lida':          [134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170],
+        'slava marlow':  [185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204],
+        'qwiza':         [171,172,173],
+        'maybe baby':    [174,175,176,177,178,179,180,181,182],
+        'френдзона':     [183,184],
+        'morgenstern':   [205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224]
+    };
+
+    let currentAuthor = 'all';
+    let favorites = [];
+    try { const s = JSON.parse(localStorage.getItem('petFavorites') || '[]'); if (Array.isArray(s)) favorites = s; } catch(_) {}
+    function saveFavorites() { localStorage.setItem('petFavorites', JSON.stringify(favorites)); }
     let currentTrack = -1;
     let isPlaying = false;
     let isRepeat = false;
@@ -465,29 +547,162 @@ document.addEventListener('DOMContentLoaded', () => {
         return m + ':' + String(s).padStart(2, '0');
     }
 
+    function getVisibleTrackIndices() {
+        const query = (musicSearchInput && musicSearchInput.value ? musicSearchInput.value : '').trim().toLowerCase();
+        let indices;
+
+        if (currentAuthor === 'all') {
+            indices = [];
+            TRACKS.forEach((t, i) => {
+                if (t.hidden) return;
+                indices.push(i);
+            });
+        } else {
+            indices = (AUTHOR_PLAYLISTS[currentAuthor] || []).slice();
+            /* в авторском плейлисте показываем все треки, включая скрытые (например, любовная любовь у стинта) */
+        }
+
+        if (query) {
+            indices = indices.filter(i => TRACKS[i] && TRACKS[i].title.toLowerCase().includes(query));
+        }
+
+        /* Сортировка: избранные сверху (в порядке favorites), потом остальные в исходном порядке */
+        const favSet = new Set(favorites);
+        const favFirst = [];
+        const rest = [];
+        indices.forEach(i => {
+            const file = TRACKS[i].file;
+            if (favSet.has(file)) favFirst.push(i);
+            else rest.push(i);
+        });
+        /* Сортируем избранные по порядку в favorites */
+        favFirst.sort((a, b) => favorites.indexOf(TRACKS[a].file) - favorites.indexOf(TRACKS[b].file));
+
+        return { favFirst, rest };
+    }
+
     function renderTrackList() {
         musicList.innerHTML = '';
         if (TRACKS.length === 0) {
             musicList.innerHTML = '<div class="music-track"><span class="music-track-num">—</span>треки не добавлены</div>';
             return;
         }
-        const query = (musicSearchInput && musicSearchInput.value ? musicSearchInput.value : '').trim().toLowerCase();
-        let hasVisible = false;
-        TRACKS.forEach((t, i) => {
-            if (t.hidden) return;
-            if (query && !t.title.toLowerCase().includes(query)) return;
-            hasVisible = true;
-            const row = document.createElement('div');
-            row.className = 'music-track' + (i === currentTrack ? ' active' : '');
-            row.dataset.idx = i;
-            row.innerHTML = `<span class="music-track-num">${i + 1}</span><span>${t.title}</span>`;
-            row.addEventListener('click', () => { loadTrack(i); playTrack(); });
-            musicList.appendChild(row);
-        });
-        if (!hasVisible) {
+
+        const { favFirst, rest } = getVisibleTrackIndices();
+
+        if (favFirst.length === 0 && rest.length === 0) {
             musicList.innerHTML = '<div class="music-track"><span class="music-track-num">—</span>ничего не найдено</div>';
+            return;
         }
+
+        function makeRow(idx, isFav, favPos, favTotal) {
+            const t = TRACKS[idx];
+            const row = document.createElement('div');
+            row.className = 'music-track' + (idx === currentTrack ? ' active' : '');
+            row.dataset.idx = idx;
+            row.innerHTML = `<span class="music-track-num">${idx + 1}</span><span>${t.title}</span>`;
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('.music-fav-btn') || e.target.closest('.music-fav-move')) return;
+                loadTrack(idx);
+                playTrack();
+            });
+
+            /* Кнопки перемещения избранного вверх/вниз */
+            if (isFav && favTotal > 1) {
+                const up = document.createElement('button');
+                up.className = 'music-fav-move up';
+                up.textContent = '▲';
+                up.disabled = favPos === 0;
+                up.title = 'вверх';
+                up.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (favPos > 0) {
+                        [favorites[favPos - 1], favorites[favPos]] = [favorites[favPos], favorites[favPos - 1]];
+                        saveFavorites(); renderTrackList(); updateListActive();
+                    }
+                });
+                const down = document.createElement('button');
+                down.className = 'music-fav-move down';
+                down.textContent = '▼';
+                down.disabled = favPos === favTotal - 1;
+                down.title = 'вниз';
+                down.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (favPos < favTotal - 1) {
+                        [favorites[favPos + 1], favorites[favPos]] = [favorites[favPos], favorites[favPos + 1]];
+                        saveFavorites(); renderTrackList(); updateListActive();
+                    }
+                });
+                row.appendChild(up);
+                row.appendChild(down);
+            }
+
+            /* Звёздочка */
+            const star = document.createElement('button');
+            star.className = 'music-fav-btn' + (isFav ? ' active' : '');
+            star.textContent = isFav ? '★' : '☆';
+            star.title = isFav ? 'убрать из избранного' : 'в избранное';
+            star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const file = t.file;
+                if (favorites.includes(file)) favorites = favorites.filter(f => f !== file);
+                else favorites.push(file);
+                saveFavorites();
+                renderTrackList();
+                updateListActive();
+            });
+            row.appendChild(star);
+
+            return row;
+        }
+
+        if (favFirst.length > 0 && rest.length > 0) {
+            const sep1 = document.createElement('div');
+            sep1.className = 'music-separator';
+            sep1.textContent = '★ избранное';
+            musicList.appendChild(sep1);
+        }
+        favFirst.forEach((idx, i) => {
+            musicList.appendChild(makeRow(idx, true, i, favFirst.length));
+        });
+        if (favFirst.length > 0 && rest.length > 0) {
+            const sep2 = document.createElement('div');
+            sep2.className = 'music-separator';
+            sep2.textContent = 'все остальные';
+            musicList.appendChild(sep2);
+        }
+        rest.forEach(idx => {
+            musicList.appendChild(makeRow(idx, false, 0, 0));
+        });
     }
+
+    function renderAuthorButtons() {
+        musicAuthors.innerHTML = '';
+        const allBtn = document.createElement('button');
+        allBtn.className = 'music-author-btn' + (currentAuthor === 'all' ? ' active' : '');
+        allBtn.textContent = 'все';
+        allBtn.addEventListener('click', () => {
+            currentAuthor = 'all';
+            renderAuthorButtons();
+            renderTrackList();
+            updateListActive();
+        });
+        musicAuthors.appendChild(allBtn);
+
+        Object.keys(AUTHOR_PLAYLISTS).forEach(a => {
+            const btn = document.createElement('button');
+            btn.className = 'music-author-btn' + (currentAuthor === a ? ' active' : '');
+            btn.textContent = a;
+            btn.addEventListener('click', () => {
+                currentAuthor = a;
+                renderAuthorButtons();
+                renderTrackList();
+                updateListActive();
+            });
+            musicAuthors.appendChild(btn);
+        });
+    }
+
     function updateListActive() {
         musicList.querySelectorAll('.music-track').forEach(el => {
             const idx = parseInt(el.dataset.idx, 10);
@@ -806,6 +1021,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function loveSongBegin() {
         if (loveSongActive) return;
         loveSongActive = true;
+
+         /* Принудительно открываем трек и розовые темы, даже если играет из плейлиста стинта */
+        unlockLoveSong();
         /* Рандомный розовый фон */
         const themes = ['pink1', 'pink2', 'pink3'];
         const chosen = themes[Math.floor(Math.random() * themes.length)];
@@ -1265,8 +1483,11 @@ document.addEventListener('DOMContentLoaded', () => {
         musicList.classList.toggle('open', isExpanded);
         musicExpandBtn.classList.toggle('open', isExpanded);
         musicSearchWrap.classList.toggle('open', isExpanded);
+        musicAuthors.classList.toggle('open', isExpanded);
         if (isExpanded) {
-            setTimeout(() => { if (musicSearchInput) musicSearchInput.focus(); }, 300);
+            renderAuthorButtons();
+            renderTrackList();
+            updateListActive();
         }
     });
 
@@ -1298,6 +1519,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedVol = localStorage.getItem('petVolume');
     if (savedVol !== null) { const v = parseFloat(savedVol); if (!isNaN(v)) { audioEl.volume = v; musicVolume.value = v; } }
 
+        /* ===== Перетаскивание плеера ===== */
+    const musicPosSaved = localStorage.getItem('petMusicPos');
+    if (musicPosSaved) {
+        try {
+            const p = JSON.parse(musicPosSaved);
+            musicPlayer.style.left = p.x + 'px';
+            musicPlayer.style.top = p.y + 'px';
+            musicPlayer.style.transform = 'none';
+        } catch(_) {}
+    }
+    const musicSizeSaved = localStorage.getItem('petMusicSize');
+    if (musicSizeSaved) {
+        try {
+            const s = JSON.parse(musicSizeSaved);
+            musicPlayer.style.width = s.w + 'px';
+            musicPlayer.style.maxWidth = 'none';
+        } catch(_) {}
+    }
+
+    let mDragging = false, mStartX = 0, mStartY = 0, mInitX = 0, mInitY = 0;
+    if (musicDragHandle) {
+        musicDragHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const rect = musicPlayer.getBoundingClientRect();
+            mDragging = true;
+            mStartX = e.clientX; mStartY = e.clientY;
+            mInitX = rect.left; mInitY = rect.top;
+            document.body.style.cursor = 'grabbing';
+        });
+    }
+    document.addEventListener('mousemove', (e) => {
+        if (mDragging) {
+            const dx = e.clientX - mStartX, dy = e.clientY - mStartY;
+            const newX = Math.max(0, Math.min(window.innerWidth - 100, mInitX + dx));
+            const newY = Math.max(0, Math.min(window.innerHeight - 40, mInitY + dy));
+            musicPlayer.style.left = newX + 'px';
+            musicPlayer.style.top = newY + 'px';
+            musicPlayer.style.transform = 'none';
+        }
+        if (mDragging && e.buttons === 0) {
+            mDragging = false;
+            document.body.style.cursor = '';
+            const rect = musicPlayer.getBoundingClientRect();
+            localStorage.setItem('petMusicPos', JSON.stringify({ x: rect.left, y: rect.top }));
+        }
+    });
+    document.addEventListener('mouseup', () => {
+        if (!mDragging) return;
+        mDragging = false;
+        document.body.style.cursor = '';
+        const rect = musicPlayer.getBoundingClientRect();
+        localStorage.setItem('petMusicPos', JSON.stringify({ x: rect.left, y: rect.top }));
+    });
+
+    /* Сохраняем размер при изменении через native resize */
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            const w = musicPlayer.offsetWidth;
+            if (w > 100) localStorage.setItem('petMusicSize', JSON.stringify({ w }));
+        });
+        ro.observe(musicPlayer);
+    }
     if (TRACKS.length > 0) loadTrack(0, false);
     else musicTitle.textContent = 'нет треков';
     renderTrackList();
@@ -2125,6 +2408,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (nick !== null) {
                     const trimmed = nick.trim();
                     if (trimmed) {
+                        const check = checkNickname(trimmed);
+                        if (!check.ok && check.reason === 'her') {
+                            setTimeout(() => {
+                                if (state !== 'sleeping') forcePlayPhrase({ text: 'ну уж нет, ками здесь лишь я!', mood: 'angry' }, finishDialog);
+                            }, 300);
+                            return;
+                        }
+                        if (!check.ok && check.reason === 'bad') {
+                            setTimeout(() => {
+                                if (state !== 'sleeping') forcePlayPhrase({ text: 'ну уж нет! ты у меня самый лучший, а не то, как ты себя назвал!', mood: 'angry' }, finishDialog);
+                            }, 300);
+                            return;
+                        }
                         localStorage.setItem('petNickname', trimmed);
                         setTimeout(() => {
                             if (state !== 'sleeping') forcePlayPhrase({ text: `приятно познакомиться, ${trimmed}! буду так тебя называть~`, mood: 'happy' }, finishDialog);
@@ -2373,7 +2669,7 @@ if (kompotRec && !kompotRec.desc) {
         if (!vitrinaRecords.find(r => r.id === 'zebra_07_10_26')) {
         vitrinaRecords.push({
             id: 'zebra_07_10_26',
-            name: 'тортик «зебра»',
+            name: 'тортик "зебра"',
             desc: 'идеальный баланс между ванилькой и шоколадом. не слишком сладко - идеально с чаем!',
             date: '07.10.26',
             bought: false,
@@ -2381,7 +2677,17 @@ if (kompotRec && !kompotRec.desc) {
         });
         saveVitrina();
     }
-
+    if (!vitrinaRecords.find(r => r.id === 'chakchak_08_10_26')) {
+        vitrinaRecords.push({
+            id: 'chakchak_08_10_26',
+            name: 'чак-чак',
+            desc: 'медовая вкусняшка! какая пчёлка её сделала?',
+            date: '08.10.26',
+            bought: false,
+            icon: '🍯'
+        });
+        saveVitrina();
+    }
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
     vitrinaRecords.forEach(rec => {
@@ -2405,13 +2711,13 @@ function renderVitrinaPanel() {
        МАГАЗИН И УХОД
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
-        const TODAY_LIMITED = {
-        id: 'zebra_07_10_26',
-        icon: '🎂',
-        name: 'тортик «зебра»',
-        price: 15,
-        hunger: 35,
-        date: '07.10.26',
+    const TODAY_LIMITED = {
+        id: 'chakchak_08_10_26',
+        icon: '🍯',
+        name: 'чак-чак',
+        price: 18,
+        hunger: 25,
+        date: '08.10.26',
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -2718,7 +3024,21 @@ function renderVitrinaPanel() {
         "ладно, так уж и быть, прощаю тебя.", "ну ладно, прощаю",
         "всё-всё, не обижаюсь!", "в следующий раз думай, что говоришь!"
     ];
-    const APOLOGY_KEYWORDS = ['извини', 'прости', 'сорри', 'соррян', 'соррянчик', 'прошу прощения', 'виноват', 'виновата'];
+    const APOLOGY_KEYWORDS = ['извини', 'извиняюсь', 'прости', 'сорри', 'соррян', 'соррянчик', 'прошу прощения', 'виноват', 'виновата'];
+        /* Запрещённые обращения (её имена и оскорбления) */
+    const NICK_BLOCKLIST_HER = ['ками', 'камичка', 'камушка', 'камушко', 'ди', 'kami', 'kamichka', 'диана', 'диячка'];
+    const NICK_BLOCKLIST_BAD = ['мусор', 'шлак', 'долбаеб', 'долбоеб', 'помойка', 'тварь', 'дэбил', 'пидор', 'пидорас', 'идиот', 'дурак', 'дура', 'лох', 'лошара', 'лохушка', 'сучка', 'сука', 'мразь', 'ублюдок', 'ублюдище', 'падла', 'гнида', 'крыса', 'чмо', 'дебил', 'кретин', 'придурок', 'ничтожество', 'петух', 'гомик', 'негр', 'ниггер', 'хач'];
+
+    function checkNickname(nick) {
+        const n = nick.toLowerCase().trim();
+        if (NICK_BLOCKLIST_HER.some(b => n.includes(b))) {
+            return { ok: false, reason: 'her' };
+        }
+        if (NICK_BLOCKLIST_BAD.some(b => n.includes(b))) {
+            return { ok: false, reason: 'bad' };
+        }
+        return { ok: true };
+    }
 
     const CHAT_TRIGGERS = [
     { keywords: ['мангонан'], replies: ["продавался только 3 октября!"], mood: 'neutral' },
@@ -3458,6 +3778,21 @@ function renderVitrinaPanel() {
                 if (nick !== null) {
                     const trimmed2 = nick.trim();
                     if (trimmed2) {
+                        const check = checkNickname(trimmed2);
+                        if (!check.ok && check.reason === 'her') {
+                            addSystemMessage('[ник] это моё имя!');
+                            setTimeout(() => {
+                                if (state !== 'sleeping') forcePlayPhrase({ text: 'ну уж нет, ками здесь лишь я!', mood: 'angry' }, finishDialog);
+                            }, 500);
+                            return;
+                        }
+                        if (!check.ok && check.reason === 'bad') {
+                            addSystemMessage('[ник] такое обращение не подходит.');
+                            setTimeout(() => {
+                                if (state !== 'sleeping') forcePlayPhrase({ text: 'ну уж нет! ты у меня самый лучший, а не то, как ты себя назвал!', mood: 'angry' }, finishDialog);
+                            }, 500);
+                            return;
+                        }
                         localStorage.setItem('petNickname', trimmed2);
                         addSystemMessage(`[ник] обращение установлено: ${trimmed2}`);
                         setTimeout(() => {
@@ -3470,7 +3805,7 @@ function renderVitrinaPanel() {
                 }
                 return;
             }
-            addSystemMessage('[чит] неизвестная команда.');
+            addSystemMessage('[ник] неизвестная команда.');
             return;
         }
                messagesSent++;
@@ -3983,6 +4318,16 @@ function renderVitrinaPanel() {
        ДЕВ-ЛОГ
        ========================================================== */
     const DEVLOG = [
+                {
+            version: 'v 1.0.9', date: '8 окт 2026',
+            changes: [
+                'добавлено новое ограниченное предложение',
+                'добавлено 50+ новых треков в плейлист',
+                'добавлен фильтр плейлиста по авторам',
+                'добавлена система избранных треков',
+                'плеер теперь можно перетаскивать и менять его размер'
+            ]
+        },
                 {
             version: 'v 1.0.8', date: '7 окт 2026',
             changes: [
