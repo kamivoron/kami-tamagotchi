@@ -410,30 +410,77 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/259.mp3', title: 'maretu - suck it up' },
         { file: 'music/260.mp3', title: 'ぬぬぬぬぬぬ - mimukauwa nice try' },
         { file: 'music/261.mp3', title: 'hatsune miku - 39 music!' },
-        { file: 'music/262.mp3', title: 'tomodachi no imouto ga ore ni dake uzai (op tv)' },
-        { file: 'music/263.mp3', title: 'mayonaka punch (op tv) - gimme gimme' },
-        { file: 'music/264.mp3', title: 'higurashi (op tv) - happy! lucky! dochy!' },
-        { file: 'music/265.mp3', title: 'takopii no genzai (op) - happy lucky chappy' },
-        { file: 'music/266.mp3', title: 'gnosia (ed tv) - floor killer' },
-        { file: 'music/267.mp3', title: 'giga, gnosia (op tv) - bake no kawa' },
+        { file: 'music/262.mp3', title: 'uza kawaikute nani ga warui! (tomodachi no imouto ga ore ni dake uzai, op tv)' },
+        { file: 'music/263.mp3', title: 'gimme gimme (mayonaka punch, op tv)' },
+        { file: 'music/264.mp3', title: 'happy! lucky! dochy! (higurashi, op tv)' },
+        { file: 'music/265.mp3', title: 'happy lucky chappy (takopii no genzai, op)' },
+        { file: 'music/266.mp3', title: 'floor killer (gnosia, ed tv)' },
+        { file: 'music/267.mp3', title: 'bake no kawa (gnosia, op tv)' },
         { file: 'music/268.mp3', title: '9lana - neo-luddite' },
-        { file: 'music/269.mp3', title: 'the 100 girlfriends who really love you (ed 1 tv) - sweet sign' },
-        { file: 'music/270.mp3', title: 'the 100 girlfriends who really love you (ed 2 tv) - unmei?' },
-        { file: 'music/271.mp3', title: 'the 100 girlfriends who really love you (ed 3 tv) - kore koi itare ai' },
-        { file: 'music/272.mp3', title: 'make a heroine ga oosugiru (op tv) - tsuyogaru girl' },
-        { file: 'music/273.mp3', title: 'oshi no ko (op 1 tv) - idol' },
-        { file: 'music/274.mp3', title: 'oshi no ko (ed 1 tv) - mephisto' },
-        { file: 'music/275.mp3', title: 'oshi no ko (op 2 tv) - fatale' },
-        { file: 'music/276.mp3', title: 'oshi no ko (ed 2 tv) - burning' },
-        { file: 'music/277.mp3', title: 'oshi no ko (op 3 tv) - test me' },
-        { file: 'music/278.mp3', title: 'oshi no ko (ed 3 tv) - serenade' },
-        { file: 'music/279.mp3', title: 'game center shoujo to ibunka kouryuu (ed tv) - amusing flavor' },
-        { file: 'music/280.mp3', title: 'watashi ga koibito ni nareru wake nai jan, muri muri! (op tv) - muri muri shinkaron' },
-        { file: 'music/281.mp3', title: 'lycoris recoil (ed tv) - hana no tou' },
-        { file: 'music/282.mp3', title: 'summertime rendering (ed 2) - shitsuren song takusan kiite naite bakari no watashi wa mou' },
-        { file: 'music/283.mp3', title: 'satsuriku no tenshi (ed) - pray' },
-        { file: 'music/284.mp3', title: 'shoushimin series (op 2 tv) - martian' },
-        { file: 'music/285.mp3', title: 'shoushimin series (ed 2 tv) - sugariddle' }
+        { file: 'music/269.mp3', title: 'sweet sign (the 100 girlfriends who really love you, ed 1 tv)' },
+        { file: 'music/270.mp3', title: 'unmei? (the 100 girlfriends who really love you, ed 2 tv)' },
+        { file: 'music/271.mp3', title: 'kore koi itare ai (the 100 girlfriends who really love you, ed 3 tv)' },
+        { file: 'music/272.mp3', title: 'tsuyogaru girl (make a heroine ga oosugiru, op tv)' },
+        { file: 'music/273.mp3', title: 'idol (oshi no ko, op 1 tv)' },
+        { file: 'music/274.mp3', title: 'mephisto (oshi no ko, ed 1 tv)' },
+        { file: 'music/275.mp3', title: 'fatale (oshi no ko, op 2 tv)' },
+        { file: 'music/276.mp3', title: 'burning (oshi no ko, ed 2 tv)' },
+        { file: 'music/277.mp3', title: 'test me (oshi no ko, op 3 tv)' },
+        { file: 'music/278.mp3', title: 'serenade (oshi no ko, ed 3 tv)' },
+        { file: 'music/279.mp3', title: 'amusing flavor (game center shoujo to ibunka kouryuu, ed tv)' },
+        { file: 'music/280.mp3', title: 'muri muri shinkaron (watashi ga koibito ni nareru wake nai jan, muri muri!, op tv)' },
+        { file: 'music/281.mp3', title: 'hana no tou (lycoris recoil, ed tv)' },
+        { file: 'music/282.mp3', title: 'shitsuren song takusan kiite naite bakari no watashi wa mou (summertime rendering, ed 2)' },
+        { file: 'music/283.mp3', title: 'pray (satsuriku no tenshi, ed)' },
+        { file: 'music/284.mp3', title: 'martian (shoushimin series, op 2 tv)' },
+        { file: 'music/285.mp3', title: 'sugariddle (shoushimin series, ed 2 tv)' },
+        { file: 'music/286.mp3', title: 'redo (re:zero, op 1 tv)' },
+        { file: 'music/287.mp3', title: 'styx helix (re:zero, ed 1 tv)' },
+        { file: 'music/288.mp3', title: 'paradisus-paradoxum (re:zero, op 1.2 tv)' },
+        { file: 'music/289.mp3', title: 'stay alive (re:zero, ed 1.2 tv)' },
+        { file: 'music/290.mp3', title: 'ender ember (re:zero, ed 4 tv)' },
+        { file: 'music/291.mp3', title: 'это я (ost "твой цвет")' },
+        { file: 'music/292.mp3', title: 'dramatic overlay (alma-chan wa kazoku ni naritai, op tv)' },
+        { file: 'music/293.mp3', title: 'arifuretetai (alma-chan wa kazoku ni naritai, ed tv)' },
+        { file: 'music/294.mp3', title: 'ichiban kagayaku hoshi (tokidoki bosotto roshia-go de dereru tonari no alya-san, op tv)' },
+        { file: 'music/295.mp3', title: 'kawaikute gomen (tokidoki bosotto roshia-go de dereru tonari no alya-san, ed tv)' },
+        { file: 'music/296.mp3', title: 'kakehiki wa poker face (soredemo ayumu wa yosetekuru, op tv)' },
+        { file: 'music/297.mp3', title: 'kyōran hey kids!! (noragami aragoto, op tv)' },
+        { file: 'music/298.mp3', title: 'michishirube (violet evergarden, ed tv)' },
+        { file: 'music/299.mp3', title: 'sing my pleasure (vivy -fluorite eye\'s song-, op tv)' },
+        { file: 'music/300.mp3', title: 'virtual・showtime! (vtuber nandaga haishin kiri wasuretara densetsu ni natteta, op tv)' },
+        { file: 'music/301.mp3', title: 'hacking to the gate (steins;gate, op tv)' },
+        { file: 'music/302.mp3', title: 'hugs (gachiakuta, op tv)' },
+        { file: 'music/303.mp3', title: 're:re (boku dake ga inai machi, op tv)' },
+        { file: 'music/304.mp3', title: 'sore wa shiisana hikari no youna (boku dake ga inai machi, ed tv)' },
+        { file: 'music/305.mp3', title: 'love dramatic (kaguya-sama wa kokurasetai: tensai-tachi no renai zunousen, op 1 tv)' },
+        { file: 'music/306.mp3', title: 'daddy! daddy! do! (kaguya-sama wa kokurasetai: tensai-tachi no renai zunousen, op 2 tv)' },
+        { file: 'music/307.mp3', title: 'chikatto chika chika♡ (kaguya-sama wa kokurasetai: tensai-tachi no renai zunousen, ed 2 tv)' },
+        { file: 'music/308.mp3', title: 'never say never (danganronpa, op tv)' },
+        { file: 'music/309.mp3', title: 'kakushinteki☆metamaruphose! (himouto! umaru-chan, op tv)' },
+        { file: 'music/310.mp3', title: 'nimensei☆ura omote life! (himouto! umaru-chan r, op tv)' },
+        { file: 'music/311.mp3', title: 'nacherry (shiunji-ke no kodomotachi, op tv)' },
+        { file: 'music/312.mp3', title: 'nai nai (shadows house, ed tv)' },
+        { file: 'music/313.mp3', title: 'a cruel angel\'s thesis (neon genesis evangelion, op tv)' },
+        { file: 'music/314.mp3', title: 'fly me to the moon (neon genesis evangelion, ed tv)' },
+        { file: 'music/315.mp3', title: 'bokura wa ima no naka de (love live! school idol project, op 1 tv)' },
+        { file: 'music/316.mp3', title: 'susume tomorrow (love live! school idol project, ed 1 tv)' },
+        { file: 'music/317.mp3', title: 'sore wa bokutachi no kiseki (love live! school idol project, op 2 tv)' },
+        { file: 'music/318.mp3', title: 'aozora jumping heart (love live! sunshine!!, op 1 tv)' },
+        { file: 'music/319.mp3', title: 'mirai no bokura wa shitteru yo (love live! sunshine!!, op 2 tv)' },
+        { file: 'music/320.mp3', title: 'internet yamero (needy girl overdose)' },
+        { file: 'music/321.mp3', title: 'double shuffle (tomodachi game, op tv)' },
+        { file: 'music/322.mp3', title: 'higurashi no naku koro ni (higurashi, op tv)' },
+        { file: 'music/323.mp3', title: 'lay your hands on me (kiznaiver, op tv)' },
+        { file: 'music/324.mp3', title: 'hoshi ga oyogu (summertime rendering, op tv)' },
+        { file: 'music/325.mp3', title: 'crossing field (sword art online, op tv)' },
+        { file: 'music/326.mp3', title: 'overfly (sword art online, ed tv)' },
+        { file: 'music/327.mp3', title: 'unlasting (sword art online: alicization - war of underworld, ed tv)' },
+        { file: 'music/328.mp3', title: 'irodori (yoru no kurage wa oyogenai, op tv)' },
+        { file: 'music/329.mp3', title: 'shitsumon, koitte nan deshou ka? (danjo no yuujou wa seiritsu suru? (iya, shinai!!), op tv)' },
+        { file: 'music/330.mp3', title: 'honey jet coaster (kawaii dake ja nai shikimori-san, op tv)' },
+        { file: 'music/331.mp3', title: 'shikairo days (shikanoko nokonoko koshitantan, op tv)' },
+        { file: 'music/332.mp3', title: 'shika-senbei no uta (shikanoko nokonoko koshitantan, ed tv)' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -471,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /* ===== КАРТА АВТОРОВ (индексы в TRACKS, 0-based) ===== */
     const AUTHOR_PLAYLISTS = {
-        'японское':    [3, 4, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284],
+        'японское':    [3, 4, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331],
         'mzlff':         [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,131],
         'стинт':         [5,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133],
         'lida':          [134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170],
@@ -664,12 +711,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        function makeRow(idx, isFav, favPos, favTotal) {
+        function makeRow(idx, displayNum, isFav, favPos, favTotal) {
             const t = TRACKS[idx];
             const row = document.createElement('div');
             row.className = 'music-track' + (idx === currentTrack ? ' active' : '');
             row.dataset.idx = idx;
-            row.innerHTML = `<span class="music-track-num">${idx + 1}</span><span>${t.title}</span>`;
+            row.innerHTML = `<span class="music-track-num">${displayNum}</span><span>${t.title}</span>`;
             row.addEventListener('click', (e) => {
                 if (e.target.closest('.music-fav-btn') || e.target.closest('.music-fav-move')) return;
                 loadTrack(idx);
@@ -725,6 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return row;
         }
 
+        let displayNum = 1;
         if (favFirst.length > 0 && rest.length > 0) {
             const sep1 = document.createElement('div');
             sep1.className = 'music-separator';
@@ -732,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
             musicList.appendChild(sep1);
         }
         favFirst.forEach((idx, i) => {
-            musicList.appendChild(makeRow(idx, true, i, favFirst.length));
+            musicList.appendChild(makeRow(idx, displayNum++, true, i, favFirst.length));
         });
         if (favFirst.length > 0 && rest.length > 0) {
             const sep2 = document.createElement('div');
@@ -741,10 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
             musicList.appendChild(sep2);
         }
         rest.forEach(idx => {
-            musicList.appendChild(makeRow(idx, false, 0, 0));
+            musicList.appendChild(makeRow(idx, displayNum++, false, 0, 0));
         });
-    }
-
+        
     function renderAuthorButtons() {
         musicAuthors.innerHTML = '';
         const allBtn = document.createElement('button');
@@ -4410,7 +4457,8 @@ function renderVitrinaPanel() {
                 {
             version: 'v 1.0.10', date: '9 окт 2026',
             changes: [
-                'добавлено новое ограниченное предложение'
+                'добавлено новое ограниченное предложение',
+                'добавлено 47 новых треков в японский плейлист',
             ]
         },
                 {
