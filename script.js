@@ -791,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rest.forEach(idx => {
             musicList.appendChild(makeRow(idx, displayNum++, false, 0, 0));
         });
-        
+        }
     function renderAuthorButtons() {
         musicAuthors.innerHTML = '';
         const allBtn = document.createElement('button');
