@@ -2766,6 +2766,17 @@ if (kompotRec && !kompotRec.desc) {
         });
         saveVitrina();
     }
+        if (!vitrinaRecords.find(r => r.id === 'sandwich_09_10_26')) {
+        vitrinaRecords.push({
+            id: 'sandwich_09_10_26',
+            name: 'бутерброд с красной рыбой',
+            desc: 'и совсем без косточек! я лично проверила и убрала их для тебя',
+            date: '09.10.26',
+            bought: false,
+            icon: '🥪'
+        });
+        saveVitrina();
+    }
 function renderVitrinaPanel() {
     let html = `<div class="vitrina-header">🏆 витрина достижений</div>`;
     vitrinaRecords.forEach(rec => {
@@ -2788,14 +2799,13 @@ function renderVitrinaPanel() {
     /* ==========================================================
        МАГАЗИН И УХОД
        ========================================================== */
-    const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
     const TODAY_LIMITED = {
-        id: 'chakchak_08_10_26',
-        icon: '🍯',
-        name: 'чак-чак',
-        price: 18,
-        hunger: 25,
-        date: '08.10.26',
+        id: 'sandwich_09_10_26',
+        icon: '🥪',
+        name: 'бутерброд с красной рыбой',
+        price: 22,
+        hunger: 30,
+        date: '09.10.26',
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -4396,6 +4406,12 @@ function renderVitrinaPanel() {
        ДЕВ-ЛОГ
        ========================================================== */
     const DEVLOG = [
+                {
+            version: 'v 1.0.10', date: '9 окт 2026',
+            changes: [
+                'добавлено новое ограниченное предложение'
+            ]
+        },
                 {
             version: 'v 1.0.9', date: '8 окт 2026',
             changes: [
