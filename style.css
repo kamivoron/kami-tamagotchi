@@ -1720,7 +1720,9 @@ body.theme-backrooms.chat-open .pet-widget {
     position: fixed;
     top: 70px;
     left: 20px;
-    width: 340px;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    box-sizing: border-box;
     max-height: calc(100vh - 100px);
     overflow-y: auto;
     background: var(--speech-bg);
@@ -1758,10 +1760,13 @@ body.theme-backrooms.chat-open .pet-widget {
 }
 .inv-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 }
 .inv-item {
+    box-sizing: border-box;
+    min-width: 0;
+    overflow: hidden;
     padding: 10px 6px;
     border-radius: 10px;
     background: rgba(255,255,255,0.05);
@@ -1783,6 +1788,9 @@ body.theme-backrooms.chat-open .pet-widget {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 100%;
+    display: block;
+    word-break: break-word;
 }
 .inv-item.limited {
     background: linear-gradient(135deg, rgba(255,213,74,0.12), rgba(255,90,138,0.08));
