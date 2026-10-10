@@ -480,7 +480,62 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/329.mp3', title: 'shitsumon, koitte nan deshou ka? (danjo no yuujou wa seiritsu suru? (iya, shinai!!), op tv)' },
         { file: 'music/330.mp3', title: 'honey jet coaster (kawaii dake ja nai shikimori-san, op tv)' },
         { file: 'music/331.mp3', title: 'shikairo days (shikanoko nokonoko koshitantan, op tv)' },
-        { file: 'music/332.mp3', title: 'shika-senbei no uta (shikanoko nokonoko koshitantan, ed tv)' }
+        { file: 'music/332.mp3', title: 'shika-senbei no uta (shikanoko nokonoko koshitantan, ed tv)' },
+
+        /* ===== новые японские / английские треки ===== */
+        { file: 'music/333.mp3', title: 'this game (no game no life, op tv)' },
+        { file: 'music/334.mp3', title: 'touch off (yakusoku no neverland, op 1 tv)' },
+        { file: 'music/335.mp3', title: 'zettai zetsumei (yakusoku no neverland, ed 1 tv)' },
+        { file: 'music/336.mp3', title: 'isabella\'s lullaby (yakusoku no neverland ost, cover by bajiru)' },
+        { file: 'music/337.mp3', title: 'monster (cover by camila ft. neurosama)' },
+        { file: 'music/338.mp3', title: 'evil (cover by camila & evil)' },
+        { file: 'music/339.mp3', title: 'abracadabra (cover by ironmouse)' },
+        { file: 'music/340.mp3', title: 'aishite aishite aishite (cover by ironmouse)' },
+        { file: 'music/341.mp3', title: 'colorful array (neuro-sama)' },
+        { file: 'music/342.mp3', title: 'chinatown blues (cover by neuro-sama & vedal)' },
+        { file: 'music/343.mp3', title: 'boom (evil)' },
+        { file: 'music/344.mp3', title: 'life (neuro-sama)' },
+        { file: 'music/345.mp3', title: '1-800 (bbno$, ironmouse)' },
+        { file: 'music/346.mp3', title: 'koi no retronym (kowloon generic romance, ed tv)' },
+        { file: 'music/347.mp3', title: 'jump in (kono subarashii sekai ni bakuen wo!, ed tv)' },
+        { file: 'music/348.mp3', title: 'seishun complex (bocchi the rock, op tv)' },
+        { file: 'music/349.mp3', title: 'yofukashi no uta (yofukashi no uta, ed 1 tv)' },
+        { file: 'music/350.mp3', title: 'mirage (yofukashi no uta, op 2 tv)' },
+        { file: 'music/351.mp3', title: 'zen (zenshu, op tv)' },
+        { file: 'music/352.mp3', title: 'sou (zenshu, ed tv)' },
+        { file: 'music/353.mp3', title: 'gori☆gori feez e-girl!! (mattaku saikin no tantei to kitara, ed tv)' },
+        { file: 'music/354.mp3', title: 'sox (shimoneta to iu gainen ga sonzai shinai taikutsu na sekai, ed tv)' },
+        { file: 'music/355.mp3', title: 'mixed nuts (spy×family, op 1 tv)' },
+        { file: 'music/356.mp3', title: 'comedy (spy×family, ed 1 tv)' },
+        { file: 'music/357.mp3', title: 'vaundy (spy×family, ed 2 tv)' },
+        { file: 'music/358.mp3', title: 'nyanbori de moffi!! (kawaisugi crisis, ed tv)' },
+        { file: 'music/359.mp3', title: 'nannmonee (yani neko, op tv)' },
+        { file: 'music/360.mp3', title: 'sparkle (kimi no na wa ost)' },
+        { file: 'music/361.mp3', title: 'kick back (chainsaw man, op tv)' },
+        { file: 'music/362.mp3', title: 'sparkling daydream (chuunibyou demo koi ga shitai!, op 1 tv)' },
+        { file: 'music/363.mp3', title: 'duvet (serial experiments lain, op tv)' },
+        { file: 'music/364.mp3', title: 'hitorigoto (eromanga sensei, op tv)' },
+        { file: 'music/365.mp3', title: 'san san days (sono bisque doll wa koi wo suru, op 1 tv)' },
+        { file: 'music/366.mp3', title: 'koi no yukue (sono bisque doll wa koi wo suru, ed 1 tv)' },
+        { file: 'music/367.mp3', title: 'ao to kirameki (sono bisque doll wa koi wo suru, op 2 tv)' },
+        { file: 'music/368.mp3', title: 'kawaii kaiwai (sono bisque doll wa koi wo suru, ed 2 tv)' },
+        { file: 'music/369.mp3', title: 'fukashigi no karte (seishun buta yarou wa bunny girl senpai no yume wo minai, movie ed 6 tv)' },
+        { file: 'music/370.mp3', title: 'fantastic dreamer (kono subarashii sekai ni shukufuku wo!, op 1 tv)' },
+        { file: 'music/371.mp3', title: 'chisana boken-sha (kono subarashii sekai ni shukufuku wo!, ed 1 tv)' },
+        { file: 'music/372.mp3', title: 'tomorrow (kono subarashii sekai ni shukufuku wo!, op 2 tv)' },
+        { file: 'music/373.mp3', title: 'growing up (kono subarashii sekai ni shukufuku wo!, op 3 tv)' },
+        { file: 'music/374.mp3', title: 'ano hi no mama no bokura (kono subarashii sekai ni shukufuku wo!, ed 3 tv)' },
+        { file: 'music/375.mp3', title: 'aishiteru banzai (love live! school idol project)' },
+        { file: 'music/376.mp3', title: 'no brand girls (love live! school idol project)' },
+        { file: 'music/377.mp3', title: 'start:dash!! (love live! school idol project)' },
+        { file: 'music/378.mp3', title: 'angelic angel (love live! school idol project)' },
+        { file: 'music/379.mp3', title: 'sunny day song (love live! school idol project)' },
+        { file: 'music/380.mp3', title: 'nico puri♥joshi dou (nico yazawa)' },
+        { file: 'music/381.mp3', title: 'snow halation (love live! school idol project)' },
+        { file: 'music/382.mp3', title: 'strawberry trapper (love live! sunshine!!)' },
+        { file: 'music/383.mp3', title: 'thrilling one way (love live! sunshine!!)' },
+        { file: 'music/384.mp3', title: 'tsunagaru connect (rina tennoji)' },
+        { file: 'music/385.mp3', title: 'two (bbno$)' }
     ];
 
     const audioEl = document.getElementById('audioEl');
@@ -518,7 +573,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /* ===== КАРТА АВТОРОВ (индексы в TRACKS, 0-based) ===== */
     const AUTHOR_PLAYLISTS = {
-        'японское':    [3, 4, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331],
+        'японское':    [3, 4, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383],
+        'английское':  [336, 337, 338, 339, 340, 341, 342, 343, 344, 384],
         'mzlff':         [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,131],
         'стинт':         [5,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133],
         'lida':          [134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170],
@@ -2816,11 +2872,22 @@ if (kompotRec && !kompotRec.desc) {
         if (!vitrinaRecords.find(r => r.id === 'sandwich_09_10_26')) {
         vitrinaRecords.push({
             id: 'sandwich_09_10_26',
-            name: 'бутерброд с красной рыбой',
+            name: 'бутер с красной рыбой',
             desc: 'и совсем без косточек! я лично проверила и убрала их для тебя',
             date: '09.10.26',
             bought: false,
             icon: '🥪'
+        });
+        saveVitrina();
+    }
+        if (!vitrinaRecords.find(r => r.id === 'chocolate_10_10_26')) {
+        vitrinaRecords.push({
+            id: 'chocolate_10_10_26',
+            name: 'премиум шоколад',
+            desc: 'но где же скидка до 45%?',
+            date: '10.10.26',
+            bought: false,
+            icon: '🍫'
         });
         saveVitrina();
     }
@@ -2848,12 +2915,12 @@ function renderVitrinaPanel() {
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
     const TODAY_LIMITED = {
-        id: 'sandwich_09_10_26',
-        icon: '🥪',
-        name: 'бутерброд с красной рыбой',
-        price: 22,
-        hunger: 30,
-        date: '09.10.26',
+        id: 'chocolate_10_10_26',
+        icon: '🍫',
+        name: 'премиум шоколад',
+        price: 35,
+        hunger: 40,
+        date: '10.10.26',
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -4455,10 +4522,18 @@ function renderVitrinaPanel() {
        ========================================================== */
     const DEVLOG = [
                 {
+            version: 'v 1.0.11', date: '10 окт 2026',
+            changes: [
+                'добавлено 53 новых трека в плейлист',
+                'добавлен плейлист "английское"',
+                'добавлено новое ограниченное предложение'
+            ]
+        },
+                {
             version: 'v 1.0.10', date: '9 окт 2026',
             changes: [
                 'добавлено новое ограниченное предложение',
-                'добавлено 47 новых треков в японский плейлист',
+                'добавлено 47 новых треков в японский плейлист'
             ]
         },
                 {
@@ -4708,6 +4783,26 @@ function renderVitrinaPanel() {
         }
     });
     renderThemeLock();
+        /* ===== Авто-переформатирование: "автор - название" → "название (автор)" ===== */
+    function autoReformatTitles() {
+        TRACKS.forEach(t => {
+            /* уже в новом формате "что-то (что-то, что-то)" — не трогаем */
+            if (/\([^)]+,\s*[^)]+\)$/.test(t.title)) return;
+            const idx = t.title.indexOf(' - ');
+            if (idx <= 0) return;
+            const author = t.title.substring(0, idx).trim();
+            let song = t.title.substring(idx + 3).trim();
+            /* если в конце был (YEAR) — вытащим год в скобки к автору */
+            const yearMatch = song.match(/\s*\((\d{4})\)$/);
+            if (yearMatch) {
+                song = song.replace(/\s*\(\d{4}\)$/, '').trim();
+                t.title = song + ' (' + author + ', ' + yearMatch[1] + ')';
+            } else {
+                t.title = song + ' (' + author + ')';
+            }
+        });
+    }
+    autoReformatTitles();
     renderFriendship(false);
     renderAchPanel();
     renderMemePanel();
