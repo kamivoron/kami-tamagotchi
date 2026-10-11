@@ -2914,13 +2914,15 @@ function renderVitrinaPanel() {
        МАГАЗИН И УХОД
        ========================================================== */
     const LIMITED_OFFER_KEY = 'petLimitedOfferEnd';
+    /* Лимитка дня. Если name пустая — показываем сообщение «сегодня нет». */
     const TODAY_LIMITED = {
-        id: 'chocolate_10_10_26',
-        icon: '🍫',
-        name: 'премиум шоколад',
-        price: 35,
-        hunger: 40,
-        date: '10.10.26',
+        id: null,
+        icon: '⏳',
+        name: '',
+        price: 0,
+        hunger: 0,
+        date: '11.10.26',
+        desc: ''
     };
 
     if (!localStorage.getItem(LIMITED_OFFER_KEY)) {
@@ -2988,16 +2990,25 @@ function renderVitrinaPanel() {
 
         if (remaining > 0) {
             html += `<div class="shop-section-title">⚡ ограниченное предложение</div>`;
-            const available = friendship >= TODAY_LIMITED.price;
-            html += `<div class="shop-item limited ${available ? '' : 'disabled'}" data-id="limited_today">
-                <div class="shop-item-icon">${TODAY_LIMITED.icon}</div>
-                <div class="shop-item-info">
-                    <div class="shop-item-title">${TODAY_LIMITED.name}</div>
-                    <div class="shop-item-desc">+${TODAY_LIMITED.hunger} сытости · попадёт в сумку</div>
-                    <div class="shop-limited-timer">осталось ${Math.floor(remaining/3600000)}ч ${Math.floor((remaining%3600000)/60000)}мин</div>
-                </div>
-                <div class="shop-item-price">${TODAY_LIMITED.price}</div>
-            </div>`;
+            if (!TODAY_LIMITED.name) {
+                html += `<div class="shop-item disabled" style="cursor: default;">
+                    <div class="shop-item-icon">⏳</div>
+                    <div class="shop-item-info">
+                        <div class="shop-item-title" style="opacity: 0.7;">ограниченного предложения сегодня нет, приходи завтра!</div>
+                    </div>
+                </div>`;
+            } else {
+                const available = friendship >= TODAY_LIMITED.price;
+                html += `<div class="shop-item limited ${available ? '' : 'disabled'}" data-id="limited_today">
+                    <div class="shop-item-icon">${TODAY_LIMITED.icon}</div>
+                    <div class="shop-item-info">
+                        <div class="shop-item-title">${TODAY_LIMITED.name}</div>
+                        <div class="shop-item-desc">+${TODAY_LIMITED.hunger} сытости · попадёт в сумку</div>
+                        <div class="shop-limited-timer">осталось ${Math.floor(remaining/3600000)}ч ${Math.floor((remaining%3600000)/60000)}мин</div>
+                    </div>
+                    <div class="shop-item-price">${TODAY_LIMITED.price}</div>
+                </div>`;
+            }
         }
 
         html += `<div class="shop-section-title">обычное меню</div>`;
@@ -3033,6 +3044,7 @@ function renderVitrinaPanel() {
         let item, price, isLimited = false, recordId = null;
         if (id === 'limited_today') {
             if (getLimitedOfferRemaining() <= 0) return;
+            if (!TODAY_LIMITED.name) return;
             const inventoryTitle = TODAY_LIMITED.inventoryName || TODAY_LIMITED.name;
             item = { icon: TODAY_LIMITED.icon, title: inventoryTitle, hunger: TODAY_LIMITED.hunger, isLimited: true, desc: TODAY_LIMITED.desc };
             price = TODAY_LIMITED.price;
