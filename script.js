@@ -420,7 +420,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/269.mp3', title: 'sweet sign (the 100 girlfriends who really love you, ed 1 tv)' },
         { file: 'music/270.mp3', title: 'unmei? (the 100 girlfriends who really love you, ed 2 tv)' },
         { file: 'music/271.mp3', title: 'kore koi itare ai (the 100 girlfriends who really love you, ed 3 tv)' },
-        { file: 'music/272.mp3', title: 'tsuyogaru girl (make a heroine ga oosugiru, op tv)' },
+        { file: 'music/272.mp3', title: 'tsuyogaru girl (make heroine ga oosugiru, op tv)' },
+        { file: 'music/404.mp3', title: 'feel my soul (make heroine ga oosugiru!, ed 3 tv)' },
         { file: 'music/273.mp3', title: 'idol (oshi no ko, op 1 tv)' },
         { file: 'music/274.mp3', title: 'mephisto (oshi no ko, ed 1 tv)' },
         { file: 'music/275.mp3', title: 'fatale (oshi no ko, op 2 tv)' },
@@ -555,8 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/400.mp3', title: 'i\'m not famous (ajr)' },
         { file: 'music/401.mp3', title: 'come hang out (ajr)' },
         { file: 'music/402.mp3', title: 'wow, i\'m not crazy (ajr)' },
-        { file: 'music/403.mp3', title: 'world\'s smallest violin (ajr)' },
-        { file: 'music/404.mp3', title: 'feel my soul (make heroine ga oosugiru!, ed 3 tv)' }
+        { file: 'music/403.mp3', title: 'world\'s smallest violin (ajr)' }
     ];
 
     const audioEl = document.getElementById('audioEl');
