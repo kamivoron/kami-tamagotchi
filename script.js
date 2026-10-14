@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/347.mp3', title: 'jump in (kono subarashii sekai ni bakuen wo!, ed tv)' },
         { file: 'music/348.mp3', title: 'seishun complex (bocchi the rock, op tv)' },
         { file: 'music/349.mp3', title: 'yofukashi no uta (yofukashi no uta, ed 1 tv)' },
-        { file: 'music/350.mp3', title: 'mirage (yofukashi no uta, op 2 tv)' },
+        { file: 'music/350.mp3', title: 'mirage (yofukashi no uta, op 2)' },
         { file: 'music/351.mp3', title: 'zen (zenshu, op tv)' },
         { file: 'music/352.mp3', title: 'sou (zenshu, ed tv)' },
         { file: 'music/353.mp3', title: 'gori☆gori feez e-girl!! (mattaku saikin no tantei to kitara, ed tv)' },
