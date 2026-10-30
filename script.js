@@ -2002,7 +2002,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { triggers: ['100 bad days'], video: 'video/42.mp4', name: '100 bad days' },
         { triggers: ['miku miku beam'], video: 'video/43.mp4', name: 'miku miku beam' },
         { triggers: ['поровну'], video: 'video/44.mp4', name: 'поровну' },
-        { triggers: ['avgn dance', 'avgn'], video: 'video/45.mp4', name: 'avgn' }
+        { triggers: ['avgn dance', 'avgn'], video: 'video/45.mp4', name: 'avgn' },
+        { triggers: ['two'], video: 'video/46.mp4', name: 'two' }
     ];
 
     let foundMemes = new Set();
