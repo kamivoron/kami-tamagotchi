@@ -593,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/440.mp3', title: 'soccer ball (endacopia ost 4)' },
         { file: 'music/441.mp3', title: 'beautiful creature (endacopia ost 13)' },
         { file: 'music/442.mp3', title: 'bury or die (endacopia ost 58)' },
-        { file: 'music/443.mp3', title: 'code talker (endacopia ost 63)' }
+        { file: 'music/443.mp3', title: 'code talker (endacopia ost 63)' },
         { file: 'music/444.mp3', title: 'cry for me (ironmouse ft. bubi)' }
     ];
 
