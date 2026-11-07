@@ -594,7 +594,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { file: 'music/441.mp3', title: 'beautiful creature (endacopia ost 13)' },
         { file: 'music/442.mp3', title: 'bury or die (endacopia ost 58)' },
         { file: 'music/443.mp3', title: 'code talker (endacopia ost 63)' },
-        { file: 'music/444.mp3', title: 'cry for me (ironmouse ft. bubi)' }
+        { file: 'music/444.mp3', title: 'cry for me (ironmouse ft. bubi)' },
+        { file: 'music/445.m4a', title: 'кожа, в которой я живу (u-topia)' }
     ];
 
     const audioEl = document.getElementById('audioEl');
